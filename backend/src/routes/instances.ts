@@ -67,7 +67,14 @@ router.get('/fetchInstances', async (req: AuthRequest, res) => {
       where: { userId }
     })
 
-    const allEvolutionInstances = await evolutionAPI.fetchInstances()
+    let allEvolutionInstances: any[] = []
+    
+    try {
+      allEvolutionInstances = await evolutionAPI.fetchInstances()
+    } catch (evolutionError: any) {
+      console.warn('[FETCH] Evolution API error, using database data only:', evolutionError?.response?.data?.message || evolutionError?.message)
+      // Continue with empty array - we'll use database data only
+    }
 
     const enriched = userInstances.map(dbInstance => {
       const evolutionData = allEvolutionInstances.find(
@@ -77,9 +84,9 @@ router.get('/fetchInstances', async (req: AuthRequest, res) => {
       return {
         instanceName: dbInstance.customName,
         status: evolutionData?.instance?.state || dbInstance.status,
-        profileName: evolutionData?.profileName,
-        profilePictureUrl: evolutionData?.profilePictureUrl,
-        ownerJid: evolutionData?.owner,
+        profileName: evolutionData?.profileName || dbInstance.profileName,
+        profilePictureUrl: evolutionData?.profilePictureUrl || dbInstance.profilePictureUrl,
+        ownerJid: evolutionData?.owner || dbInstance.ownerJid,
       }
     })
 
@@ -104,14 +111,26 @@ router.get('/connectionState/:instanceName', async (req: AuthRequest, res) => {
       return res.status(404).json({ error: 'Instance non trouvée' })
     }
 
-    const state = await evolutionAPI.getConnectionState(fullInstanceName)
+    try {
+      const state = await evolutionAPI.getConnectionState(fullInstanceName)
 
-    await prisma.instance.update({
-      where: { id: dbInstance.id },
-      data: { status: state.instance?.state || 'close' }
-    })
+      await prisma.instance.update({
+        where: { id: dbInstance.id },
+        data: { status: state.instance?.state || 'close' }
+      })
 
-    res.json(state)
+      res.json(state)
+    } catch (evolutionError: any) {
+      console.warn('[STATE] Evolution API error, returning database status:', evolutionError?.response?.data?.message || evolutionError?.message)
+      
+      // Return database status as fallback
+      res.json({
+        instance: {
+          instanceName: fullInstanceName,
+          state: dbInstance.status
+        }
+      })
+    }
   } catch (error: any) {
     const msg = error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Erreur inconnue'
     console.error('[STATE]', msg, error?.response?.data)
