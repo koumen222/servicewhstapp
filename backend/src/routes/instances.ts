@@ -45,8 +45,8 @@ router.post('/create', checkInstanceQuota, async (req: AuthRequest, res) => {
         customName,
         status: 'close',
         instanceUrl: env.EVOLUTION_API_URL,
-        apiKey,
-      } as any
+        evolutionApiKey: apiKey,
+      }
     })
 
     res.json({
