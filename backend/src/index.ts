@@ -10,7 +10,7 @@ import messageRoutes from './routes/messages.js'
 const app = express()
 
 app.use(helmet())
-const allowedOrigins = env.FRONTEND_URL.split(',').map(o => o.trim())
+const allowedOrigins = env.FRONTEND_URL.split(',').map(o => o.trim().replace(/\/$/, ''))
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) return callback(null, true)
