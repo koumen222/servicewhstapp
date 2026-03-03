@@ -26,8 +26,10 @@ export default function InstanceDetail() {
     setQrLoading(true)
     try {
       const data = await fetchQRCode(instanceName)
-      setQrBase64(data.code ?? null)
-      setPairingCode(data.pairingCode ?? null)
+      const qrValue = data.base64 ?? data.code ?? data.qrcode?.base64 ?? data.qrcode?.code ?? null
+      const pairingValue = data.pairingCode ?? data.qrcode?.pairingCode ?? null
+      setQrBase64(qrValue)
+      setPairingCode(pairingValue)
     } catch {
       toast.error('Impossible de charger le QR code')
     } finally {

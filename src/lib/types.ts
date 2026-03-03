@@ -29,9 +29,16 @@ export interface InstanceConnectionState {
 }
 
 export interface QRCodeResponse {
-  pairingCode: string | null
-  code: string            // base64 do QR code
-  count: number
+  pairingCode?: string | null
+  code?: string | null
+  base64?: string | null
+  count?: number
+  qrcode?: {
+    pairingCode?: string | null
+    code?: string | null
+    base64?: string | null
+    count?: number
+  }
 }
 
 export interface CreateInstancePayload {

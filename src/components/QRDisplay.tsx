@@ -9,6 +9,18 @@ interface Props {
 }
 
 export function QRDisplay({ qrBase64, pairingCode, onRefresh, loading }: Props) {
+  const qrValue = qrBase64?.trim() ?? null
+
+  const getQrImageSrc = (value: string) => {
+    if (value.startsWith('data:image/')) return value
+
+    const compactValue = value.replace(/\s+/g, '')
+    const looksLikeBase64 = /^[A-Za-z0-9+/=]+$/.test(compactValue)
+    if (looksLikeBase64) return `data:image/png;base64,${compactValue}`
+
+    return `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(value)}`
+  }
+
   if (pairingCode) {
     return (
       <div className="flex flex-col items-center gap-4 p-6">
@@ -29,13 +41,13 @@ export function QRDisplay({ qrBase64, pairingCode, onRefresh, loading }: Props) 
     )
   }
 
-  if (qrBase64) {
+  if (qrValue) {
     return (
       <div className="flex flex-col items-center gap-4 p-6">
         <p className="text-sm text-muted-foreground">Scannez avec WhatsApp</p>
         <div className="p-3 bg-white rounded-2xl shadow-md border border-border">
           <img
-            src={`data:image/png;base64,${qrBase64}`}
+            src={getQrImageSrc(qrValue)}
             alt="QR Code WhatsApp"
             className="w-64 h-64 object-contain"
           />
