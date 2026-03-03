@@ -56,24 +56,32 @@ router.post('/register', async (req, res) => {
       },
     })
   } catch (error) {
+    console.log('💥 Error:', error)
     if (error instanceof z.ZodError) {
+      console.log('📝 Validation error:', error.errors)
       return res.status(400).json({ error: 'Données invalides', details: error.errors })
     }
+    console.log('🚨 Server error:', error)
     res.status(500).json({ error: 'Erreur serveur' })
   }
 })
 
 router.post('/login', async (req, res) => {
   try {
+    console.log('🔐 LOGIN attempt:', { email: req.body?.email, hasPassword: !!req.body?.password })
     const { email, password } = loginSchema.parse(req.body)
 
     const user = await prisma.user.findUnique({ where: { email } })
+    console.log('👤 User found:', !!user)
     if (!user) {
+      console.log('❌ LOGIN failed: user not found')
       return res.status(401).json({ error: 'Email ou mot de passe incorrect' })
     }
 
     const valid = await bcrypt.compare(password, user.password)
+    console.log('🔑 Password valid:', valid)
     if (!valid) {
+      console.log('❌ LOGIN failed: invalid password')
       return res.status(401).json({ error: 'Email ou mot de passe incorrect' })
     }
 
@@ -96,9 +104,12 @@ router.post('/login', async (req, res) => {
       },
     })
   } catch (error) {
+    console.log('💥 Error:', error)
     if (error instanceof z.ZodError) {
+      console.log('📝 Validation error:', error.errors)
       return res.status(400).json({ error: 'Données invalides', details: error.errors })
     }
+    console.log('🚨 Server error:', error)
     res.status(500).json({ error: 'Erreur serveur' })
   }
 })
