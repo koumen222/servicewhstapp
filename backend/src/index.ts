@@ -10,8 +10,12 @@ import messageRoutes from './routes/messages.js'
 const app = express()
 
 app.use(helmet())
+const allowedOrigins = env.FRONTEND_URL.split(',').map(o => o.trim())
 app.use(cors({
-  origin: env.FRONTEND_URL,
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true)
+    callback(new Error(`CORS: origin ${origin} not allowed`))
+  },
   credentials: true,
 }))
 app.use(express.json())
@@ -35,8 +39,8 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Route non trouvée' })
 })
 
-const PORT = parseInt(env.PORT)
-app.listen(PORT, () => {
+const PORT = Number(env.PORT) || 3001
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Backend proxy démarré sur http://localhost:${PORT}`)
   console.log(`🔒 Evolution API cachée : ${env.EVOLUTION_API_URL}`)
   console.log(`🌐 Frontend autorisé : ${env.FRONTEND_URL}`)
