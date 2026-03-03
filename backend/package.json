@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "npx prisma migrate deploy && npx prisma generate && node dist/index.js",
+    "start": "node dist/index.js",
     "postinstall": "npm run build && npx prisma generate",
     "db:health": "curl -s http://localhost:3001/api/health | jq .",
     "db:backup": "pg_dump $DATABASE_URL > backup_$(date +%Y%m%d_%H%M%S).sql",
