@@ -1,0 +1,5 @@
+# API routes vers le backend Railway
+/api/*  https://votre-backend.railway.app/:splat  200
+
+# SPA routing
+/*    /index.html   200
