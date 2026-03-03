@@ -120,7 +120,7 @@ const instance = await prisma.instance.findFirst({
   where: {
     id: instanceId,
     userId,        // CRITIQUE : toujours filtrer par utilisateur
-    isActive: true
+    isActive: truedd
   }
 })
 ```
