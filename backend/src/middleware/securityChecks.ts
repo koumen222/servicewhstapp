@@ -140,7 +140,7 @@ export const userRateLimit = rateLimit({
     return limits[user.plan as keyof typeof limits] || 100
   },
   keyGenerator: (req: Request) => {
-    return req.user?.id || req.ip
+    return req.user?.id ?? req.ip ?? 'anonymous'
   },
   message: (req: Request) => {
     return {

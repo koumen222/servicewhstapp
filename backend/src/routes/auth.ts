@@ -43,6 +43,7 @@ router.post('/register', async (req, res) => {
       name: user.name,
       plan: user.plan,
       maxInstances: user.maxInstances,
+      isActive: user.isActive,
     })
 
     res.json({
@@ -91,6 +92,7 @@ router.post('/login', async (req, res) => {
       name: user.name,
       plan: user.plan,
       maxInstances: user.maxInstances,
+      isActive: user.isActive,
     })
 
     res.json({

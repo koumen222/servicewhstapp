@@ -259,7 +259,7 @@ router.get('/credentials/:instanceName', async (req: AuthRequest, res) => {
       instanceName: dbInstance.customName,
       fullInstanceName: dbInstance.instanceName,
       evolutionApiUrl: dbInstance.instanceUrl,
-      apiKey: dbInstance.apiKey,
+      apiKey: dbInstance.evolutionApiKey ?? '',
       status: dbInstance.status,
       createdAt: dbInstance.createdAt
     })

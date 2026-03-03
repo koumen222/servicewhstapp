@@ -105,7 +105,7 @@ router.post('/send-message',
         },
         metadata: {
           requestId: generateRequestId(),
-          processingTime: Date.now() - req.startTime
+          processingTime: Date.now() - (req.startTime ?? Date.now())
         }
       }
 

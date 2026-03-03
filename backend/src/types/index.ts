@@ -6,6 +6,7 @@ export interface AuthUser {
   name: string
   plan: string
   maxInstances: number
+  isActive: boolean
 }
 
 export interface AuthRequest extends Request {
