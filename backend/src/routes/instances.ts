@@ -76,7 +76,7 @@ router.get('/fetchInstances', async (req: AuthRequest, res) => {
       // Continue with empty array - we'll use database data only
     }
 
-    const enriched = userInstances.map(dbInstance => {
+    const enriched = userInstances.map((dbInstance: any) => {
       const evolutionData = allEvolutionInstances.find(
         (e: any) => e.instance?.instanceName === dbInstance.instanceName
       )
