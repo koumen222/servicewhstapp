@@ -1,2 +1,2 @@
 [phases.setup]
-nixpkgsArchive = "51ad838b03a05b1de6f9f2a0fffecee64a9788ee"  # Commit Nixpkgs qui inclut Node ~20.19.x ou plus récent compatible Prisma 7
+nixpkgsArchive = "51ad838b03a05b1de6f9f2a0fffecee64a9788ee"  # Commit Nixpkgs récent avec Node 22 ≥ 22.12 ou 22.13+
