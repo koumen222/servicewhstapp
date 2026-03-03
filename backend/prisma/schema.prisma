@@ -14,27 +14,108 @@ model User {
   password      String
   plan          String   @default("free") // free, starter, pro, enterprise
   maxInstances  Int      @default(1)
+  isActive      Boolean  @default(true)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   instances     Instance[]
+  apiKeys       ApiKey[]
 }
 
 model Instance {
-  id                String   @id @default(uuid())
-  userId            String
-  instanceName      String   @unique // Format: user_{userId}_{customName}
-  customName        String   // Nom choisi par l'utilisateur
-  status            String   @default("close")
-  profileName       String?
-  profilePictureUrl String?
-  ownerJid          String?
-  instanceUrl       String?  // URL Evolution API pour cette instance
-  apiKey            String?  // Token API généré pour cette instance
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                    String   @id @default(uuid())
+  userId                String
+  instanceName          String   @unique // Format: user_{userId}_{customName}
+  customName            String   // Nom choisi par l'utilisateur
+  status                String   @default("close")
+  profileName           String?
+  profilePictureUrl     String?
+  ownerJid              String?
+  instanceUrl           String?  // URL Evolution API pour cette instance
+  evolutionApiKey       String?  // Clé API Evolution (privée, côté backend)
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  lastUsed              DateTime?
 
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  apiKeys               ApiKey[]
+  quotaUsage            QuotaUsage[]
+  messagesSent          MessageLog[]
 
   @@index([userId])
+  @@index([instanceName])
+}
+
+model ApiKey {
+  id                String   @id @default(uuid())
+  userId            String
+  instanceId        String
+  keyHash           String   @unique // Hash SHA-256 de la clé pour sécurité
+  keyPrefix         String   // Premiers caractères pour identification (ex: "ak_live_abc123...")
+  name              String?  // Nom optionnel donné par l'utilisateur
+  permissions       String[] // Liste des permissions accordées
+  isActive          Boolean  @default(true)
+  lastUsed          DateTime?
+  usageCount        Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  expiresAt         DateTime? // Optionnel: expiration de la clé
+
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  instance          Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  messagesSent      MessageLog[]
+
+  @@index([keyHash])
+  @@index([userId])
+  @@index([instanceId])
+}
+
+model QuotaUsage {
+  id            String   @id @default(uuid())
+  instanceId    String
+  quotaType     String   // "messages_per_day", "messages_per_month", etc.
+  currentUsage  Int      @default(0)
+  maxAllowed    Int
+  resetDate     DateTime // Date de remise à zéro du quota
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  instance      Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+
+  @@unique([instanceId, quotaType])
+  @@index([instanceId])
+}
+
+model MessageLog {
+  id            String   @id @default(uuid())
+  instanceId    String
+  apiKeyId      String
+  recipientNumber String
+  messageType   String   // "text", "image", "document", etc.
+  messageContent String? // Contenu du message (tronqué si trop long)
+  status        String   // "sent", "delivered", "failed", etc.
+  evolutionMessageId String? // ID du message Evolution API
+  errorMessage  String?
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime @default(now())
+
+  instance      Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  apiKey        ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+
+  @@index([instanceId])
+  @@index([apiKeyId])
+  @@index([createdAt])
+}
+
+model SystemConfig {
+  id            String   @id @default(uuid())
+  key           String   @unique
+  value         String
+  description   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([key])
 }
