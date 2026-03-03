@@ -1,0 +1,38 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  password  String
+  plan      String   @default("free") // free, starter, pro, enterprise
+  maxInstances Int   @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  instances Instance[]
+}
+
+model Instance {
+  id            String   @id @default(uuid())
+  userId        String
+  instanceName  String   @unique // Format: user_{userId}_{customName}
+  customName    String   // Nom choisi par l'utilisateur
+  status        String   @default("close")
+  profileName   String?
+  profilePictureUrl String?
+  ownerJid      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
