@@ -7,6 +7,7 @@ import type {
   QRCodeResponse,
   SendTextPayload,
   SendTextResponse,
+  InstanceCredentials,
 } from './types'
 
 // ── Configuration ────────────────────────────────────────────────────────────
@@ -155,4 +156,13 @@ export const deleteInstance = (instanceName: string) => {
     console.log('🟢 [deleteInstance] done', r.data)
     return r.data
   }).catch((err) => { console.error('🔴 [deleteInstance] error', err.response?.data ?? err.message); throw err })
+}
+
+/** Récupère les informations d'accès API d'une instance */
+export const getInstanceCredentials = (instanceName: string) => {
+  console.log('🟡 [getInstanceCredentials]', instanceName)
+  return apiClient.get<InstanceCredentials>(`/api/instance/credentials/${instanceName}`).then((r) => {
+    console.log('🟢 [getInstanceCredentials] got credentials:', { url: r.data.evolutionApiUrl, hasApiKey: !!r.data.apiKey })
+    return r.data
+  }).catch((err) => { console.error('🔴 [getInstanceCredentials] error', err.response?.data ?? err.message); throw err })
 }

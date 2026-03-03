@@ -1,11 +1,13 @@
 import { Router } from 'express'
 import { z } from 'zod'
+import crypto from 'crypto'
 import { AuthRequest } from '../types/index.js'
 import { prisma } from '../lib/prisma.js'
 import { evolutionAPI } from '../lib/evolution.js'
 import { buildInstanceName } from '../utils/instanceName.js'
 import { authenticate } from '../middleware/auth.js'
 import { checkInstanceQuota } from '../middleware/quota.js'
+import { env } from '../config/env.js'
 
 const router = Router()
 
@@ -33,13 +35,18 @@ router.post('/create', checkInstanceQuota, async (req: AuthRequest, res) => {
 
     const evolutionResponse = await evolutionAPI.createInstance(fullInstanceName, integration, qrcode)
 
+    // Générer un token API unique pour cette instance
+    const apiKey = crypto.randomBytes(32).toString('hex')
+
     const instance = await prisma.instance.create({
       data: {
         userId,
         instanceName: fullInstanceName,
         customName,
         status: 'close',
-      }
+        instanceUrl: env.EVOLUTION_API_URL,
+        apiKey,
+      } as any
     })
 
     res.json({
@@ -230,6 +237,35 @@ router.delete('/delete/:instanceName', async (req: AuthRequest, res) => {
   } catch (error: any) {
     const msg = error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Erreur inconnue'
     console.error('[DELETE]', msg, error?.response?.data)
+    res.status(500).json({ error: msg })
+  }
+})
+
+// Endpoint pour récupérer les informations d'accès API d'une instance
+router.get('/credentials/:instanceName', async (req: AuthRequest, res) => {
+  try {
+    const { instanceName: customName } = req.params
+    const userId = req.user!.id
+    const fullInstanceName = buildInstanceName(userId, customName)
+
+    const dbInstance = await prisma.instance.findUnique({
+      where: { instanceName: fullInstanceName, userId }
+    })
+    if (!dbInstance) {
+      return res.status(404).json({ error: 'Instance non trouvée' })
+    }
+
+    res.json({
+      instanceName: dbInstance.customName,
+      fullInstanceName: dbInstance.instanceName,
+      evolutionApiUrl: dbInstance.instanceUrl,
+      apiKey: dbInstance.apiKey,
+      status: dbInstance.status,
+      createdAt: dbInstance.createdAt
+    })
+  } catch (error: any) {
+    const msg = error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Erreur inconnue'
+    console.error('[CREDENTIALS]', msg, error?.response?.data)
     res.status(500).json({ error: msg })
   }
 })

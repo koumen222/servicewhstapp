@@ -97,3 +97,12 @@ export interface ApiError {
   message: string
   error?: string
 }
+
+export interface InstanceCredentials {
+  instanceName: string
+  fullInstanceName: string
+  evolutionApiUrl: string
+  apiKey: string
+  status: string
+  createdAt: string
+}

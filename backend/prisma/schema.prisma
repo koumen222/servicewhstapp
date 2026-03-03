@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_CONNECTION_URI")
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -29,6 +29,8 @@ model Instance {
   profileName       String?
   profilePictureUrl String?
   ownerJid          String?
+  instanceUrl       String?  // URL Evolution API pour cette instance
+  apiKey            String?  // Token API généré pour cette instance
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

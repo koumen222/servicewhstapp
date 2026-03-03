@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Send, RefreshCw, Loader2, LogOut, Wifi, WifiOff } from 'lucide-react'
+import { ArrowLeft, Send, RefreshCw, Loader2, LogOut, Wifi, WifiOff, Copy, Key } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { QRDisplay } from '@/components/QRDisplay'
-import { getConnectionState, fetchQRCode, sendTextMessage, logoutInstance } from '@/lib/api'
+import { getConnectionState, fetchQRCode, sendTextMessage, logoutInstance, getInstanceCredentials } from '@/lib/api'
+import type { InstanceCredentials } from '@/lib/types'
 
 export default function InstanceDetail() {
   const { instanceName } = useParams<{ instanceName: string }>()
@@ -19,6 +20,8 @@ export default function InstanceDetail() {
   const [msgForm, setMsgForm] = useState({ number: '', text: '' })
   const [sending, setSending] = useState(false)
   const [disconnecting, setDisconnecting] = useState(false)
+  const [credentials, setCredentials] = useState<InstanceCredentials | null>(null)
+  const [credentialsLoading, setCredentialsLoading] = useState(false)
   const statusRef = useRef(status)
 
   const loadQR = useCallback(async () => {
@@ -59,12 +62,29 @@ export default function InstanceDetail() {
     }
   }, [instanceName])
 
+  const loadCredentials = useCallback(async () => {
+    if (!instanceName) return
+    console.log('🟡 [InstanceDetail] loadCredentials:', instanceName)
+    setCredentialsLoading(true)
+    try {
+      const data = await getInstanceCredentials(instanceName)
+      console.log('🟢 [InstanceDetail] credentials loaded')
+      setCredentials(data)
+    } catch (err) {
+      console.error('🔴 [InstanceDetail] loadCredentials error:', err)
+      toast.error('Impossible de charger les informations API')
+    } finally {
+      setCredentialsLoading(false)
+    }
+  }, [instanceName])
+
   // Chargement initial
   useEffect(() => {
     console.log('📦 [InstanceDetail] mount, instance:', instanceName)
     checkStatus()
     loadQR()
-  }, [checkStatus, loadQR])
+    loadCredentials()
+  }, [checkStatus, loadQR, loadCredentials])
 
   // Sync ref with current status
   useEffect(() => { statusRef.current = status }, [status])
@@ -114,6 +134,14 @@ export default function InstanceDetail() {
     } finally {
       setDisconnecting(false)
     }
+  }
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      toast.success(`${label} copié dans le presse-papiers`)
+    }).catch(() => {
+      toast.error('Impossible de copier')
+    })
   }
 
   const isConnected = status === 'open'
@@ -220,6 +248,101 @@ export default function InstanceDetail() {
                   Envoyer
                 </Button>
               </form>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Informations API */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Key className="w-4 h-4" />
+              🔗 Informations API
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {credentialsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : credentials ? (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Utilisez ces informations pour connecter votre instance à d'autres plateformes :
+                </p>
+                
+                <div className="grid gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">URL Evolution API</label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={credentials.evolutionApiUrl || ''}
+                        readOnly
+                        className="font-mono text-xs bg-muted"
+                      />
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => copyToClipboard(credentials.evolutionApiUrl, 'URL API')}
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">Nom complet instance</label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={credentials.fullInstanceName}
+                        readOnly
+                        className="font-mono text-xs bg-muted"
+                      />
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => copyToClipboard(credentials.fullInstanceName, 'Nom instance')}
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">Token API</label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={credentials.apiKey || ''}
+                        readOnly
+                        className="font-mono text-xs bg-muted"
+                        type="password"
+                      />
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => copyToClipboard(credentials.apiKey, 'Token API')}
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <p className="text-xs text-blue-700 dark:text-blue-300">
+                    💡 <strong>Exemple d'utilisation :</strong> Utilisez l'URL + nom d'instance + token pour intégrer WhatsApp à vos applications externes via l'API Evolution.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-3 py-8 text-muted-foreground text-sm text-center">
+                <Key className="w-8 h-8" />
+                <p>Impossible de charger les informations API</p>
+                <Button variant="outline" size="sm" onClick={loadCredentials}>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Réessayer
+                </Button>
+              </div>
             )}
           </CardContent>
         </Card>
