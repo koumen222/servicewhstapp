@@ -8,7 +8,7 @@ interface JWTPayload {
   name: string
   plan: string
   maxInstances: number
-  isActive: boolean
+  isActive?: boolean
 }
 
 // Middleware d'authentification JWT pour le système multi-tenant
@@ -46,7 +46,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
     }
 
     // Vérifier que l'utilisateur est actif
-    if (!decoded.isActive) {
+    if (decoded.isActive === false) {
       return res.status(403).json({
         error: 'Account suspended',
         message: 'Your account has been suspended',
@@ -61,7 +61,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
       name: decoded.name,
       plan: decoded.plan || 'free',
       maxInstances: decoded.maxInstances || 1,
-      isActive: decoded.isActive
+      isActive: decoded.isActive ?? true
     }
 
     // Logger l'authentification (en développement uniquement)

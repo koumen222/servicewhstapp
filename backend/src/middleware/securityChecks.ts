@@ -332,7 +332,8 @@ export const securityLogger = (req: Request, res: Response, next: NextFunction) 
     const statusCode = res.statusCode
 
     // Logger les événements de sécurité importants
-    if (statusCode === 401 || statusCode === 403 || statusCode === 429) {
+    const shouldLogSecurityEvent = statusCode === 401 || statusCode === 429 || (statusCode === 403 && process.env.NODE_ENV !== 'production')
+    if (shouldLogSecurityEvent) {
       console.warn(`🔒 Security Event:`, {
         timestamp: new Date().toISOString(),
         event: getSecurityEventType(statusCode),
