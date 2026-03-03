@@ -6,6 +6,7 @@ import { env } from './config/env.js'
 import authRoutes from './routes/auth.js'
 import instanceRoutes from './routes/instances.js'
 import messageRoutes from './routes/messages.js'
+import healthRoutes from './routes/health.js'
 
 const app = express()
 
@@ -42,13 +43,15 @@ const limiter = rateLimit({
 })
 app.use(limiter)
 
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() })
-})
-
+app.use('/api/health', healthRoutes)
 app.use('/api/auth', authRoutes)
 app.use('/api/instance', instanceRoutes)
 app.use('/api/message', messageRoutes)
+
+// Legacy health endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() })
+})
 
 app.use((req, res) => {
   console.log(`❌ 404: ${req.method} ${req.url} not found`)
