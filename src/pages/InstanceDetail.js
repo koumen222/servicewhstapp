@@ -22,15 +22,19 @@ export default function InstanceDetail() {
     const loadQR = useCallback(async () => {
         if (!instanceName)
             return;
+        console.log('🟡 [InstanceDetail] loadQR start:', instanceName);
         setQrLoading(true);
         try {
             const data = await fetchQRCode(instanceName);
+            console.log('🟢 [InstanceDetail] QR raw response:', data);
             const qrValue = data.base64 ?? data.code ?? data.qrcode?.base64 ?? data.qrcode?.code ?? null;
             const pairingValue = data.pairingCode ?? data.qrcode?.pairingCode ?? null;
+            console.log('🟢 [InstanceDetail] qrValue length:', qrValue?.length ?? 0, '| pairingCode:', pairingValue);
             setQrBase64(qrValue);
             setPairingCode(pairingValue);
         }
-        catch {
+        catch (err) {
+            console.error('🔴 [InstanceDetail] loadQR error:', err);
             toast.error('Impossible de charger le QR code');
         }
         finally {
@@ -40,19 +44,25 @@ export default function InstanceDetail() {
     const checkStatus = useCallback(async () => {
         if (!instanceName)
             return;
+        console.log('🟡 [InstanceDetail] checkStatus:', instanceName);
         try {
             const data = await getConnectionState(instanceName);
             const state = data.instance?.state ?? 'close';
+            console.log('🟢 [InstanceDetail] state:', state, '| previous:', statusRef.current);
             setStatus(state);
             if (state === 'open') {
+                console.log('🟢 [InstanceDetail] ✅ Connected! Clearing QR.');
                 setQrBase64(null);
                 setPairingCode(null);
             }
         }
-        catch { /* silent */ }
+        catch (err) {
+            console.warn('🔴 [InstanceDetail] checkStatus error (silent):', err);
+        }
     }, [instanceName]);
     // Chargement initial
     useEffect(() => {
+        console.log('📦 [InstanceDetail] mount, instance:', instanceName);
         checkStatus();
         loadQR();
     }, [checkStatus, loadQR]);
@@ -61,8 +71,10 @@ export default function InstanceDetail() {
     // Polling toutes les 5s — intervalle stable, pas réinitialisé à chaque changement de statut
     useEffect(() => {
         const interval = setInterval(() => {
-            if (statusRef.current !== 'open')
+            if (statusRef.current !== 'open') {
+                console.log('🔄 [InstanceDetail] polling checkStatus, current state:', statusRef.current);
                 checkStatus();
+            }
         }, 5000);
         return () => clearInterval(interval);
     }, [checkStatus]);
@@ -70,13 +82,16 @@ export default function InstanceDetail() {
         e.preventDefault();
         if (!instanceName || !msgForm.number || !msgForm.text)
             return;
+        console.log('🟡 [InstanceDetail] handleSend', { instanceName, number: msgForm.number });
         setSending(true);
         try {
-            await sendTextMessage(instanceName, { number: msgForm.number, text: msgForm.text });
+            const result = await sendTextMessage(instanceName, { number: msgForm.number, text: msgForm.text });
+            console.log('🟢 [InstanceDetail] message sent:', result);
             toast.success('Message envoyé !');
             setMsgForm({ ...msgForm, text: '' });
         }
-        catch {
+        catch (err) {
+            console.error('🔴 [InstanceDetail] handleSend error:', err);
             toast.error("Erreur lors de l'envoi");
         }
         finally {
@@ -86,14 +101,17 @@ export default function InstanceDetail() {
     const handleLogout = async () => {
         if (!instanceName)
             return;
+        console.log('🟡 [InstanceDetail] handleLogout:', instanceName);
         setDisconnecting(true);
         try {
-            await logoutInstance(instanceName);
+            const result = await logoutInstance(instanceName);
+            console.log('🟢 [InstanceDetail] logout result:', result);
             toast.success('Instance déconnectée');
             setStatus('close');
             loadQR();
         }
-        catch {
+        catch (err) {
+            console.error('🔴 [InstanceDetail] logout error:', err);
             toast.error('Erreur lors de la déconnexion');
         }
         finally {

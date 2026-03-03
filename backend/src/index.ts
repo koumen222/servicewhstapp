@@ -9,6 +9,7 @@ import messageRoutes from './routes/messages.js'
 import healthRoutes from './routes/health.js'
 
 const app = express()
+app.set('etag', false)
 
 app.use(helmet())
 const allowedOrigins = env.FRONTEND_URL.split(',').map(o => o.trim().replace(/\/$/, ''))

@@ -21,7 +21,9 @@ export const apiClient: AxiosInstance = axios.create({
   timeout: 15_000,
 })
 
-// Intercepteur : ajoute le token JWT automatiquement
+console.log('🔧 [API] Backend URL:', BACKEND_URL)
+
+// Intercepteur : ajoute le token JWT automatiquement + logs requêtes
 apiClient.interceptors.request.use((config) => {
   const authData = localStorage.getItem('wasa_auth')
   if (authData) {
@@ -32,13 +34,18 @@ apiClient.interceptors.request.use((config) => {
       }
     } catch {}
   }
+  console.log(`🟡 [API] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, config.data ?? '')
   return config
 })
 
-// Intercepteur : gestion globale des erreurs
+// Intercepteur : gestion globale des erreurs + logs réponses
 apiClient.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    console.log(`🟢 [API] ${res.status} ${res.config.url}`, res.data)
+    return res
+  },
   (error: AxiosError<{ message?: string; error?: string }>) => {
+    console.error(`🔴 [API] ${error.response?.status ?? 'ERR'} ${error.config?.url}`, error.response?.data ?? error.message)
     const status = error.response?.status
     const msg =
       error.response?.data?.message ??
@@ -77,35 +84,75 @@ export const register = (name: string, email: string, password: string) =>
 // ── Endpoints Instances (via proxy backend) ──────────────────────────────────
 
 /** Crée une nouvelle instance WhatsApp */
-export const createInstance = (payload: CreateInstancePayload) =>
-  apiClient.post<CreateInstanceResponse>('/api/instance/create', payload).then((r) => r.data)
+export const createInstance = (payload: CreateInstancePayload) => {
+  console.log('🟡 [createInstance]', payload)
+  return apiClient.post<CreateInstanceResponse>('/api/instance/create', payload).then((r) => {
+    console.log('🟢 [createInstance] success', r.data)
+    return r.data
+  }).catch((err) => { console.error('🔴 [createInstance] error', err.response?.data ?? err.message); throw err })
+}
 
 /** Récupère toutes les instances de l'utilisateur connecté */
-export const fetchInstances = () =>
-  apiClient.get<FetchInstancesResponse[]>('/api/instance/fetchInstances').then((r) => r.data)
+export const fetchInstances = () => {
+  console.log('🟡 [fetchInstances]')
+  return apiClient.get<FetchInstancesResponse[]>('/api/instance/fetchInstances').then((r) => {
+    console.log('🟢 [fetchInstances]', r.data.length, 'instances', r.data)
+    return r.data
+  }).catch((err) => { console.error('🔴 [fetchInstances] error', err.response?.data ?? err.message); throw err })
+}
 
 /** Connecte une instance et retourne QR ou pairingCode */
-export const connectInstance = (instanceName: string) =>
-  apiClient.get<QRCodeResponse>(`/api/instance/connect/${instanceName}`).then((r) => r.data)
+export const connectInstance = (instanceName: string) => {
+  console.log('🟡 [connectInstance]', instanceName)
+  return apiClient.get<QRCodeResponse>(`/api/instance/connect/${instanceName}`).then((r) => {
+    console.log('🟢 [connectInstance] response keys:', Object.keys(r.data), r.data)
+    return r.data
+  }).catch((err) => { console.error('🔴 [connectInstance] error', err.response?.data ?? err.message); throw err })
+}
 
 /** Recharge le QR code d'une instance */
-export const fetchQRCode = (instanceName: string) =>
-  apiClient.get<QRCodeResponse>(`/api/instance/qrcode/${instanceName}`).then((r) => r.data)
+export const fetchQRCode = (instanceName: string) => {
+  console.log('🟡 [fetchQRCode]', instanceName)
+  return apiClient.get<QRCodeResponse>(`/api/instance/qrcode/${instanceName}`).then((r) => {
+    console.log('🟢 [fetchQRCode] keys:', Object.keys(r.data), '| base64 length:', (r.data.base64 ?? r.data.code ?? '').length, r.data)
+    return r.data
+  }).catch((err) => { console.error('🔴 [fetchQRCode] error', err.response?.data ?? err.message); throw err })
+}
 
 /** Statut de connexion d'une instance */
-export const getConnectionState = (instanceName: string) =>
-  apiClient
+export const getConnectionState = (instanceName: string) => {
+  console.log('🟡 [getConnectionState]', instanceName)
+  return apiClient
     .get<{ instance: { instanceName: string; state: string } }>(`/api/instance/connectionState/${instanceName}`)
-    .then((r) => r.data)
+    .then((r) => {
+      console.log('🟢 [getConnectionState]', instanceName, '→', r.data?.instance?.state, r.data)
+      return r.data
+    }).catch((err) => { console.error('🔴 [getConnectionState] error', err.response?.data ?? err.message); throw err })
+}
 
 /** Envoie un message texte */
-export const sendTextMessage = (instanceName: string, payload: SendTextPayload) =>
-  apiClient.post<SendTextResponse>(`/api/message/sendText/${instanceName}`, payload).then((r) => r.data)
+export const sendTextMessage = (instanceName: string, payload: SendTextPayload) => {
+  console.log('🟡 [sendTextMessage]', instanceName, payload)
+  return apiClient.post<SendTextResponse>(`/api/message/sendText/${instanceName}`, payload).then((r) => {
+    console.log('🟢 [sendTextMessage] sent', r.data)
+    return r.data
+  }).catch((err) => { console.error('🔴 [sendTextMessage] error', err.response?.data ?? err.message); throw err })
+}
 
 /** Déconnecte une instance */
-export const logoutInstance = (instanceName: string) =>
-  apiClient.delete(`/api/instance/logout/${instanceName}`).then((r) => r.data)
+export const logoutInstance = (instanceName: string) => {
+  console.log('🟡 [logoutInstance]', instanceName)
+  return apiClient.delete(`/api/instance/logout/${instanceName}`).then((r) => {
+    console.log('🟢 [logoutInstance] done', r.data)
+    return r.data
+  }).catch((err) => { console.error('🔴 [logoutInstance] error', err.response?.data ?? err.message); throw err })
+}
 
 /** Supprime définitivement une instance */
-export const deleteInstance = (instanceName: string) =>
-  apiClient.delete(`/api/instance/delete/${instanceName}`).then((r) => r.data)
+export const deleteInstance = (instanceName: string) => {
+  console.log('🟡 [deleteInstance]', instanceName)
+  return apiClient.delete(`/api/instance/delete/${instanceName}`).then((r) => {
+    console.log('🟢 [deleteInstance] done', r.data)
+    return r.data
+  }).catch((err) => { console.error('🔴 [deleteInstance] error', err.response?.data ?? err.message); throw err })
+}
