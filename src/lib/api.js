@@ -13,15 +13,22 @@ export const apiClient = axios.create({
 console.log('🔧 [API] Backend URL:', BACKEND_URL);
 // Intercepteur : ajoute le token JWT automatiquement + logs requêtes
 apiClient.interceptors.request.use((config) => {
+    let token = null;
+    // Format Zustand persist
     const authData = localStorage.getItem('wasa_auth');
     if (authData) {
         try {
             const { state } = JSON.parse(authData);
-            if (state?.token) {
-                config.headers.Authorization = `Bearer ${state.token}`;
-            }
+            token = typeof state?.token === 'string' ? state.token : null;
         }
         catch { }
+    }
+    // Fallback legacy
+    if (!token) {
+        token = localStorage.getItem('token');
+    }
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
     }
     console.log(`🟡 [API] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, config.data ?? '');
     return config;
@@ -129,4 +136,12 @@ export const deleteInstance = (instanceName) => {
         console.log('🟢 [deleteInstance] done', r.data);
         return r.data;
     }).catch((err) => { console.error('🔴 [deleteInstance] error', err.response?.data ?? err.message); throw err; });
+};
+/** Récupère les informations d'accès API d'une instance */
+export const getInstanceCredentials = (instanceName) => {
+    console.log('🟡 [getInstanceCredentials]', instanceName);
+    return apiClient.get(`/api/instance/credentials/${instanceName}`).then((r) => {
+        console.log('🟢 [getInstanceCredentials] got credentials:', { url: r.data.evolutionApiUrl, hasApiKey: !!r.data.apiKey });
+        return r.data;
+    }).catch((err) => { console.error('🔴 [getInstanceCredentials] error', err.response?.data ?? err.message); throw err; });
 };

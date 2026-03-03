@@ -43,6 +43,7 @@ declare global {
 
 const app = express()
 app.set('etag', false)
+app.set('trust proxy', 1)
 
 // =============== SÉCURITÉ GLOBALE ===============
 app.use(securityHeaders)

@@ -26,15 +26,26 @@ console.log('🔧 [API] Backend URL:', BACKEND_URL)
 
 // Intercepteur : ajoute le token JWT automatiquement + logs requêtes
 apiClient.interceptors.request.use((config) => {
+  let token: string | null = null
+
+  // Format Zustand persist
   const authData = localStorage.getItem('wasa_auth')
   if (authData) {
     try {
       const { state } = JSON.parse(authData)
-      if (state?.token) {
-        config.headers.Authorization = `Bearer ${state.token}`
-      }
+      token = typeof state?.token === 'string' ? state.token : null
     } catch {}
   }
+
+  // Fallback legacy
+  if (!token) {
+    token = localStorage.getItem('token')
+  }
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+
   console.log(`🟡 [API] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, config.data ?? '')
   return config
 })
