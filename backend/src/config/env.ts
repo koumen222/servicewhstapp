@@ -12,7 +12,7 @@ export const env = {
   EVOLUTION_API_URL: process.env.EVOLUTION_API_URL || '',
   EVOLUTION_API_KEY: process.env.EVOLUTION_API_KEY || '',
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
-  DATABASE_URL: process.env.DATABASE_URL || 'file:./dev.db',
+  DATABASE_CONNECTION_URI: process.env.DATABASE_CONNECTION_URI || 'file:./dev.db',
 }
 
 if (!env.EVOLUTION_API_URL || !env.EVOLUTION_API_KEY) {

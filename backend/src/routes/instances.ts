@@ -37,7 +37,25 @@ const createInstanceSchema = z.object({
 router.post('/create', checkInstanceQuota, async (req: AuthRequest, res) => {
   try {
     const { instanceName: customName, integration, qrcode } = createInstanceSchema.parse(req.body)
-    const userId = req.user!.id
+    
+    if (!req.user || !req.user.id) {
+      console.error('[CREATE] Utilisateur non authentifié:', req.user)
+      return res.status(401).json({ error: 'Utilisateur non authentifié' })
+    }
+
+    const userId = req.user.id
+    console.log('[CREATE] Tentative de création d\'instance pour userId:', userId, 'customName:', customName)
+
+    // Vérifier explicitement que l'utilisateur existe dans la base
+    const userExists = await prisma.user.findUnique({
+      where: { id: userId }
+    })
+    if (!userExists) {
+      console.error('[CREATE] Utilisateur non trouvé en base:', userId)
+      return res.status(404).json({ error: 'Utilisateur non trouvé' })
+    }
+
+    console.log('[CREATE] Utilisateur trouvé:', userExists.email, 'plan:', userExists.plan)
 
     const fullInstanceName = buildInstanceName(userId, customName)
 
@@ -48,11 +66,13 @@ router.post('/create', checkInstanceQuota, async (req: AuthRequest, res) => {
       return res.status(400).json({ error: 'Instance déjà existante' })
     }
 
+    console.log('[CREATE] Création de l\'instance Evolution API:', fullInstanceName)
     const evolutionResponse = await evolutionAPI.createInstance(fullInstanceName, integration, qrcode)
 
     // Générer un token API unique pour cette instance
     const apiKey = crypto.randomBytes(32).toString('hex')
 
+    console.log('[CREATE] Enregistrement en base avec userId:', userId)
     const instance = await prisma.instance.create({
       data: {
         userId,
@@ -64,6 +84,7 @@ router.post('/create', checkInstanceQuota, async (req: AuthRequest, res) => {
       }
     })
 
+    console.log('[CREATE] Instance créée avec succès:', instance.id)
     res.json({
       instance: {
         instanceName: instance.customName,
@@ -75,8 +96,22 @@ router.post('/create', checkInstanceQuota, async (req: AuthRequest, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: 'Données invalides', details: error.errors })
     }
+    
+    // Logs détaillés pour l'erreur de contrainte de clé étrangère
+    if (error?.code === 'P2003') {
+      console.error('[CREATE] Erreur de contrainte de clé étrangère:', {
+        code: error.code,
+        target: error.meta?.target,
+        field_name: error.meta?.field_name,
+        userId: req.user?.id,
+        userExists: req.user ? 'user object exists' : 'no user object'
+      })
+      return res.status(400).json({ error: 'Erreur de relation utilisateur - veuillez vous reconnecter' })
+    }
+
     const msg = error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Erreur inconnue'
     console.error('[CREATE]', msg, error?.response?.data)
+    console.error('[CREATE] Full error:', error)
     res.status(500).json({ error: msg })
   }
 })
