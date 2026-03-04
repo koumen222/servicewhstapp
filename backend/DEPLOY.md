@@ -24,6 +24,9 @@ PORT=3001
 JWT_SECRET=votre-secret-jwt-super-securise-unique
 JWT_EXPIRES_IN=7d
 
+# URL publique du backend (affichée côté frontend dans Informations API)
+BACKEND_PUBLIC_URL=https://api.ecomcookpit.site
+
 # Evolution API
 EVOLUTION_API_URL=https://evolution-api-production-77b9.up.railway.app
 EVOLUTION_API_KEY=votre-cle-api-evolution

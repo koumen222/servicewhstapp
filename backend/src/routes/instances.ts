@@ -14,6 +14,10 @@ const router = Router()
 router.use(authenticate)
 
 const getPublicApiBaseUrl = (req: AuthRequest): string => {
+  if (env.BACKEND_PUBLIC_URL) {
+    return env.BACKEND_PUBLIC_URL
+  }
+
   const forwardedProto = req.headers['x-forwarded-proto']
   const forwardedHost = req.headers['x-forwarded-host']
 
