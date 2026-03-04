@@ -9,56 +9,48 @@ import { PLAN_LIMITS } from '../utils/quotaManager.js'
 
 const router = Router()
 
-// Endpoint spécial pour créer le premier admin (sans authentification)
-router.post('/create-first-admin', async (req: AuthRequest, res) => {
+// Endpoint spécial pour promouvoir un compte existant en admin (uniquement si aucun admin existe)
+router.post('/setup-admin', async (req: AuthRequest, res) => {
   try {
     // Vérifier s'il existe déjà un admin
-    const existingAdmin = await (prisma.user as any).findFirst({
-      where: { isAdmin: true }
+    const existingAdmin = await prisma.user.findFirst({
+      where: { isAdmin: true } as any
     })
     
     if (existingAdmin) {
-      return res.status(400).json({ error: 'Un administrateur existe déjà' })
+      return res.status(400).json({ error: 'Un administrateur existe déjà. Contactez votre admin.' })
     }
     
-    const { name, email, password } = req.body
+    const { email } = req.body
     
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: 'Nom, email et mot de passe requis' })
+    if (!email) {
+      return res.status(400).json({ error: 'Email requis' })
     }
     
-    const hashedPassword = await bcrypt.hash(password, 12)
+    // Trouver l'utilisateur existant
+    const user = await prisma.user.findUnique({ where: { email } })
     
-    const admin = await (prisma.user as any).create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-        plan: 'enterprise',
-        maxInstances: 100,
-        isActive: true,
-        isAdmin: true
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        plan: true,
-        isAdmin: true,
-        createdAt: true
-      }
+    if (!user) {
+      return res.status(404).json({ error: `Aucun compte trouvé pour ${email}` })
+    }
+    
+    // Promouvoir en admin
+    const updatedUser = await prisma.user.update({
+      where: { email },
+      data: { isAdmin: true, plan: 'enterprise', maxInstances: 100 } as any,
+      select: { id: true, name: true, email: true, plan: true, createdAt: true }
     })
     
-    console.log('[ADMIN] Premier administrateur créé:', admin.email)
+    console.log('[ADMIN] Utilisateur promu administrateur:', updatedUser.email)
     
-    res.status(201).json({ 
+    res.json({ 
       success: true, 
-      admin,
-      message: `Premier administrateur ${admin.name} créé avec succès`
+      user: updatedUser,
+      message: `${updatedUser.name} est maintenant administrateur. Reconnectez-vous.`
     })
   } catch (error: any) {
-    console.error('[CREATE FIRST ADMIN]', error.message)
-    res.status(500).json({ error: 'Erreur lors de la création de l\'administrateur' })
+    console.error('[SETUP ADMIN]', error.message)
+    res.status(500).json({ error: 'Erreur lors de la promotion en administrateur' })
   }
 })
 
