@@ -23,6 +23,7 @@ export interface AuthRequest extends Request {
   user?: AuthUser
   instanceId?: string
   quotaInfo?: QuotaInfo
+  isAdminAction?: boolean
 }
 
 export interface EvolutionInstance {

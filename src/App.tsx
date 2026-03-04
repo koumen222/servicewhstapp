@@ -10,8 +10,7 @@ import InstanceDetail from '@/pages/InstanceDetail'
 import Home from '@/pages/Home'
 import Pricing from '@/pages/Pricing'
 import Account from '@/pages/Account'
-import AdminDashboard from '@/pages/admin/AdminDashboard'
-import AdminUsers from '@/pages/admin/AdminUsers'
+import AdminDashboard from '@/pages/AdminDashboard'
 import PaymentSuccess from '@/pages/PaymentSuccess'
 
 function ProtectedLayout({ children }: { children: React.ReactNode }) {
@@ -67,7 +66,6 @@ export default function App() {
 
         {/* Admin */}
         <Route path="/admin"       element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-        <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
 
         {/* Default */}
         <Route path="*" element={<Navigate to="/" replace />} />
