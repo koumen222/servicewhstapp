@@ -72,11 +72,13 @@ console.log('🔧 CORS allowedOrigins:', allowedOrigins)
 // CORS sécurisé
 app.use(cors({
   origin: (origin, callback) => {
-    // En développement, autoriser les requêtes sans origin (Postman, etc.)
-    if (!origin && process.env.NODE_ENV !== 'production') {
+    // En développement, autoriser toutes les origines
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`🔍 CORS check (DEV MODE) - Origin: ${origin} - Allowed`)
       return callback(null, true)
     }
     
+    // En production, vérifier la liste des origines autorisées
     console.log(`🔍 CORS check - Origin: ${origin}, Allowed: ${allowedOrigins}`)
     if (!origin || allowedOrigins.includes(origin)) {
       console.log('✅ CORS: Origin allowed')
