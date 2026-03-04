@@ -60,17 +60,17 @@ router.post('/initiate-payment', async (req: AuthRequest, res) => {
     const frontendUrl = env.FRONTEND_URL.split(',')[0].trim()
 
     const paymentPayload = {
-      totalPrice: planData.price,
+      // Champs compatibles avec la doc MoneyFusion/FusionPay
+      totalPrice: String(planData.price),
       devise: planData.currency,
       token: externalRef,
-      nom: req.user!.name,
+      nomclient: req.user!.name,
       email: req.user!.email,
-      numeroSend: '',
-      returnUrl: `${frontendUrl}/payment/success?ref=${externalRef}`,
-      cancelUrl: `${frontendUrl}/pricing?cancelled=1`,
-      notifUrl: `${backendUrl}/api/subscriptions/payment-webhook`,
-      metadata: JSON.stringify({ userId, plan }),
-      article: [{ name: `Abonnement ${planData.name}`, qte: 1, montant: planData.price }],
+      numeroSend: 'None',
+      return_url: `${frontendUrl}/payment/success?ref=${externalRef}`,
+      webhook_url: `${backendUrl}/api/subscriptions/payment-webhook`,
+      personal_Info: [{ userId, plan }],
+      article: [{ name: `Abonnement ${planData.name}`, price: String(planData.price), quantity: 1 }],
     }
 
     const payment = await (prisma as any).payment?.create({
