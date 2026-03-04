@@ -17,7 +17,9 @@ import {
 } from "lucide-react";
 import { cn, getAvatarColor, timeAgo, formatNumber } from "@/lib/utils";
 import { StatusBadge } from "./StatusBadge";
-import type { Instance } from "@/lib/types";
+import { ConnectionStatus } from "./ConnectionStatus";
+import { useInstanceStatus } from "@/hooks/useInstanceStatus";
+import type { Instance, ConnectionStatus as ConnectionStatusType } from "@/lib/types";
 
 interface InstanceCardProps {
   instance: Instance;
@@ -33,13 +35,28 @@ export function InstanceCard({
   onRestart,
 }: InstanceCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const isExpired =
-    instance.status === "expired" || instance.connectionStatus === "expired";
-  const isConnected =
-    instance.status === "open" || instance.connectionStatus === "open";
-  const isConnecting =
-    instance.status === "connecting" ||
-    instance.connectionStatus === "connecting";
+  
+  // Real-time instance status
+  const {
+    status: realTimeStatus,
+    connectionInfo,
+    isLoading: statusLoading,
+  } = useInstanceStatus({
+    instanceName: instance.instanceName,
+    enabled: true,
+    pollInterval: 5000, // Check every 5 seconds
+  });
+  
+  // Use real-time status if available, otherwise fallback to stored status
+  const currentStatus = realTimeStatus !== 'unknown' ? realTimeStatus : 
+    (instance.connectionStatus === 'open' ? 'connected' : 
+     instance.connectionStatus === 'close' ? 'disconnected' :
+     instance.connectionStatus === 'connecting' ? 'connecting' :
+     instance.connectionStatus === 'expired' ? 'expired' : 'unknown');
+  
+  const isExpired = currentStatus === "expired" || instance.status === "expired" || instance.connectionStatus === "expired";
+  const isConnected = currentStatus === "connected" || instance.status === "open" || instance.connectionStatus === "open";
+  const isConnecting = currentStatus === "connecting" || instance.status === "connecting" || instance.connectionStatus === "connecting";
 
   const avatarColor = getAvatarColor(instance.name);
   const initials = instance.name
@@ -155,6 +172,17 @@ export function InstanceCard({
             </>
           )}
         </div>
+      </div>
+
+      {/* ── Connection Status ────────────────────── */}
+      <div className="mt-3">
+        <ConnectionStatus
+          status={currentStatus as ConnectionStatusType}
+          instanceName={instance.instanceName}
+          profileName={connectionInfo?.profileName || instance.profileName || undefined}
+          showInstanceName={false}
+          className="text-xs"
+        />
       </div>
 
       {/* ── Stats row ───────────────────────────── */}

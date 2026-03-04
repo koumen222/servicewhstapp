@@ -28,6 +28,7 @@ export const api = axios.create({
   timeout: 15000,
 });
 
+// Add request interceptor for authentication
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== "undefined") {
@@ -142,16 +143,33 @@ export const subscriptionsApi = {
 };
 
 // ─── Notifications  /api/notifications/* ────────────────────────────────────
-export const notificationsApi = {
-  /** GET /api/notifications?page=&limit=&unread= */
-  getAll: (params?: { page?: number; limit?: number; unread?: boolean }) =>
-    api.get("/api/notifications", { params }),
+export const subscriptionApi = {
+  getCurrent: () => api.get('/api/subscription'),
+  initPayment: (plan: string) => api.post('/api/subscription/pay', { plan }),
+};
 
-  /** PATCH /api/notifications/:id/read */
+export const notificationApi = {
+  getAll: () => api.get('/api/notifications'),
   markRead: (id: string) => api.patch(`/api/notifications/${id}/read`),
+  markAllRead: () => api.post('/api/notifications/read-all'),
+};
 
-  /** PATCH /api/notifications/mark-all-read */
-  markAllRead: () => api.patch("/api/notifications/mark-all-read"),
+// Messages & Chats API
+export const messagesApi = {
+  sendMessage: (payload: any) => api.post('/api/messages/send', payload),
+  getChats: (instanceId?: string) => api.get('/api/chats', { params: { instanceId } }),
+  getChatMessages: (chatId: string, limit = 50, offset = 0) => 
+    api.get(`/api/chats/${chatId}/messages`, { params: { limit, offset } }),
+  markAsRead: (chatId: string, messageIds: string[]) => 
+    api.post(`/api/chats/${chatId}/mark-read`, { messageIds }),
+};
+
+// Instance Connection Status API
+export const connectionApi = {
+  getStatus: (instanceName: string) => api.get(`/api/instance/status/${instanceName}`),
+  getQRCode: (instanceId: string) => api.get(`/api/instances/${instanceId}/qr-code`),
+  disconnect: (instanceId: string) => api.post(`/api/instances/${instanceId}/disconnect`),
+  reconnect: (instanceId: string) => api.post(`/api/instances/${instanceId}/reconnect`),
 };
 
 // ─── Public API  /api/v1/* (API key auth, not JWT) ──────────────────────────

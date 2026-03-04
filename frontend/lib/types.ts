@@ -1,5 +1,8 @@
 export type UserRole = 'user' | 'admin';
 export type InstanceStatus = 'open' | 'close' | 'connecting' | 'expired' | 'unknown';
+export type ConnectionStatus = 'connected' | 'disconnected' | 'connecting' | 'expired' | 'unknown';
+export type MessageStatus = 'pending' | 'sent' | 'delivered' | 'read' | 'failed';
+export type MessageType = 'text' | 'image' | 'audio' | 'video' | 'document';
 export type PlanType = 'free' | 'starter' | 'pro' | 'enterprise';
 export type PaymentStatus = 'pending' | 'success' | 'failed' | 'cancelled';
 
@@ -48,6 +51,7 @@ export interface Instance {
   instanceName: string;
   status: InstanceStatus;
   connectionStatus: InstanceStatus;
+  realTimeStatus?: ConnectionStatus; // For real-time updates
   profileName?: string | null;
   profilePictureUrl?: string | null;
   ownerJid?: string | null;
@@ -59,6 +63,8 @@ export interface Instance {
     messagesLast30Days: number;
     totalApiKeys: number;
   };
+  chats?: Chat[]; // Associated chats
+  connectionInfo?: InstanceConnectionInfo;
 }
 
 export interface InstanceListResponse {
@@ -194,4 +200,56 @@ export interface Stats {
   expiredInstances: number;
   messagesSent: number;
   maxInstances: number;
+}
+
+// ─── Messages & Chats ────────────────────────────────────────────────────────
+
+export interface ChatMessage {
+  id: string;
+  chatId: string;
+  instanceId: string;
+  senderId: string; // phone number or instance ID
+  recipientId: string; // phone number
+  content: string;
+  messageType: MessageType;
+  status: MessageStatus;
+  isFromMe: boolean;
+  timestamp: string;
+  deliveredAt?: string;
+  readAt?: string;
+  mediaUrl?: string;
+  mediaCaption?: string;
+}
+
+export interface Chat {
+  id: string;
+  instanceId: string;
+  contactId: string; // phone number
+  contactName: string;
+  contactAvatar?: string;
+  lastMessage?: ChatMessage;
+  unreadCount: number;
+  lastActivity: string;
+  isArchived: boolean;
+  isPinned: boolean;
+  messages?: ChatMessage[];
+}
+
+export interface SendMessagePayload {
+  instanceName: string;
+  number: string;
+  message: string;
+  messageType?: MessageType;
+}
+
+export interface InstanceConnectionInfo {
+  instanceId: string;
+  instanceName: string;
+  status: ConnectionStatus;
+  profileName?: string;
+  profilePicture?: string;
+  lastSeen?: string;
+  qrCode?: string;
+  batteryLevel?: number;
+  isOnWhatsApp?: boolean;
 }
