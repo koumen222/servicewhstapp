@@ -154,7 +154,8 @@ export const canCreateInstance = async (req: Request, res: Response, next: NextF
     
     const instanceCount = await prisma.instance.count({
       where: {
-        userId: user.id
+        userId: user.id,
+        isActive: true
       }
     })
 

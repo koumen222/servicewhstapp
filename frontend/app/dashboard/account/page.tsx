@@ -1,0 +1,192 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Mail, CreditCard, MessageSquare, Wifi, CheckCircle2, XCircle, Send, Shield, Key, Loader2 } from "lucide-react";
+import { useAppStore } from "@/store/useStore";
+import { subscriptionsApi } from "@/lib/api";
+import { PLAN_CATALOG } from "@/lib/types";
+import type { SubscriptionInfo, PlanType } from "@/lib/types";
+import { formatNumber } from "@/lib/utils";
+
+export default function AccountPage() {
+  const { user, instances } = useAppStore();
+  const [sub, setSub] = useState<SubscriptionInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    subscriptionsApi.getMySubscription()
+      .then((r) => setSub(r.data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const plan = (sub?.plan ?? user?.plan ?? "free") as PlanType;
+  const planData = PLAN_CATALOG[plan];
+  const usage = sub?.usage;
+  const maxInst = sub?.maxInstances ?? user?.maxInstances ?? 1;
+  const instPct = Math.min(((usage?.activeInstances ?? instances.length) / maxInst) * 100, 100);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-40">
+        <Loader2 size={20} className="animate-spin text-[#22c55e]" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-3xl space-y-5">
+      {/* Profile */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-2xl p-5"
+        style={{ background: "#111", border: "1px solid #1e1e1e" }}
+      >
+        <h2 className="text-[13px] font-semibold text-[#8a9a8a] uppercase tracking-wider mb-4">
+          Profil
+        </h2>
+        <div className="flex items-center gap-4">
+          <div
+            className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold shrink-0"
+            style={{ background: "#0d2510", color: "#22c55e" }}
+          >
+            {user?.name?.charAt(0)?.toUpperCase() ?? "U"}
+          </div>
+          <div className="flex-1">
+            <p className="text-[16px] font-bold text-white">{user?.name ?? "User"}</p>
+            <p className="text-[12px] text-[#5a7a5a] flex items-center gap-1.5 mt-0.5">
+              <Mail size={11} />{user?.email ?? "—"}
+            </p>
+          </div>
+          <span
+            className="px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize"
+            style={{ background: "#0d2510", color: "#22c55e" }}
+          >
+            {plan}
+          </span>
+        </div>
+      </motion.div>
+
+      {/* Usage Metrics — live from /api/subscriptions/my-subscription */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+        className="rounded-2xl p-5"
+        style={{ background: "#111", border: "1px solid #1e1e1e" }}
+      >
+        <h2 className="text-[13px] font-semibold text-[#8a9a8a] uppercase tracking-wider mb-4">
+          Métriques d&apos;utilisation
+        </h2>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-5">
+          {[
+            { label: "Messages envoyés (30j)", value: usage?.messages30d ?? 0,       icon: Send,          color: "#22c55e" },
+            { label: "Total messages",          value: usage?.totalMessages ?? 0,     icon: MessageSquare, color: "#3b82f6" },
+            { label: "Messages livrés",         value: usage?.deliveredMessages ?? 0, icon: CheckCircle2,  color: "#22c55e" },
+            { label: "Échecs d'envoi",           value: usage?.failedMessages ?? 0,   icon: XCircle,       color: "#ef4444" },
+            { label: "Instances actives",        value: usage?.activeInstances ?? instances.length, icon: Wifi, color: "#8b5cf6" },
+            { label: "Clés API",                 value: instances.reduce((s, i) => s + (i.apiKeys?.length ?? 0), 0), icon: Key, color: "#f59e0b" },
+          ].map(({ label, value, icon: Icon, color }) => (
+            <div
+              key={label}
+              className="rounded-xl p-3.5"
+              style={{ background: "#0a0a0a", border: "1px solid #1a1a1a" }}
+            >
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: `${color}18` }}>
+                  <Icon size={12} style={{ color }} />
+                </div>
+                <p className="text-[10px] text-[#5a7a5a]">{label}</p>
+              </div>
+              <p className="text-xl font-bold" style={{ color }}>{formatNumber(value)}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Instance quota bar */}
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[12px] text-[#8a9a8a]">Instances utilisées</span>
+            <span className="text-[11px] text-[#5a7a5a] font-mono">
+              {usage?.activeInstances ?? instances.length} / {maxInst}
+            </span>
+          </div>
+          <div className="h-1.5 rounded-full bg-[#1a1a1a] overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${instPct}%` }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="h-full rounded-full"
+              style={{ background: instPct > 80 ? "#ef4444" : "#3b82f6" }}
+            />
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Plan */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="rounded-2xl p-5"
+        style={{ background: "#111", border: "1px solid #1e1e1e" }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-[13px] font-semibold text-[#8a9a8a] uppercase tracking-wider">
+            Abonnement
+          </h2>
+          <a href="/dashboard/balance" className="btn-green text-xs px-3 py-1.5">Upgrader</a>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#0d2510" }}>
+            <CreditCard size={18} className="text-[#22c55e]" />
+          </div>
+          <div>
+            <p className="text-[14px] font-semibold text-white capitalize">{plan} Plan</p>
+            <p className="text-[12px] text-[#5a7a5a] mt-0.5">
+              {planData.maxInstances} instance{planData.maxInstances !== 1 ? "s" : ""} ·{" "}
+              {planData.price === 0 ? "Gratuit" : `${planData.price.toLocaleString("fr-FR")} XAF/mois`}
+            </p>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Security */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="rounded-2xl p-5"
+        style={{ background: "#111", border: "1px solid #1e1e1e" }}
+      >
+        <h2 className="text-[13px] font-semibold text-[#8a9a8a] uppercase tracking-wider mb-4">
+          Sécurité
+        </h2>
+        <div className="space-y-2">
+          {[
+            { label: "Changer le mot de passe", desc: "Mettre à jour votre mot de passe" },
+            { label: "Authentification 2FA",     desc: "Ajouter une couche de sécurité supplémentaire" },
+          ].map(({ label, desc }) => (
+            <div
+              key={label}
+              className="flex items-center justify-between p-3 rounded-xl"
+              style={{ background: "#0a0a0a", border: "1px solid #1a1a1a" }}
+            >
+              <div className="flex items-center gap-3">
+                <Shield size={14} className="text-[#4a6a4a]" />
+                <div>
+                  <p className="text-[12px] font-medium text-white">{label}</p>
+                  <p className="text-[10px] text-[#4a6a4a]">{desc}</p>
+                </div>
+              </div>
+              <button className="btn-ghost text-xs">Configurer</button>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    </div>
+  );
+}

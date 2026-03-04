@@ -1,5 +1,0 @@
-# API routes vers le backend API
-/api/*  https://api.ecomcookpit.site/:splat  200
-
-# SPA routing
-/*    /index.html   200

@@ -42,7 +42,11 @@ router.post('/create-instance', async (req, res) => {
     // Récupérer l'utilisateur avec ses quotas
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: { instances: true }
+      include: { 
+        instances: {
+          where: { isActive: true }
+        }
+      }
     })
 
     if (!user || !user.isActive) {

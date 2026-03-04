@@ -9,7 +9,7 @@ export function generateToken(user: AuthUser): string {
     name: user.name,
     plan: user.plan,
     maxInstances: user.maxInstances,
-    isAdmin: user.isAdmin ?? false,
+    isActive: user.isActive,
   }
   // @ts-ignore - Conflit de types entre versions de jsonwebtoken
   return jwt.sign(payload, env.JWT_SECRET, { expiresIn: env.JWT_EXPIRES_IN })

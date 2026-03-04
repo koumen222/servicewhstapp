@@ -9,7 +9,10 @@ export async function checkInstanceQuota(req: AuthRequest, res: Response, next: 
     }
 
     const instanceCount = await prisma.instance.count({
-      where: { userId: req.user.id }
+      where: { 
+        userId: req.user.id,
+        isActive: true
+      }
     })
 
     if (instanceCount >= req.user.maxInstances) {

@@ -1,0 +1,147 @@
+import axios from "axios";
+
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
+export const api = axios.create({
+  baseURL: BASE_URL,
+  withCredentials: false,
+  headers: { "Content-Type": "application/json" },
+  timeout: 15000,
+});
+
+api.interceptors.request.use(
+  (config) => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("auth_token");
+      if (token) config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("auth_user");
+        window.location.href = "/login";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+// ─── Auth  POST /api/auth/* ──────────────────────────────────────────────────
+export const authApi = {
+  login: (email: string, password: string) =>
+    api.post<{ token: string; user: { id: string; email: string; name: string; plan: string; maxInstances: number } }>(
+      "/api/auth/login", { email, password }
+    ),
+  register: (email: string, name: string, password: string) =>
+    api.post<{ token: string; user: { id: string; email: string; name: string; plan: string; maxInstances: number } }>(
+      "/api/auth/register", { email, name, password }
+    ),
+};
+
+// ─── Instance Management  /api/instances/* ──────────────────────────────────
+//  Uses instanceManagement.ts routes (by DB id)
+export const instancesApi = {
+  /** GET /api/instances/instances — list all user instances */
+  getAll: () => api.get("/api/instances/instances"),
+
+  /** POST /api/instances/create-instance — { customName, integration? } */
+  create: (customName: string, integration = "WHATSAPP-BAILEYS") =>
+    api.post("/api/instances/create-instance", { customName, integration }),
+
+  /** DELETE /api/instances/instances/:id */
+  delete: (id: string) => api.delete(`/api/instances/instances/${id}`),
+
+  /** POST /api/instances/instances/:id/restart */
+  restart: (id: string) => api.post(`/api/instances/instances/${id}/restart`),
+
+  /** GET /api/instances/instances/:id/qr-code */
+  getQRCode: (id: string) => api.get(`/api/instances/instances/${id}/qr-code`),
+};
+
+// ─── Instance Routes  /api/instance/* ───────────────────────────────────────
+//  Uses instances.ts routes (by customName)
+export const instanceApi = {
+  /** GET /api/instance/fetchInstances */
+  fetchAll: () => api.get("/api/instance/fetchInstances"),
+
+  /** POST /api/instance/create — { instanceName, integration?, qrcode? } */
+  create: (instanceName: string, integration = "WHATSAPP-BAILEYS", qrcode = true) =>
+    api.post("/api/instance/create", { instanceName, integration, qrcode }),
+
+  /** GET /api/instance/connectionState/:instanceName */
+  getState: (instanceName: string) =>
+    api.get(`/api/instance/connectionState/${encodeURIComponent(instanceName)}`),
+
+  /** GET /api/instance/connect/:instanceName — returns QR / connection */
+  connect: (instanceName: string) =>
+    api.get(`/api/instance/connect/${encodeURIComponent(instanceName)}`),
+
+  /** GET /api/instance/qrcode/:instanceName */
+  getQRCode: (instanceName: string) =>
+    api.get(`/api/instance/qrcode/${encodeURIComponent(instanceName)}`),
+
+  /** DELETE /api/instance/logout/:instanceName */
+  logout: (instanceName: string) =>
+    api.delete(`/api/instance/logout/${encodeURIComponent(instanceName)}`),
+
+  /** DELETE /api/instance/delete/:instanceName */
+  delete: (instanceName: string) =>
+    api.delete(`/api/instance/delete/${encodeURIComponent(instanceName)}`),
+
+  /** GET /api/instance/credentials/:instanceName */
+  getCredentials: (instanceName: string) =>
+    api.get(`/api/instance/credentials/${encodeURIComponent(instanceName)}`),
+
+  /** GET /api/instance/stats/:instanceName */
+  getStats: (instanceName: string) =>
+    api.get(`/api/instance/stats/${encodeURIComponent(instanceName)}`),
+};
+
+// ─── Subscriptions  /api/subscriptions/* ────────────────────────────────────
+export const subscriptionsApi = {
+  /** GET /api/subscriptions/plans */
+  getPlans: () => api.get("/api/subscriptions/plans"),
+
+  /** GET /api/subscriptions/my-subscription — usage + payments + plan */
+  getMySubscription: () => api.get("/api/subscriptions/my-subscription"),
+
+  /** POST /api/subscriptions/initiate-payment — { plan } → { redirectUrl, externalRef } */
+  initiatePayment: (plan: string) =>
+    api.post("/api/subscriptions/initiate-payment", { plan }),
+
+  /** GET /api/subscriptions/payment-verify/:ref */
+  verifyPayment: (ref: string) =>
+    api.get(`/api/subscriptions/payment-verify/${encodeURIComponent(ref)}`),
+};
+
+// ─── Notifications  /api/notifications/* ────────────────────────────────────
+export const notificationsApi = {
+  /** GET /api/notifications?page=&limit=&unread= */
+  getAll: (params?: { page?: number; limit?: number; unread?: boolean }) =>
+    api.get("/api/notifications", { params }),
+
+  /** PATCH /api/notifications/:id/read */
+  markRead: (id: string) => api.patch(`/api/notifications/${id}/read`),
+
+  /** PATCH /api/notifications/mark-all-read */
+  markAllRead: () => api.patch("/api/notifications/mark-all-read"),
+};
+
+// ─── Public API  /api/v1/* (API key auth, not JWT) ──────────────────────────
+export const publicApi = {
+  /** POST /api/v1/send-message — { number, text } with x-api-key header */
+  sendMessage: (apiKey: string, number: string, text: string) =>
+    api.post(
+      "/api/v1/send-message",
+      { number, text },
+      { headers: { "x-api-key": apiKey } }
+    ),
+};
