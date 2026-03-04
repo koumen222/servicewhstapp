@@ -273,7 +273,7 @@ export default function InstanceDetail() {
                 
                 <div className="grid gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">URL Evolution API</label>
+                    <label className="text-sm font-medium text-foreground">URL API Service WhatsApp</label>
                     <div className="flex items-center gap-2">
                       <Input
                         value={credentials.evolutionApiUrl || ''}
@@ -283,7 +283,7 @@ export default function InstanceDetail() {
                       <Button 
                         size="sm" 
                         variant="outline"
-                        onClick={() => copyToClipboard(credentials.evolutionApiUrl, 'URL API')}
+                        onClick={() => copyToClipboard(credentials.evolutionApiUrl || '', 'URL API')}
                       >
                         <Copy className="w-4 h-4" />
                       </Button>
@@ -330,7 +330,7 @@ export default function InstanceDetail() {
 
                 <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
                   <p className="text-xs text-blue-700 dark:text-blue-300">
-                    💡 <strong>Exemple d'utilisation :</strong> Utilisez l'URL + nom d'instance + token pour intégrer WhatsApp à vos applications externes via l'API Evolution.
+                    💡 <strong>Exemple d'utilisation :</strong> Utilisez l'URL API du service + nom d'instance + token pour intégrer WhatsApp à vos applications externes.
                   </p>
                 </div>
               </div>

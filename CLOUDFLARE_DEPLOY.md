@@ -3,12 +3,12 @@
 ## Étapes de déploiement
 
 ### 1. Préparation
-Assurez-vous que le backend Railway est déployé et notez son URL.
+Assurez-vous que le backend API est déployé et notez son URL.
 
 ### 2. Configuration de l'environnement
-Mettez à jour `.env` avec l'URL de votre backend Railway :
+Mettez à jour `.env` avec l'URL de votre backend API :
 ```env
-VITE_BACKEND_URL=https://votre-backend.railway.app
+VITE_BACKEND_URL=https://api.ecomcookpit.site
 ```
 
 ### 3. Déploiement sur Cloudflare Pages
@@ -29,12 +29,12 @@ VITE_BACKEND_URL=https://votre-backend.railway.app
 ### 4. Variables d'environnement sur Cloudflare
 Dans Settings > Environment variables :
 ```env
-VITE_BACKEND_URL=https://votre-backend.railway.app
+VITE_BACKEND_URL=https://api.ecomcookpit.site
 ```
 
 ### 5. Configuration des redirects
 Les fichiers `_redirects` et `_headers` sont déjà configurés pour :
-- Rediriger les appels API vers le backend Railway
+- Rediriger les appels API vers le backend API
 - Sécuriser les headers HTTP
 - Gérer le routing SPA
 
@@ -58,10 +58,10 @@ Les fichiers `_redirects` et `_headers` sont déjà configurés pour :
 ## 🔧 Dépannage
 
 ### Erreur CORS ?
-Vérifiez que `FRONTEND_URL` dans Railway contient votre domaine Cloudflare.
+Vérifiez que `FRONTEND_URL` côté backend contient votre domaine Cloudflare.
 
 ### Erreur 502 ?
-Le backend Railway n'est pas accessible. Vérifiez les logs Railway.
+Le backend API n'est pas accessible. Vérifiez les logs de votre hébergeur backend.
 
 ### Erreur 404 ?
 Les routes API ne sont pas redirigées. Vérifiez le fichier `_redirects`.

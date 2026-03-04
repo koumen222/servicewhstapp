@@ -13,6 +13,16 @@ const router = Router()
 
 router.use(authenticate)
 
+const getPublicApiBaseUrl = (req: AuthRequest): string => {
+  const forwardedProto = req.headers['x-forwarded-proto']
+  const forwardedHost = req.headers['x-forwarded-host']
+
+  const proto = Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto || req.protocol
+  const host = Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost || req.get('host')
+
+  return host ? `${proto}://${host}` : ''
+}
+
 const createInstanceSchema = z.object({
   instanceName: z.string().min(1),
   integration: z.string().optional().default('WHATSAPP-BAILEYS'),
@@ -44,7 +54,7 @@ router.post('/create', checkInstanceQuota, async (req: AuthRequest, res) => {
         instanceName: fullInstanceName,
         customName,
         status: 'close',
-        instanceUrl: env.EVOLUTION_API_URL,
+        instanceUrl: getPublicApiBaseUrl(req) || env.EVOLUTION_API_URL,
         evolutionApiKey: apiKey,
       }
     })
@@ -258,7 +268,7 @@ router.get('/credentials/:instanceName', async (req: AuthRequest, res) => {
     res.json({
       instanceName: dbInstance.customName,
       fullInstanceName: dbInstance.instanceName,
-      evolutionApiUrl: dbInstance.instanceUrl,
+      evolutionApiUrl: getPublicApiBaseUrl(req) || dbInstance.instanceUrl || env.EVOLUTION_API_URL,
       apiKey: dbInstance.evolutionApiKey ?? '',
       status: dbInstance.status,
       createdAt: dbInstance.createdAt

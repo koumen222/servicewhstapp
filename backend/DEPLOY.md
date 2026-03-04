@@ -56,7 +56,7 @@ npx prisma generate
 
 Une fois déployé, testez :
 ```bash
-curl https://votre-backend.railway.app/api/auth/login
+curl https://api.ecomcookpit.site/api/auth/login
 ```
 
 ## ⚠️ Sécurité importante
@@ -71,7 +71,7 @@ curl https://votre-backend.railway.app/api/auth/login
 Après déploiement du backend, mettez à jour `.env` du frontend :
 
 ```env
-VITE_BACKEND_URL=https://votre-backend-deploye.railway.app
+VITE_BACKEND_URL=https://api.ecomcookpit.site
 ```
 
 Puis redéployez le frontend.
