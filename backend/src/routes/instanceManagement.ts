@@ -8,6 +8,28 @@ import crypto from 'crypto'
 const router = express.Router()
 const prisma = new PrismaClient()
 
+// Client axios centralisé pour Evolution API
+const createEvolutionClient = () => {
+  const baseURL = process.env.EVOLUTION_API_URL
+  const apikey = process.env.EVOLUTION_MASTER_API_KEY || process.env.EVOLUTION_API_KEY
+  
+  if (!baseURL || !apikey) {
+    console.error('❌ Evolution API not configured')
+    console.error('   EVOLUTION_API_URL:', baseURL || '(empty)')
+    console.error('   API Key:', apikey ? 'set' : '(empty)')
+    return null
+  }
+  
+  return axios.create({
+    baseURL,
+    headers: {
+      'apikey': apikey,
+      'Content-Type': 'application/json'
+    },
+    timeout: 30000
+  })
+}
+
 /**
  * POST /create-instance
  * Créer une nouvelle instance WhatsApp pour l'utilisateur connecté
@@ -475,16 +497,8 @@ async function createEvolutionInstance(instanceName: string, integration: string
   console.log('Instance name:', instanceName)
   console.log('Integration:', integration)
   
-  const evolutionUrl = process.env.EVOLUTION_API_URL
-  const masterApiKey = process.env.EVOLUTION_MASTER_API_KEY
-  
-  console.log('EVOLUTION_API_URL:', evolutionUrl || '(not set)')
-  console.log('EVOLUTION_MASTER_API_KEY:', masterApiKey ? `${masterApiKey.substring(0, 10)}...` : '(not set)')
-
-  if (!evolutionUrl || !masterApiKey) {
-    console.error('❌ Evolution API configuration missing!')
-    console.error('   URL:', evolutionUrl || '(empty)')
-    console.error('   Master API Key:', masterApiKey || '(empty)')
+  const evolution = createEvolutionClient()
+  if (!evolution) {
     throw new Error('Evolution API configuration missing')
   }
 
@@ -494,18 +508,11 @@ async function createEvolutionInstance(instanceName: string, integration: string
     qrcode: true
   }
   
-  const url = `${evolutionUrl}/instance/create`
-  console.log('Sending request to:', url)
+  console.log('Sending request to: /instance/create')
   console.log('Payload:', JSON.stringify(payload, null, 2))
 
   try {
-    const response = await axios.post(url, payload, {
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': masterApiKey
-      },
-      timeout: 30000
-    })
+    const response = await evolution.post('/instance/create', payload)
     
     console.log('✅ Evolution instance created successfully')
     console.log('Response status:', response.status)
@@ -519,66 +526,42 @@ async function createEvolutionInstance(instanceName: string, integration: string
 }
 
 async function deleteEvolutionInstance(instanceName: string, apiKey: string) {
-  const evolutionUrl = process.env.EVOLUTION_API_URL
-
-  if (!evolutionUrl) {
-    throw new Error('Evolution API URL not configured')
+  const evolution = createEvolutionClient()
+  if (!evolution) {
+    throw new Error('Evolution API configuration missing')
   }
 
-  await axios.delete(`${evolutionUrl}/instance/delete/${instanceName}`, {
-    headers: {
-      'apikey': apiKey
-    },
-    timeout: 15000
-  })
+  await evolution.delete(`/instance/delete/${instanceName}`)
 }
 
 async function getEvolutionInstanceStatus(instanceName: string, apiKey: string) {
-  const evolutionUrl = process.env.EVOLUTION_API_URL
-
-  if (!evolutionUrl) {
-    throw new Error('Evolution API URL not configured')
+  const evolution = createEvolutionClient()
+  if (!evolution) {
+    throw new Error('Evolution API configuration missing')
   }
 
-  const response = await axios.get(`${evolutionUrl}/instance/fetchInstances`, {
-    headers: {
-      'apikey': apiKey
-    },
-    timeout: 10000
-  })
+  const response = await evolution.get('/instance/fetchInstances')
 
   const instances = Array.isArray(response.data) ? response.data : [response.data]
   return instances.find((i: any) => i.instance?.instanceName === instanceName) || { connectionState: 'unknown' }
 }
 
 async function restartEvolutionInstance(instanceName: string, apiKey: string) {
-  const evolutionUrl = process.env.EVOLUTION_API_URL
-
-  if (!evolutionUrl) {
-    throw new Error('Evolution API URL not configured')
+  const evolution = createEvolutionClient()
+  if (!evolution) {
+    throw new Error('Evolution API configuration missing')
   }
 
-  await axios.put(`${evolutionUrl}/instance/restart/${instanceName}`, {}, {
-    headers: {
-      'apikey': apiKey
-    },
-    timeout: 15000
-  })
+  await evolution.put(`/instance/restart/${instanceName}`, {})
 }
 
 async function getEvolutionQRCode(instanceName: string, apiKey: string) {
-  const evolutionUrl = process.env.EVOLUTION_API_URL
-
-  if (!evolutionUrl) {
-    throw new Error('Evolution API URL not configured')
+  const evolution = createEvolutionClient()
+  if (!evolution) {
+    throw new Error('Evolution API configuration missing')
   }
 
-  const response = await axios.get(`${evolutionUrl}/instance/connect/${instanceName}`, {
-    headers: {
-      'apikey': apiKey
-    },
-    timeout: 10000
-  })
+  const response = await evolution.get(`/instance/connect/${instanceName}`)
 
   return response.data.qrcode || response.data
 }
