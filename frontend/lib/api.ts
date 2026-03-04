@@ -1,6 +1,25 @@
 import axios from "axios";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+// Détection automatique de l'environnement
+const getBaseURL = () => {
+  // Si on est côté serveur (SSR), utiliser la variable d'environnement
+  if (typeof window === "undefined") {
+    return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+  }
+  
+  // Côté client : détecter si on est en local ou en production
+  const hostname = window.location.hostname;
+  
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
+    // Environnement local
+    return "http://localhost:8080";
+  } else {
+    // Environnement de production
+    return "https://servicewhstapp-production.up.railway.app";
+  }
+};
+
+const BASE_URL = getBaseURL();
 
 export const api = axios.create({
   baseURL: BASE_URL,
