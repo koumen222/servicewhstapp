@@ -37,6 +37,7 @@ export default function Home() {
           </Link>
           <nav className="flex items-center gap-4">
             <Link to="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors hidden sm:block">Tarifs</Link>
+            <Link to="/admin-setup" className="text-xs text-muted-foreground/60 hover:text-orange-500 transition-colors hidden sm:block" title="Administration">⚙️</Link>
             <Button variant="ghost" size="sm" asChild><Link to="/login">Connexion</Link></Button>
             <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" asChild>
               <Link to="/register">Démarrer gratuitement</Link>

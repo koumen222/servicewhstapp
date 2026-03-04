@@ -10,6 +10,7 @@ const registerSchema = z.object({
   email: z.string().email(),
   name: z.string().min(2),
   password: z.string().min(6),
+  isAdmin: z.boolean().optional().default(false),
 })
 
 const loginSchema = z.object({
@@ -19,7 +20,7 @@ const loginSchema = z.object({
 
 router.post('/register', async (req, res) => {
   try {
-    const { email, name, password } = registerSchema.parse(req.body)
+    const { email, name, password, isAdmin } = registerSchema.parse(req.body)
 
     const existing = await prisma.user.findUnique({ where: { email } })
     if (existing) {
@@ -32,8 +33,9 @@ router.post('/register', async (req, res) => {
         email,
         name,
         password: hashedPassword,
-        plan: 'free',
-        maxInstances: 1,
+        plan: isAdmin ? 'enterprise' : 'free',
+        maxInstances: isAdmin ? 100 : 1,
+        isAdmin: isAdmin || false,
       },
     })
 
