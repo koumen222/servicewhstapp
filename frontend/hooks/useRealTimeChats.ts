@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { messagesApi } from "@/lib/api";
+import { instanceApi } from "@/lib/api";
 import type { Chat, ChatMessage } from "@/lib/types";
 
 interface UseRealTimeChatsOptions {
@@ -39,8 +39,16 @@ export function useRealTimeChats({
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      const response = await messagesApi.getChats(instanceId);
-      const newChats: Chat[] = response.data?.chats || [];
+      if (!instanceId) {
+        setState(prev => ({ ...prev, isLoading: false }));
+        return;
+      }
+      const response = await instanceApi.getChats(instanceId);
+      if (!response.data?.success) {
+        setState(prev => ({ ...prev, isLoading: false, error: response.data?.message || 'Failed to fetch chats' }));
+        return;
+      }
+      const newChats: Chat[] = response.data?.data?.chats || [];
       
       if (!mountedRef.current) return;
 
@@ -134,7 +142,7 @@ export function useRealTimeChats({
   // Mark messages as read
   const markAsRead = useCallback(async (chatId: string, messageIds: string[]) => {
     try {
-      await messagesApi.markAsRead(chatId, messageIds);
+      // Mark as read — no backend endpoint yet, update locally only
       
       // Update local state
       setState(prev => ({

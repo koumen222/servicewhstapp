@@ -17,9 +17,8 @@ import {
 } from "lucide-react";
 import { cn, getAvatarColor, timeAgo, formatNumber } from "@/lib/utils";
 import { StatusBadge } from "./StatusBadge";
-import { ConnectionStatus } from "./ConnectionStatus";
 import { useInstanceStatus } from "@/hooks/useInstanceStatus";
-import type { Instance, ConnectionStatus as ConnectionStatusType } from "@/lib/types";
+import type { Instance } from "@/lib/types";
 
 interface InstanceCardProps {
   instance: Instance;
@@ -40,23 +39,22 @@ export function InstanceCard({
   const {
     status: realTimeStatus,
     connectionInfo,
-    isLoading: statusLoading,
   } = useInstanceStatus({
-    instanceName: instance.instanceName,
+    instanceName: instance.name,
     enabled: true,
-    pollInterval: 5000, // Check every 5 seconds
+    pollInterval: 5000,
   });
   
-  // Use real-time status if available, otherwise fallback to stored status
-  const currentStatus = realTimeStatus !== 'unknown' ? realTimeStatus : 
-    (instance.connectionStatus === 'open' ? 'connected' : 
-     instance.connectionStatus === 'close' ? 'disconnected' :
-     instance.connectionStatus === 'connecting' ? 'connecting' :
-     instance.connectionStatus === 'expired' ? 'expired' : 'unknown');
-  
-  const isExpired = currentStatus === "expired" || instance.status === "expired" || instance.connectionStatus === "expired";
-  const isConnected = currentStatus === "connected" || instance.status === "open" || instance.connectionStatus === "open";
-  const isConnecting = currentStatus === "connecting" || instance.status === "connecting" || instance.connectionStatus === "connecting";
+  // Normalize: real-time takes priority, fallback to DB status
+  const currentStatus = realTimeStatus !== 'unknown' ? realTimeStatus :
+    ({ open: 'connected', connecting: 'connecting', close: 'disconnected', closed: 'disconnected', expired: 'expired' } as Record<string, string>)[instance.connectionStatus ?? instance.status] || 'unknown';
+
+  const isExpired = currentStatus === 'expired';
+  const isConnected = currentStatus === 'connected';
+  const isConnecting = currentStatus === 'connecting';
+
+  const statusDotColor = isConnected ? '#22c55e' : isConnecting ? '#f59e0b' : isExpired ? '#ef4444' : '#6b7280';
+  const statusLabel = isConnected ? '🟢 Connected' : isConnecting ? '🟡 Connecting…' : isExpired ? '🔴 Expired' : '⚫ Disconnected';
 
   const avatarColor = getAvatarColor(instance.name);
   const initials = instance.name
@@ -174,15 +172,18 @@ export function InstanceCard({
         </div>
       </div>
 
-      {/* ── Connection Status ────────────────────── */}
-      <div className="mt-3">
-        <ConnectionStatus
-          status={currentStatus as ConnectionStatusType}
-          instanceName={instance.instanceName}
-          profileName={connectionInfo?.profileName || instance.profileName || undefined}
-          showInstanceName={false}
-          className="text-xs"
+      {/* ── Inline Status ────────────────────── */}
+      <div className="flex items-center gap-2 mt-3 px-3 py-2 rounded-lg" style={{ background: '#0a0a0a', border: '1px solid #1a1a1a' }}>
+        <div
+          className={`w-2 h-2 rounded-full shrink-0 ${isConnecting ? 'animate-pulse' : ''}`}
+          style={{ background: statusDotColor }}
         />
+        <span className="text-[11px]" style={{ color: statusDotColor }}>{statusLabel}</span>
+        {(connectionInfo?.profileName || instance.profileName) && (
+          <span className="text-[10px] text-white/40 ml-auto truncate">
+            {connectionInfo?.profileName || instance.profileName}
+          </span>
+        )}
       </div>
 
       {/* ── Stats row ───────────────────────────── */}

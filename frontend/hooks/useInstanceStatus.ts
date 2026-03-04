@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { connectionApi } from "@/lib/api";
+import { instanceApi } from "@/lib/api";
 import type { ConnectionStatus, InstanceConnectionInfo } from "@/lib/types";
 
 interface UseInstanceStatusOptions {
@@ -34,20 +34,32 @@ export function useInstanceStatus({
   const mountedRef = useRef(true);
 
   const fetchStatus = async () => {
-    if (!enabled || !mountedRef.current) return;
+    if (!enabled || !mountedRef.current || !instanceName) return;
 
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      const response = await connectionApi.getStatus(instanceName);
-      const data = response.data;
+      const response = await instanceApi.getStatus(instanceName);
       
       if (!mountedRef.current) return;
 
+      if (!response.data?.success) {
+        setState(prev => ({ ...prev, isLoading: false, error: response.data?.message || 'Failed to fetch status' }));
+        return;
+      }
+
+      const data = response.data.data;
+
       setState(prev => ({
         ...prev,
-        status: data.status || 'unknown',
-        connectionInfo: data,
+        status: (data.status as ConnectionStatus) || 'unknown',
+        connectionInfo: {
+          instanceId: instanceName,
+          instanceName,
+          status: (data.status as ConnectionStatus) || 'unknown',
+          profileName: data.profileName || undefined,
+          profilePicture: data.profilePicture || undefined,
+        },
         isLoading: false,
         lastUpdated: new Date(),
       }));

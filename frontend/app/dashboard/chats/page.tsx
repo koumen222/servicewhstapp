@@ -8,7 +8,7 @@ import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { ChatWindow } from "@/components/ChatWindow";
 import { useRealTimeChats } from "@/hooks/useRealTimeChats";
 import { useInstanceStatus } from "@/hooks/useInstanceStatus";
-import { messagesApi } from "@/lib/api";
+import { instanceApi } from "@/lib/api";
 import type { Chat, ConnectionStatus as ConnectionStatusType } from "@/lib/types";
 
 // Mock data for development - will be replaced by real data from hooks
@@ -86,33 +86,35 @@ export default function ChatsPage() {
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   
-  // Get active instance for real-time updates
+  // Get active (connected) instance first, then any instance
   const activeInstance = instances.find(i => i.status === "open" || i.connectionStatus === "open") || instances[0];
   
-  // Real-time chats hook
-  const {
-    chats: realTimeChats,
-    isLoading: chatsLoading,
-    error: chatsError,
-    addMessageOptimistically,
-    markAsRead,
-  } = useRealTimeChats({
-    instanceId: activeInstance?.id,
-    enabled: !!activeInstance,
-  });
-  
-  // Instance status hook for the active instance
+  // Real-time status hook — always use instance.name (customName) not instanceName
   const {
     status: connectionStatus,
     connectionInfo,
-    isLoading: statusLoading,
   } = useInstanceStatus({
-    instanceName: activeInstance?.instanceName || "",
-    enabled: !!activeInstance,
+    instanceName: activeInstance?.name || "",
+    enabled: !!activeInstance?.name,
+    pollInterval: 5000,
+  });
+
+  const isConnected = connectionStatus === "connected";
+
+  // Real-time chats hook — only fetch when connected
+  const {
+    chats: realTimeChats,
+    isLoading: chatsLoading,
+    addMessageOptimistically,
+    markAsRead,
+  } = useRealTimeChats({
+    instanceId: activeInstance?.name,
+    enabled: isConnected && !!activeInstance?.name,
+    pollInterval: 3000,
   });
   
-  // Use real-time chats if available, otherwise use mock data
-  const chats = realTimeChats.length > 0 ? realTimeChats : MOCK_CHATS;
+  // Use real-time chats if available, otherwise show mocks only when not connected
+  const chats = realTimeChats.length > 0 ? realTimeChats : (isConnected ? [] : MOCK_CHATS);
   const hasInstances = instances.length > 0;
   const hasChats = chats.length > 0;
 
@@ -126,13 +128,20 @@ export default function ChatsPage() {
         messageType: "text",
       });
       
-      // Send message via API
-      await messagesApi.sendMessage({
-        instanceName: activeInstance.instanceName,
-        number: selectedChat.contactId,
-        message,
-        messageType: "text",
-      });
+      // Verify connected before sending
+      if (!isConnected) {
+        throw new Error("Instance is not connected. Please connect WhatsApp first.");
+      }
+
+      // Send message via API using customName
+      const res = await instanceApi.sendMessage(
+        activeInstance.name,
+        selectedChat.contactId,
+        message
+      );
+      if (!res.data?.success) {
+        throw new Error(res.data?.message || "Failed to send message");
+      }
     } catch (error) {
       console.error("Failed to send message:", error);
       throw error;
@@ -361,6 +370,8 @@ export default function ChatsPage() {
           isOpen={!!selectedChat}
           onClose={() => setSelectedChat(null)}
           onSendMessage={handleSendMessage}
+          instanceName={activeInstance?.name}
+          isConnected={isConnected}
         />
       )}
     </>

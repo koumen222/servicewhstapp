@@ -64,7 +64,7 @@ export function ConnectionStatus({
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className={`rounded-xl p-4 border ${className}`}
+      className={`rounded-xl p-3 border ${className}`}
       style={{ 
         background: config.bgColor, 
         borderColor: `${config.color}40`,
@@ -72,58 +72,34 @@ export function ConnectionStatus({
     >
       <div className="flex items-center gap-3">
         <div 
-          className="w-10 h-10 rounded-full flex items-center justify-center"
+          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
           style={{ background: `${config.color}20` }}
         >
           <Icon 
-            size={18} 
+            size={15} 
             className={status === "connecting" ? "animate-spin" : ""}
             style={{ color: config.color }}
           />
         </div>
         
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2">
             <div 
-              className="w-2 h-2 rounded-full"
+              className={`w-2 h-2 rounded-full shrink-0 ${status === "connecting" ? "animate-pulse" : ""}`}
               style={{ background: config.color }}
             />
-            <span 
-              className="text-sm font-semibold"
-              style={{ color: config.color }}
-            >
+            <span className="text-[12px] font-semibold" style={{ color: config.color }}>
               {config.text}
             </span>
+            {showInstanceName && (
+              <span className="text-[11px] text-white/50 truncate">
+                — {profileName || instanceName}
+              </span>
+            )}
           </div>
-          
-          {showInstanceName && (
-            <p className="text-xs text-white/90 mb-0.5">
-              {profileName ? `${profileName} (${instanceName})` : instanceName}
-            </p>
-          )}
-          
-          <p className="text-[11px] text-white/60">
-            {config.description}
-          </p>
+          <p className="text-[10px] text-white/50 mt-0.5">{config.description}</p>
         </div>
       </div>
-      
-      {/* Pulse animation for connecting status */}
-      {status === "connecting" && (
-        <motion.div
-          className="absolute inset-0 rounded-xl border-2"
-          style={{ borderColor: config.color }}
-          animate={{ 
-            opacity: [0.5, 0.2, 0.5],
-            scale: [1, 1.02, 1],
-          }}
-          transition={{ 
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-      )}
     </motion.div>
   );
 }

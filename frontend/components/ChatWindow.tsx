@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Phone, Video, MoreVertical, Send, Paperclip, Smile, Check, CheckCheck } from "lucide-react";
-import { messagesApi } from "@/lib/api";
+import { instanceApi } from "@/lib/api";
 import type { Chat, ChatMessage, MessageStatus } from "@/lib/types";
 
 interface ChatWindowProps {
@@ -11,6 +11,8 @@ interface ChatWindowProps {
   isOpen: boolean;
   onClose: () => void;
   onSendMessage: (message: string) => Promise<void>;
+  instanceName?: string;
+  isConnected?: boolean;
 }
 
 interface MessageBubbleProps {
@@ -83,7 +85,7 @@ function MessageBubble({ message }: MessageBubbleProps) {
   );
 }
 
-export function ChatWindow({ chat, isOpen, onClose, onSendMessage }: ChatWindowProps) {
+export function ChatWindow({ chat, isOpen, onClose, onSendMessage, instanceName, isConnected = true }: ChatWindowProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -99,8 +101,13 @@ export function ChatWindow({ chat, isOpen, onClose, onSendMessage }: ChatWindowP
     const loadMessages = async () => {
       setIsLoading(true);
       try {
-        const response = await messagesApi.getChatMessages(chat.id);
-        setMessages(response.data?.messages || []);
+        if (!instanceName) { setMessages(chat.messages || []); return; }
+        const response = await instanceApi.getChatMessages(instanceName, chat.contactId);
+        if (response.data?.success) {
+          setMessages(response.data.data?.messages || []);
+        } else {
+          setMessages(chat.messages || []);
+        }
       } catch (error) {
         console.error('Failed to load messages:', error);
         // Use chat.messages as fallback
@@ -263,12 +270,21 @@ export function ChatWindow({ chat, isOpen, onClose, onSendMessage }: ChatWindowP
             )}
           </div>
 
+          {/* Disconnected banner */}
+          {!isConnected && (
+            <div className="px-4 py-2 bg-red-500/10 border-t border-red-500/20 flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+              <p className="text-[11px] text-red-400">Instance not connected. Connect WhatsApp to send messages.</p>
+            </div>
+          )}
+
           {/* Message Input */}
           <form onSubmit={handleSendMessage} className="p-4 border-t border-[#1e1e1e]">
             <div className="flex items-end gap-3">
               <button
                 type="button"
-                className="p-2 hover:bg-white/5 rounded-full transition-colors shrink-0"
+                disabled={!isConnected}
+                className="p-2 hover:bg-white/5 rounded-full transition-colors shrink-0 disabled:opacity-30"
               >
                 <Paperclip size={18} className="text-white/60" />
               </button>
@@ -279,13 +295,14 @@ export function ChatWindow({ chat, isOpen, onClose, onSendMessage }: ChatWindowP
                   type="text"
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
-                  placeholder="Type a message..."
-                  disabled={isSending}
-                  className="w-full px-4 py-3 pr-12 rounded-full text-sm resize-none bg-[#1a1a1a] border border-[#2a2a2a] text-white placeholder-white/50 focus:border-[#22c55e] focus:ring-0 focus:outline-none disabled:opacity-50"
+                  placeholder={isConnected ? "Type a message..." : "Connect WhatsApp to send messages"}
+                  disabled={isSending || !isConnected}
+                  className="w-full px-4 py-3 pr-12 rounded-full text-sm resize-none bg-[#1a1a1a] border border-[#2a2a2a] text-white placeholder-white/50 focus:border-[#22c55e] focus:ring-0 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-white/5 rounded-full transition-colors"
+                  disabled={!isConnected}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-white/5 rounded-full transition-colors disabled:opacity-30"
                 >
                   <Smile size={16} className="text-white/60" />
                 </button>
@@ -293,7 +310,7 @@ export function ChatWindow({ chat, isOpen, onClose, onSendMessage }: ChatWindowP
 
               <button
                 type="submit"
-                disabled={!inputMessage.trim() || isSending}
+                disabled={!inputMessage.trim() || isSending || !isConnected}
                 className="p-3 bg-[#22c55e] hover:bg-[#16a34a] disabled:bg-[#22c55e]/30 disabled:cursor-not-allowed rounded-full transition-colors shrink-0"
               >
                 <Send size={16} className="text-white" />

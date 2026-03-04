@@ -96,17 +96,33 @@ export const instanceApi = {
   create: (instanceName: string, integration = "WHATSAPP-BAILEYS", qrcode = true) =>
     api.post("/api/instance/create", { instanceName, integration, qrcode }),
 
+  /** GET /api/instance/status/:instanceName — reliable polling endpoint */
+  getStatus: (instanceName: string) =>
+    api.get(`/api/instance/status/${encodeURIComponent(instanceName)}`),
+
   /** GET /api/instance/connectionState/:instanceName */
   getState: (instanceName: string) =>
     api.get(`/api/instance/connectionState/${encodeURIComponent(instanceName)}`),
 
-  /** GET /api/instance/connect/:instanceName — returns QR / connection */
-  connect: (instanceName: string) =>
-    api.get(`/api/instance/connect/${encodeURIComponent(instanceName)}`),
-
   /** GET /api/instance/qrcode/:instanceName */
   getQRCode: (instanceName: string) =>
     api.get(`/api/instance/qrcode/${encodeURIComponent(instanceName)}`),
+
+  /** POST /api/instance/connect-phone — { instanceName, phoneNumber } */
+  connectPhone: (instanceName: string, phoneNumber: string) =>
+    api.post("/api/instance/connect-phone", { instanceName, phoneNumber }),
+
+  /** POST /api/instance/send-message — { instanceName, number, message } */
+  sendMessage: (instanceName: string, number: string, message: string) =>
+    api.post("/api/instance/send-message", { instanceName, number, message }),
+
+  /** GET /api/instance/chats/:instanceName */
+  getChats: (instanceName: string) =>
+    api.get(`/api/instance/chats/${encodeURIComponent(instanceName)}`),
+
+  /** GET /api/instance/chats/:instanceName/:remoteJid/messages */
+  getChatMessages: (instanceName: string, remoteJid: string, limit = 50) =>
+    api.get(`/api/instance/chats/${encodeURIComponent(instanceName)}/${encodeURIComponent(remoteJid)}/messages`, { params: { limit } }),
 
   /** DELETE /api/instance/logout/:instanceName */
   logout: (instanceName: string) =>
