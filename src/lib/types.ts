@@ -13,8 +13,46 @@ export interface User {
   plan?: UserPlan
   maxInstances?: number
   isActive?: boolean
+  isAdmin?: boolean
   createdAt?: string
   updatedAt?: string
+}
+
+export interface PlanDetails {
+  name: string
+  price: number
+  maxInstances: number
+  currency: string
+}
+
+export interface Payment {
+  id: string
+  userId: string
+  plan: string
+  amount: number
+  currency: string
+  status: 'pending' | 'success' | 'failed' | 'cancelled'
+  externalRef?: string
+  createdAt: string
+}
+
+export interface AdminStats {
+  totalUsers: number
+  totalInstances: number
+  totalPayments: number
+  revenue: number
+}
+
+export interface AdminUser {
+  id: string
+  name: string
+  email: string
+  plan: string
+  maxInstances: number
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+  _count: { instances: number }
 }
 
 export interface AuthResponse {

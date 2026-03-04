@@ -25,6 +25,9 @@ export const useAuthStore = create<AuthState>()(
           id: response.user.id,
           email: response.user.email,
           name: response.user.name,
+          plan: response.user.plan,
+          maxInstances: response.user.maxInstances,
+          isAdmin: response.user.isAdmin ?? false,
           token: response.token,
         }
         set({ user, token: response.token, isAuthenticated: true })
@@ -36,6 +39,9 @@ export const useAuthStore = create<AuthState>()(
           id: response.user.id,
           email: response.user.email,
           name: response.user.name,
+          plan: response.user.plan,
+          maxInstances: response.user.maxInstances,
+          isAdmin: response.user.isAdmin ?? false,
           token: response.token,
         }
         set({ user, token: response.token, isAuthenticated: true })

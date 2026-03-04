@@ -8,6 +8,7 @@ export const env = {
   JWT_SECRET: process.env.JWT_SECRET || 'dev-secret-change-in-production',
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
   BACKEND_PUBLIC_URL: process.env.BACKEND_PUBLIC_URL || '',
+  MONEYFUSION_URL: process.env.MONEYFUSION_URL || 'https://www.pay.moneyfusion.net/Scalor/8ad75171bd8f7d55/pay/',
   EVOLUTION_API_URL: process.env.EVOLUTION_API_URL || '',
   EVOLUTION_API_KEY: process.env.EVOLUTION_API_KEY || '',
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',

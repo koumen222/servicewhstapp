@@ -7,6 +7,7 @@ export interface AuthUser {
   plan: string
   maxInstances: number
   isActive: boolean
+  isAdmin?: boolean
 }
 
 export interface AuthRequest extends Request {

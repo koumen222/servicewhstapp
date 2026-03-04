@@ -15,11 +15,52 @@ model User {
   plan          String   @default("free") // free, starter, pro, enterprise
   maxInstances  Int      @default(1)
   isActive      Boolean  @default(true)
+  isAdmin       Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   instances     Instance[]
   apiKeys       ApiKey[]
+  subscriptions Subscription[]
+  payments      Payment[]
+}
+
+model Subscription {
+  id            String   @id @default(uuid())
+  userId        String
+  plan          String   // free, starter, pro, enterprise
+  status        String   @default("active") // active, cancelled, expired
+  startDate     DateTime @default(now())
+  endDate       DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments      Payment[]
+
+  @@index([userId])
+}
+
+model Payment {
+  id              String   @id @default(uuid())
+  userId          String
+  subscriptionId  String?
+  amount          Float
+  currency        String   @default("XAF")
+  status          String   @default("pending") // pending, success, failed, cancelled
+  plan            String
+  provider        String   @default("moneyfusion")
+  externalRef     String?  @unique
+  paymentUrl      String?
+  metadata        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription    Subscription? @relation(fields: [subscriptionId], references: [id])
+
+  @@index([userId])
+  @@index([externalRef])
 }
 
 model Instance {

@@ -169,6 +169,37 @@ export const deleteInstance = (instanceName: string) => {
   }).catch((err) => { console.error('🔴 [deleteInstance] error', err.response?.data ?? err.message); throw err })
 }
 
+// ── Endpoints Admin ───────────────────────────────────────────────────────────
+
+export const adminGetStats = () =>
+  apiClient.get('/api/admin/stats').then(r => r.data)
+
+export const adminGetUsers = (page = 1, search = '') =>
+  apiClient.get(`/api/admin/users?page=${page}&search=${encodeURIComponent(search)}`).then(r => r.data)
+
+export const adminUpdateUser = (id: string, data: any) =>
+  apiClient.put(`/api/admin/users/${id}`, data).then(r => r.data)
+
+export const adminDeleteUser = (id: string) =>
+  apiClient.delete(`/api/admin/users/${id}`).then(r => r.data)
+
+export const adminGetPayments = () =>
+  apiClient.get('/api/admin/payments').then(r => r.data)
+
+// ── Endpoints Subscriptions ───────────────────────────────────────────────────
+
+export const getPlans = () =>
+  apiClient.get('/api/subscriptions/plans').then(r => r.data)
+
+export const getMySubscription = () =>
+  apiClient.get('/api/subscriptions/my-subscription').then(r => r.data)
+
+export const initiatePayment = (plan: string) =>
+  apiClient.post('/api/subscriptions/initiate-payment', { plan }).then(r => r.data)
+
+export const verifyPayment = (ref: string) =>
+  apiClient.get(`/api/subscriptions/payment-verify/${ref}`).then(r => r.data)
+
 /** Récupère les informations d'accès API d'une instance */
 export const getInstanceCredentials = (instanceName: string) => {
   console.log('🟡 [getInstanceCredentials]', instanceName)
