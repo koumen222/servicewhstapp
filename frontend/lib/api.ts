@@ -15,7 +15,7 @@ const getBaseURL = () => {
     return "http://localhost:8080";
   } else {
     // Environnement de production
-    return "https://servicewhstapp-production.up.railway.app";
+    return "https://api.ecomcookpit.site";
   }
 };
 
