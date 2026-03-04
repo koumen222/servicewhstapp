@@ -12,7 +12,10 @@ import type {
 } from './types'
 
 // ── Configuration ────────────────────────────────────────────────────────────
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001'
+// En production Cloudflare, utiliser une URL relative (middleware redirige vers backend)
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? (
+  import.meta.env.PROD ? '' : 'http://localhost:3001'
+)
 
 // ── Client Axios ─────────────────────────────────────────────────────────────
 export const apiClient: AxiosInstance = axios.create({

@@ -9,6 +9,59 @@ import { PLAN_LIMITS } from '../utils/quotaManager.js'
 
 const router = Router()
 
+// Endpoint spécial pour créer le premier admin (sans authentification)
+router.post('/create-first-admin', async (req: AuthRequest, res) => {
+  try {
+    // Vérifier s'il existe déjà un admin
+    const existingAdmin = await (prisma.user as any).findFirst({
+      where: { isAdmin: true }
+    })
+    
+    if (existingAdmin) {
+      return res.status(400).json({ error: 'Un administrateur existe déjà' })
+    }
+    
+    const { name, email, password } = req.body
+    
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Nom, email et mot de passe requis' })
+    }
+    
+    const hashedPassword = await bcrypt.hash(password, 12)
+    
+    const admin = await (prisma.user as any).create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        plan: 'enterprise',
+        maxInstances: 100,
+        isActive: true,
+        isAdmin: true
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        plan: true,
+        isAdmin: true,
+        createdAt: true
+      }
+    })
+    
+    console.log('[ADMIN] Premier administrateur créé:', admin.email)
+    
+    res.status(201).json({ 
+      success: true, 
+      admin,
+      message: `Premier administrateur ${admin.name} créé avec succès`
+    })
+  } catch (error: any) {
+    console.error('[CREATE FIRST ADMIN]', error.message)
+    res.status(500).json({ error: 'Erreur lors de la création de l\'administrateur' })
+  }
+})
+
 router.use(authenticate)
 router.use(requireAdmin)
 

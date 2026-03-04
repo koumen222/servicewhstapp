@@ -4,13 +4,13 @@ export async function onRequest(context) {
   
   // Rediriger les appels API vers le backend
   if (url.pathname.startsWith('/api/')) {
-    const backendUrl = 'https://votre-backend.railway.app' + url.pathname + url.search;
+    const backendUrl = 'https://servicewhstapp-production.up.railway.app' + url.pathname + url.search;
     
     return fetch(backendUrl, {
       method: context.request.method,
       headers: {
         ...Object.fromEntries(context.request.headers),
-        'Host': 'votre-backend.railway.app'
+        'Host': 'servicewhstapp-production.up.railway.app'
       },
       body: context.request.body
     });
