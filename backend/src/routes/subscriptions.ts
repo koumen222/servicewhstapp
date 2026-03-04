@@ -73,6 +73,27 @@ router.post('/initiate-payment', async (req: AuthRequest, res) => {
       article: [{ name: `Abonnement ${planData.name}`, price: String(planData.price), quantity: 1 }],
     }
 
+    const mfResponse = await fetch(env.MONEYFUSION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(paymentPayload),
+    })
+
+    let mfData: any = null
+    try {
+      mfData = await mfResponse.json()
+    } catch {
+      mfData = null
+    }
+
+    const redirectUrl = mfData?.url as string | undefined
+    if (!mfResponse.ok || mfData?.statut === false || !redirectUrl) {
+      return res.status(502).json({
+        error: 'MoneyFusion: échec création paiement',
+        providerMessage: mfData?.message || 'Réponse invalide du provider',
+      })
+    }
+
     const payment = await (prisma as any).payment?.create({
       data: {
         userId,
@@ -87,10 +108,10 @@ router.post('/initiate-payment', async (req: AuthRequest, res) => {
     }).catch(() => null)
 
     res.json({
-      paymentUrl: env.MONEYFUSION_URL,
-      payload: paymentPayload,
+      redirectUrl,
       externalRef,
       paymentId: payment?.id ?? null,
+      providerToken: mfData?.token ?? null,
     })
   } catch (error: any) {
     console.error('[PAYMENT INITIATE]', error.message)

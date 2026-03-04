@@ -78,11 +78,22 @@ export default function Pricing() {
     setLoadingPlan(planKey)
     try {
       const data = await initiatePayment(planKey)
+
+      if (data?.redirectUrl) {
+        window.location.href = data.redirectUrl
+        return
+      }
+
+      if (!data?.paymentUrl) {
+        toast.error('URL de paiement introuvable')
+        return
+      }
+
       const form = document.createElement('form')
       form.method = 'POST'
       form.action = data.paymentUrl
       form.target = '_self'
-      Object.entries(data.payload).forEach(([key, value]) => {
+      Object.entries(data.payload || {}).forEach(([key, value]) => {
         const input = document.createElement('input')
         input.type = 'hidden'
         input.name = key
@@ -91,8 +102,8 @@ export default function Pricing() {
       })
       document.body.appendChild(form)
       form.submit()
-    } catch {
-      toast.error('Erreur lors de l\'initiation du paiement')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.providerMessage || err?.response?.data?.error || 'Erreur lors de l\'initiation du paiement')
     } finally {
       setLoadingPlan(null)
     }
