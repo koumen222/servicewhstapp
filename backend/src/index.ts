@@ -21,6 +21,7 @@ import {
   securityHeaders 
 } from './middleware/securityChecks.js'
 import { authMiddleware } from './middleware/auth.js'
+import { prisma } from './lib/prisma.js'
 
 // Extension des types Express pour nos données personnalisées
 declare global {
@@ -135,6 +136,23 @@ if (process.env.NODE_ENV !== 'production') {
     next()
   })
 }
+
+// =============== SETUP ADMIN (sans authentification, une seule utilisation) ===============
+app.post('/api/admin/setup-admin', async (req: any, res) => {
+  try {
+    const existingAdmin = await prisma.user.findFirst({ where: { isAdmin: true } as any })
+    if (existingAdmin) return res.status(400).json({ error: 'Un administrateur existe déjà' })
+    const { email } = req.body
+    if (!email) return res.status(400).json({ error: 'Email requis' })
+    const user = await prisma.user.findUnique({ where: { email } })
+    if (!user) return res.status(404).json({ error: `Aucun compte trouvé pour ${email}` })
+    const updated = await prisma.user.update({ where: { email }, data: { isAdmin: true, plan: 'enterprise', maxInstances: 100 } as any, select: { id: true, name: true, email: true } })
+    console.log('[SETUP] Admin promu:', updated.email)
+    res.json({ success: true, user: updated, message: `${updated.name} est maintenant admin. Reconnectez-vous.` })
+  } catch (e: any) {
+    res.status(500).json({ error: e.message })
+  }
+})
 
 // =============== ROUTES PUBLIQUES (avec clés API) ===============
 app.use('/api/v1', publicRoutes)
