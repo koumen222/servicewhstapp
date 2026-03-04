@@ -11,7 +11,6 @@ import Home from '@/pages/Home'
 import Pricing from '@/pages/Pricing'
 import Account from '@/pages/Account'
 import AdminDashboard from '@/pages/AdminDashboard'
-import AdminSetup from '@/pages/AdminSetup'
 import PaymentSuccess from '@/pages/PaymentSuccess'
 
 function ProtectedLayout({ children }: { children: React.ReactNode }) {
@@ -51,7 +50,6 @@ export default function App() {
         {/* Landing */}
         <Route path="/" element={<Home />} />
         <Route path="/pricing" element={<Pricing />} />
-        <Route path="/admin-setup" element={<AdminSetup />} />
 
         {/* Auth */}
         <Route path="/login"    element={<PublicRoute><Login /></PublicRoute>} />
