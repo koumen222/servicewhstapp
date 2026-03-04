@@ -23,6 +23,7 @@ model User {
   apiKeys       ApiKey[]
   subscriptions Subscription[]
   payments      Payment[]
+  notifications Notification[]
 }
 
 model Subscription {
@@ -159,4 +160,23 @@ model SystemConfig {
   updatedAt     DateTime @updatedAt
 
   @@index([key])
+}
+
+model Notification {
+  id            String   @id @default(uuid())
+  userId        String
+  type          String   // "plan_change", "account_status", "admin_message", etc.
+  title         String
+  message       String
+  isRead        Boolean  @default(false)
+  metadata      String?  // JSON with additional data (old plan, new plan, etc.)
+  createdBy     String?  // Admin ID who created the notification
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
 }

@@ -10,6 +10,7 @@ import healthRoutes from './routes/health.js'
 import publicRoutes from './routes/public.js'
 import instanceManagementRoutes from './routes/instanceManagement.js'
 import adminRoutes from './routes/admin.js'
+import notificationRoutes from './routes/notifications.js'
 import subscriptionRoutes from './routes/subscriptions.js'
 import { 
   multiTenantIsolation, 
@@ -147,6 +148,7 @@ app.use('/api/instances', authMiddleware, userRateLimit, multiTenantIsolation, i
 app.use('/api/instance', authMiddleware, userRateLimit, multiTenantIsolation, instanceRoutes)
 app.use('/api/message', authMiddleware, userRateLimit, multiTenantIsolation, messageRoutes)
 app.use('/api/admin', authMiddleware, adminRoutes)
+app.use('/api/notifications', authMiddleware, notificationRoutes)
 app.use('/api/subscriptions', authMiddleware, subscriptionRoutes)
 
 // =============== ROUTES DE GESTION DES CLÉS API ===============

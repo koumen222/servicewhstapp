@@ -187,6 +187,17 @@ export const adminDeleteUser = (id: string) =>
 export const adminGetPayments = () =>
   apiClient.get('/api/admin/payments').then(r => r.data)
 
+// ── Notifications ──────────────────────────────────────────────────────────
+
+export const getNotifications = (page = 1, unreadOnly = false) =>
+  apiClient.get(`/api/notifications?page=${page}&unread=${unreadOnly}`).then(r => r.data)
+
+export const markNotificationRead = (id: string) =>
+  apiClient.patch(`/api/notifications/${id}/read`).then(r => r.data)
+
+export const markAllNotificationsRead = () =>
+  apiClient.patch('/api/notifications/mark-all-read').then(r => r.data)
+
 // ── Endpoints Subscriptions ───────────────────────────────────────────────────
 
 export const getPlans = () =>

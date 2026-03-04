@@ -72,6 +72,16 @@ export interface AdminUser {
   _count: { instances: number }
 }
 
+export interface Notification {
+  id: string
+  type: string
+  title: string
+  message: string
+  isRead: boolean
+  metadata?: string
+  createdAt: string
+}
+
 export interface AuthResponse {
   token: string
   user: User

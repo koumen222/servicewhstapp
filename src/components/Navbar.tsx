@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/stores/authStore'
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
+import NotificationBell from '@/components/NotificationBell'
 
 const PLAN_BADGE: Record<string, { label: string; color: string }> = {
   free:       { label: 'Free',       color: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400' },
@@ -84,6 +85,8 @@ export function Navbar() {
           <Button variant="ghost" size="icon" onClick={() => setDark(!dark)}>
             {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </Button>
+
+          {user && <NotificationBell />}
 
           {user && (
             <div className="relative" ref={menuRef}>

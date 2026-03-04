@@ -245,6 +245,48 @@ router.put('/users/:id', async (req: AuthRequest, res) => {
       }
     })
     
+    // Créer des notifications pour les changements importants
+    const notifications = []
+    
+    if (validatedData.plan !== undefined && existingUser.plan !== validatedData.plan) {
+      notifications.push({
+        userId: req.params.id,
+        type: 'plan_change',
+        title: 'Plan modifié',
+        message: `Votre plan a été mis à jour de "${existingUser.plan}" vers "${validatedData.plan}" par un administrateur.`,
+        metadata: JSON.stringify({ 
+          oldPlan: existingUser.plan, 
+          newPlan: validatedData.plan,
+          adminEmail: req.user?.email 
+        }),
+        createdBy: req.user?.id
+      })
+    }
+    
+    if (validatedData.isActive !== undefined && existingUser.isActive !== validatedData.isActive) {
+      notifications.push({
+        userId: req.params.id,
+        type: 'account_status',
+        title: validatedData.isActive ? 'Compte réactivé' : 'Compte suspendu',
+        message: validatedData.isActive 
+          ? 'Votre compte a été réactivé par un administrateur.' 
+          : 'Votre compte a été suspendu par un administrateur.',
+        metadata: JSON.stringify({ 
+          oldStatus: existingUser.isActive, 
+          newStatus: validatedData.isActive,
+          adminEmail: req.user?.email 
+        }),
+        createdBy: req.user?.id
+      })
+    }
+    
+    // Créer toutes les notifications en une fois
+    if (notifications.length > 0) {
+      await prisma.notification.createMany({
+        data: notifications
+      })
+    }
+    
     console.log('[ADMIN] Utilisateur mis à jour:', updatedUser.email, 'par admin:', req.user?.email)
     
     res.json({ 
