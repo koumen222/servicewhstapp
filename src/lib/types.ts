@@ -36,6 +36,23 @@ export interface Payment {
   createdAt: string
 }
 
+export interface UsageStats {
+  activeInstances: number
+  totalMessages: number
+  sentMessages: number
+  failedMessages: number
+  deliveredMessages: number
+  messages30d: number
+}
+
+export interface MySubscriptionResponse {
+  plan: string
+  maxInstances: number
+  planDetails: PlanDetails
+  payments: Payment[]
+  usage?: UsageStats
+}
+
 export interface AdminStats {
   totalUsers: number
   totalInstances: number

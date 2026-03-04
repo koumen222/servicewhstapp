@@ -20,6 +20,9 @@ router.get('/plans', (req, res) => {
 router.get('/my-subscription', async (req: AuthRequest, res) => {
   try {
     const userId = req.user!.id
+    const start30d = new Date()
+    start30d.setDate(start30d.getDate() - 30)
+
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { id: true, plan: true, maxInstances: true, createdAt: true },
@@ -31,11 +34,28 @@ router.get('/my-subscription', async (req: AuthRequest, res) => {
       take: 10,
     }).catch(() => [])
 
+    const [activeInstances, totalMessages, sentMessages, failedMessages, deliveredMessages, messages30d] = await Promise.all([
+      prisma.instance.count({ where: { userId, isActive: true } }),
+      prisma.messageLog.count({ where: { instance: { userId } } }),
+      prisma.messageLog.count({ where: { instance: { userId }, status: 'sent' } }),
+      prisma.messageLog.count({ where: { instance: { userId }, status: 'failed' } }),
+      prisma.messageLog.count({ where: { instance: { userId }, status: 'delivered' } }),
+      prisma.messageLog.count({ where: { instance: { userId }, createdAt: { gte: start30d } } }),
+    ])
+
     res.json({
       plan: user?.plan ?? 'free',
       maxInstances: user?.maxInstances ?? 1,
       planDetails: PLANS[user?.plan as keyof typeof PLANS] ?? PLANS.free,
       payments: payments ?? [],
+      usage: {
+        activeInstances,
+        totalMessages,
+        sentMessages,
+        failedMessages,
+        deliveredMessages,
+        messages30d,
+      },
     })
   } catch (error: any) {
     res.status(500).json({ error: 'Erreur serveur' })

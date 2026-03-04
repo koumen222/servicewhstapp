@@ -7,6 +7,7 @@ import { evolutionAPI } from '../lib/evolution.js'
 import { buildInstanceName } from '../utils/instanceName.js'
 import { authenticate } from '../middleware/auth.js'
 import { checkInstanceQuota } from '../middleware/quota.js'
+import { getUsageStats } from '../utils/quotaManager.js'
 import { env } from '../config/env.js'
 
 const router = Router()
@@ -280,6 +281,82 @@ router.get('/credentials/:instanceName', async (req: AuthRequest, res) => {
   } catch (error: any) {
     const msg = error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Erreur inconnue'
     console.error('[CREDENTIALS]', msg, error?.response?.data)
+    res.status(500).json({ error: msg })
+  }
+})
+
+// Endpoint pour récupérer les statistiques d'usage d'une instance
+router.get('/stats/:instanceName', async (req: AuthRequest, res) => {
+  try {
+    const { instanceName: customName } = req.params
+    const userId = req.user!.id
+    const fullInstanceName = buildInstanceName(userId, customName)
+
+    const dbInstance = await prisma.instance.findUnique({
+      where: { instanceName: fullInstanceName, userId }
+    })
+    if (!dbInstance) {
+      return res.status(404).json({ error: 'Instance non trouvée' })
+    }
+
+    const stats = await getUsageStats(dbInstance.id)
+
+    // Récupérer l'historique des messages récents
+    const recentMessages = await prisma.messageLog.findMany({
+      where: { instanceId: dbInstance.id },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      select: {
+        id: true,
+        recipientNumber: true,
+        messageType: true,
+        status: true,
+        createdAt: true,
+        errorMessage: true
+      }
+    })
+
+    // Statistiques par statut pour cette instance
+    const statusStats = await prisma.messageLog.groupBy({
+      by: ['status'],
+      where: { instanceId: dbInstance.id },
+      _count: { status: true }
+    })
+
+    res.json({
+      instanceName: dbInstance.customName,
+      quota: {
+        daily: {
+          current: stats.daily.current,
+          limit: stats.daily.limit,
+          remaining: stats.daily.limit === -1 ? 'Illimité' : Math.max(0, stats.daily.limit - stats.daily.current),
+          percentage: stats.daily.percentage,
+          resetDate: stats.daily.resetDate
+        },
+        monthly: {
+          current: stats.monthly.current,
+          limit: stats.monthly.limit,
+          remaining: stats.monthly.limit === -1 ? 'Illimité' : Math.max(0, stats.monthly.limit - stats.monthly.current),
+          percentage: stats.monthly.percentage,
+          resetDate: stats.monthly.resetDate
+        },
+        canSend: stats.canSend.canSend,
+        reason: stats.canSend.reason
+      },
+      statistics: {
+        total: stats.total,
+        thisHour: stats.thisHour,
+        byStatus: statusStats.reduce((acc, item) => {
+          acc[item.status] = item._count.status
+          return acc
+        }, {} as Record<string, number>)
+      },
+      recentMessages,
+      lastUsed: dbInstance.lastUsed
+    })
+  } catch (error: any) {
+    const msg = error?.message || 'Erreur lors de la récupération des statistiques'
+    console.error('[INSTANCE STATS]', msg, error)
     res.status(500).json({ error: msg })
   }
 })

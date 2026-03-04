@@ -10,8 +10,19 @@ export interface AuthUser {
   isAdmin?: boolean
 }
 
+export interface QuotaInfo {
+  canSend: boolean
+  reason?: string
+  dailyUsage?: number
+  monthlyUsage?: number
+  dailyLimit?: number
+  monthlyLimit?: number
+}
+
 export interface AuthRequest extends Request {
   user?: AuthUser
+  instanceId?: string
+  quotaInfo?: QuotaInfo
 }
 
 export interface EvolutionInstance {

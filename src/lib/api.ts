@@ -8,6 +8,7 @@ import type {
   SendTextPayload,
   SendTextResponse,
   InstanceCredentials,
+  MySubscriptionResponse,
 } from './types'
 
 // ── Configuration ────────────────────────────────────────────────────────────
@@ -192,7 +193,7 @@ export const getPlans = () =>
   apiClient.get('/api/subscriptions/plans').then(r => r.data)
 
 export const getMySubscription = () =>
-  apiClient.get('/api/subscriptions/my-subscription').then(r => r.data)
+  apiClient.get<MySubscriptionResponse>('/api/subscriptions/my-subscription').then(r => r.data)
 
 export const initiatePayment = (plan: string) =>
   apiClient.post('/api/subscriptions/initiate-payment', { plan }).then(r => r.data)

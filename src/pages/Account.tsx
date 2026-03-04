@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { User, CreditCard, Shield, CheckCircle, Loader2, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuthStore } from '@/stores/authStore'
 import { getMySubscription } from '@/lib/api'
 import { toast } from 'sonner'
-import type { Payment, PlanDetails } from '@/lib/types'
+import type { MySubscriptionResponse } from '@/lib/types'
 
 const PLAN_LABELS: Record<string, { label: string; color: string }> = {
   free:       { label: 'Free',       color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' },
@@ -25,9 +25,8 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 
 export default function Account() {
   const { user } = useAuthStore()
-  const navigate = useNavigate()
   const [tab, setTab] = useState<'profile' | 'subscription' | 'security'>('profile')
-  const [subData, setSubData] = useState<{ plan: string; maxInstances: number; planDetails: PlanDetails; payments: Payment[] } | null>(null)
+  const [subData, setSubData] = useState<MySubscriptionResponse | null>(null)
   const [subLoading, setSubLoading] = useState(false)
 
   useEffect(() => {
@@ -168,6 +167,47 @@ export default function Account() {
                 </div>
               ) : (
                 <Button variant="outline" onClick={loadSubscription}>Recharger</Button>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Usage */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Mon usage</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {subLoading ? (
+                <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+              ) : subData?.usage ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                  <div className="p-3 rounded-lg border bg-muted/20">
+                    <div className="text-muted-foreground">Messages envoyés</div>
+                    <div className="font-semibold">{subData.usage.sentMessages.toLocaleString()}</div>
+                  </div>
+                  <div className="p-3 rounded-lg border bg-muted/20">
+                    <div className="text-muted-foreground">Messages livrés</div>
+                    <div className="font-semibold">{subData.usage.deliveredMessages.toLocaleString()}</div>
+                  </div>
+                  <div className="p-3 rounded-lg border bg-muted/20">
+                    <div className="text-muted-foreground">Messages échoués</div>
+                    <div className="font-semibold text-red-600">{subData.usage.failedMessages.toLocaleString()}</div>
+                  </div>
+                  <div className="p-3 rounded-lg border bg-muted/20">
+                    <div className="text-muted-foreground">Total messages</div>
+                    <div className="font-semibold">{subData.usage.totalMessages.toLocaleString()}</div>
+                  </div>
+                  <div className="p-3 rounded-lg border bg-muted/20">
+                    <div className="text-muted-foreground">30 derniers jours</div>
+                    <div className="font-semibold">{subData.usage.messages30d.toLocaleString()}</div>
+                  </div>
+                  <div className="p-3 rounded-lg border bg-muted/20">
+                    <div className="text-muted-foreground">Instances actives</div>
+                    <div className="font-semibold">{subData.usage.activeInstances}</div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">Pas encore de données d'usage</p>
               )}
             </CardContent>
           </Card>
