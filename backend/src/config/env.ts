@@ -11,10 +11,21 @@ export const env = {
   MONEYFUSION_URL: process.env.MONEYFUSION_URL || 'https://www.pay.moneyfusion.net/Scalor/8ad75171bd8f7d55/pay/',
   EVOLUTION_API_URL: process.env.EVOLUTION_API_URL || '',
   EVOLUTION_API_KEY: process.env.EVOLUTION_API_KEY || '',
+  EVOLUTION_MASTER_API_KEY: process.env.EVOLUTION_MASTER_API_KEY || process.env.EVOLUTION_API_KEY || '',
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
   DATABASE_CONNECTION_URI: process.env.DATABASE_CONNECTION_URI || 'file:./dev.db',
 }
 
-if (!env.EVOLUTION_API_URL || !env.EVOLUTION_API_KEY) {
-  console.warn('⚠️  EVOLUTION_API_URL or EVOLUTION_API_KEY not set')
+// Logs de débogage pour Evolution API
+console.log('\n🔧 Evolution API Configuration:')
+console.log('EVOLUTION_API_URL:', process.env.EVOLUTION_API_URL || '(not set)')
+console.log('EVOLUTION_API_KEY:', process.env.EVOLUTION_API_KEY ? `${process.env.EVOLUTION_API_KEY.substring(0, 10)}...` : '(not set)')
+console.log('EVOLUTION_MASTER_API_KEY:', process.env.EVOLUTION_MASTER_API_KEY ? `${process.env.EVOLUTION_MASTER_API_KEY.substring(0, 10)}...` : '(not set)')
+
+if (!env.EVOLUTION_API_URL || !env.EVOLUTION_MASTER_API_KEY) {
+  console.error('❌ ERROR: EVOLUTION_API_URL or EVOLUTION_MASTER_API_KEY not set!')
+  console.error('   EVOLUTION_API_URL:', env.EVOLUTION_API_URL || '(empty)')
+  console.error('   EVOLUTION_MASTER_API_KEY:', env.EVOLUTION_MASTER_API_KEY || '(empty)')
+} else {
+  console.log('✅ Evolution API configuration loaded successfully\n')
 }

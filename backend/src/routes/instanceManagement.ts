@@ -471,10 +471,20 @@ router.get('/instances/:instanceId/qr-code', async (req, res) => {
 // =============== FONCTIONS UTILITAIRES EVOLUTION API ===============
 
 async function createEvolutionInstance(instanceName: string, integration: string) {
+  console.log('\n🔄 Creating Evolution instance...')
+  console.log('Instance name:', instanceName)
+  console.log('Integration:', integration)
+  
   const evolutionUrl = process.env.EVOLUTION_API_URL
   const masterApiKey = process.env.EVOLUTION_MASTER_API_KEY
+  
+  console.log('EVOLUTION_API_URL:', evolutionUrl || '(not set)')
+  console.log('EVOLUTION_MASTER_API_KEY:', masterApiKey ? `${masterApiKey.substring(0, 10)}...` : '(not set)')
 
   if (!evolutionUrl || !masterApiKey) {
+    console.error('❌ Evolution API configuration missing!')
+    console.error('   URL:', evolutionUrl || '(empty)')
+    console.error('   Master API Key:', masterApiKey || '(empty)')
     throw new Error('Evolution API configuration missing')
   }
 
@@ -483,16 +493,29 @@ async function createEvolutionInstance(instanceName: string, integration: string
     integration,
     qrcode: true
   }
+  
+  const url = `${evolutionUrl}/instance/create`
+  console.log('Sending request to:', url)
+  console.log('Payload:', JSON.stringify(payload, null, 2))
 
-  const response = await axios.post(`${evolutionUrl}/instance/create`, payload, {
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': masterApiKey
-    },
-    timeout: 30000
-  })
-
-  return response.data
+  try {
+    const response = await axios.post(url, payload, {
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': masterApiKey
+      },
+      timeout: 30000
+    })
+    
+    console.log('✅ Evolution instance created successfully')
+    console.log('Response status:', response.status)
+    return response.data
+  } catch (error: any) {
+    console.error('❌ Evolution API request failed:')
+    console.error('Status:', error.response?.status)
+    console.error('Error:', error.response?.data || error.message)
+    throw error
+  }
 }
 
 async function deleteEvolutionInstance(instanceName: string, apiKey: string) {
