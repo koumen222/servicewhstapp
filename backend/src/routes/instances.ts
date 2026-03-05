@@ -374,12 +374,13 @@ router.post('/send-message', async (req: AuthRequest, res) => {
       }
     }
 
-    // Strip JID suffix — Evolution API expects plain number or number@s.whatsapp.net
+    // Strip JID suffixes — Evolution API expects plain number or number@s.whatsapp.net
     // e.g. "553198296801@s.whatsapp.net" → "553198296801"
-    // e.g. "553198296801@g.us" → pass as-is (group)
+    // e.g. "10526998446088@lid"           → "10526998446088" (Linked Device)
+    // e.g. "553198296801@g.us"            → pass as-is (group)
     const cleanNumber = number.includes('@g.us')
       ? number
-      : number.replace('@s.whatsapp.net', '').replace(/\D/g, '')
+      : number.replace(/@s\.whatsapp\.net$/, '').replace(/@lid$/, '').replace(/[^0-9]/g, '')
 
     if (!cleanNumber) {
       return res.status(400).json({ success: false, message: 'Invalid phone number format' })
@@ -522,7 +523,10 @@ router.get('/chats/:instanceName/:remoteJid/messages', async (req: AuthRequest, 
     const decodedJid = decodeURIComponent(remoteJid)
     console.log(`[MESSAGES] Fetching messages: instance=${fullInstanceName}, remoteJid=${decodedJid}`)
     const rawMessages = await evolutionAPI.getChatMessages(fullInstanceName, decodedJid, limit)
-    const messagesArray = Array.isArray(rawMessages) ? rawMessages : (rawMessages?.messages || [])
+    // Evolution API may return: array | { messages: [] } | { message: [] }
+    const messagesArray = Array.isArray(rawMessages)
+      ? rawMessages
+      : (rawMessages?.messages || rawMessages?.message || [])
 
     const messages = messagesArray.map((msg: any) => {
       // Extract message content from various possible fields
