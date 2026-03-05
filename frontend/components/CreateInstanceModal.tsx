@@ -144,7 +144,7 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
     setQrLoading(true);
     setQrError(null);
     try {
-      const res = await instanceApi.getQRCode(instance.name);
+      const res = await instanceApi.getQRCode(instance.instanceName);
       if (!res.data?.success) {
         setQrError(res.data?.message || "Failed to get QR code");
         return;
@@ -152,7 +152,7 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
       const qr = res.data.data?.qrCode;
       if (qr) {
         setQrCode(qr.startsWith("data:") ? qr : `data:image/png;base64,${qr}`);
-        startStatusPolling(instance.name);
+        startStatusPolling(instance.instanceName);
       } else {
         setQrError("QR code not available. Instance may already be connected.");
       }
@@ -170,7 +170,7 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
     setQrLoading(true);
     setQrError(null);
     try {
-      const res = await instanceApi.getQRCode(instance.name);
+      const res = await instanceApi.getQRCode(instance.instanceName);
       if (!res.data?.success) { setQrError(res.data?.message || "Failed"); return; }
       const qr = res.data.data?.qrCode;
       if (qr) setQrCode(qr.startsWith("data:") ? qr : `data:image/png;base64,${qr}`);
@@ -186,13 +186,13 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
     setPhoneLoading(true);
     setPhoneError(null);
     try {
-      const res = await instanceApi.connectPhone(instance.name, phoneNumber.trim());
+      const res = await instanceApi.connectPhone(instance.instanceName, phoneNumber.trim());
       if (!res.data?.success) {
         setPhoneError(res.data?.message || "Failed to generate pairing code");
         return;
       }
       setPairingCode(res.data.data?.pairingCode);
-      startStatusPolling(instance.name);
+      startStatusPolling(instance.instanceName);
     } catch (err: any) {
       const msg = err?.response?.data?.message || "Failed to generate pairing code";
       console.error("Frontend error:", err);
