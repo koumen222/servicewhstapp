@@ -106,7 +106,7 @@ class EvolutionAPI {
 
   async getChats(instanceName: string) {
     try {
-      const { data } = await this.client.get(`/chat/findChats/${instanceName}`)
+      const { data } = await this.client.post(`/chat/findChats/${instanceName}`, {})
       return data
     } catch (error: any) {
       console.error('[Evolution] getChats error:', error.response?.data || error.message)
