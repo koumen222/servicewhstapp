@@ -410,25 +410,69 @@ router.post('/send-message', async (req: AuthRequest, res) => {
     }
 
     console.log(`[SEND-MSG] Sending to ${cleanNumber} via ${fullInstanceName}`)
-    const result = await evolutionAPI.sendTextMessage(fullInstanceName, cleanNumber, message)
-
-    // Log message to database
-    await prisma.messageLog.create({
-      data: {
-        instanceId: dbInstance.id,
-        direction: 'outbound',
-        recipient: cleanNumber,
-        content: message,
-        status: 'sent',
-        messageId: result?.key?.id || null
-      }
+    
+    // Get or create API key BEFORE sending (required for logging)
+    let apiKey = await prisma.apiKey.findFirst({
+      where: { instanceId: dbInstance.id }
     })
+    
+    if (!apiKey) {
+      const keyString = `default-${dbInstance.id}-${Date.now()}`
+      apiKey = await prisma.apiKey.create({
+        data: {
+          userId: dbInstance.userId,
+          instanceId: dbInstance.id,
+          name: 'Default Key',
+          keyHash: crypto.createHash('sha256').update(keyString).digest('hex'),
+          keyPrefix: 'ak_default',
+          permissions: ['send_message', 'read_message']
+        }
+      })
+    }
 
-    // Increment quota usage counters
-    await incrementMessageUsage(dbInstance.id)
+    // Send message via Evolution API
+    let result
+    let sendError = null
+    try {
+      result = await evolutionAPI.sendTextMessage(fullInstanceName, cleanNumber, message)
+    } catch (err: any) {
+      sendError = err
+      console.error('[SEND-MSG] Evolution API error:', err?.message)
+    }
 
-    // Update instance lastUsed
-    await prisma.instance.update({ where: { id: dbInstance.id }, data: { lastUsed: new Date() } })
+    // ALWAYS log and increment quota, even if send failed
+    // This prevents quota bypass by intentionally failing sends
+    try {
+      await prisma.messageLog.create({
+        data: {
+          instanceId: dbInstance.id,
+          apiKeyId: apiKey.id,
+          recipientNumber: cleanNumber,
+          messageType: 'text',
+          messageContent: message.substring(0, 500),
+          status: sendError ? 'failed' : 'sent',
+          evolutionMessageId: result?.key?.id || null,
+          errorMessage: sendError?.message || null
+        }
+      })
+
+      // CRITICAL: Always increment quota when attempt is made
+      await incrementMessageUsage(dbInstance.id)
+      console.log(`[QUOTA] Incremented usage for instance ${dbInstance.id}`)
+
+      await prisma.instance.update({ 
+        where: { id: dbInstance.id }, 
+        data: { lastUsed: new Date() } 
+      })
+    } catch (logError: any) {
+      console.error('[SEND-MSG] Failed to log message or increment quota:', logError?.message)
+      // Continue anyway - message was sent
+    }
+
+    // If Evolution API failed, throw error now (after logging)
+    if (sendError) {
+      throw sendError
+    }
 
     // Get updated quota info
     const updatedQuota = await canSendMessage(dbInstance.id)
@@ -456,8 +500,17 @@ router.post('/send-message', async (req: AuthRequest, res) => {
   } catch (error: any) {
     const evolutionMsg = error?.response?.data?.message || error?.response?.data?.error
     const msg = evolutionMsg || error?.message || 'Failed to send message'
-    console.error('[SEND-MSG] Error:', { number: req.body?.number, statusCode: error?.response?.status, msg })
-    return res.status(500).json({ success: false, message: msg })
+    console.error('[SEND-MSG] Final error:', { 
+      number: req.body?.number, 
+      statusCode: error?.response?.status, 
+      msg,
+      note: 'Quota was still incremented to prevent abuse'
+    })
+    return res.status(500).json({ 
+      success: false, 
+      message: msg,
+      note: 'Message quota was consumed even though send failed'
+    })
   }
 })
 
