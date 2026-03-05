@@ -46,6 +46,10 @@ export default function ApiPage() {
   const [creating, setCreating]     = useState(false);
   const [createError, setCreateError] = useState("");
 
+  // Session map: keyId → full key (cleared on page refresh)
+  const [sessionKeys, setSessionKeys] = useState<Record<string, string>>({});
+  const [regenerating, setRegenerating] = useState<string | null>(null);
+
   // Revealed key (shown once after creation)
   const [revealedKey, setRevealedKey] = useState<{ key: string; name: string } | null>(null);
 
@@ -77,6 +81,7 @@ export default function ApiPage() {
       const res = await apiKeysApi.create(newInstance, newName || undefined, newPerms);
       const created = res.data?.data;
       setRevealedKey({ key: created.key, name: created.name ?? "API Key" });
+      setSessionKeys((prev) => ({ ...prev, [created.id]: created.key }));
       setShowCreate(false);
       setNewName(""); setNewInstance(""); setNewPerms(["send_message", "get_instance_status"]);
       await loadKeys();
@@ -92,8 +97,33 @@ export default function ApiPage() {
     try {
       await apiKeysApi.revoke(id);
       setKeys((prev) => prev.filter((k) => k.id !== id));
+      setSessionKeys((prev) => { const n = { ...prev }; delete n[id]; return n; });
     } catch {/* silent */} finally {
       setRevoking(null);
+    }
+  }
+
+  async function handleRegenerate(k: LiveKey) {
+    setRegenerating(k.id);
+    try {
+      const res = await apiKeysApi.create(
+        k.instance.id,
+        k.name ?? undefined,
+        k.permissions
+      );
+      const created = res.data?.data;
+      // revoke old key
+      await apiKeysApi.revoke(k.id);
+      setRevealedKey({ key: created.key, name: created.name ?? "API Key" });
+      setSessionKeys((prev) => {
+        const n = { ...prev };
+        delete n[k.id];
+        n[created.id] = created.key;
+        return n;
+      });
+      await loadKeys();
+    } catch {/* silent */} finally {
+      setRegenerating(null);
     }
   }
 
@@ -206,13 +236,21 @@ console.log(data.data.messageId);`;
                     </span>
                   </td>
                   <td>
-                    <div className="flex items-center gap-1.5 font-mono text-[11px] text-[#5a7a5a]">
-                      <span>{k.keyPrefix}</span>
-                      <button onClick={() => copyText(k.keyPrefix, k.id + "-copy")} className="text-[#3a5a3a] hover:text-[#22c55e]">
-                        {copied === k.id + "-copy"
-                          ? <CheckCircle2 size={10} className="text-[#22c55e]" />
-                          : <Copy size={10} />}
-                      </button>
+                    <div className="flex items-center gap-1.5 font-mono text-[11px]">
+                      {sessionKeys[k.id] ? (
+                        // Full key available this session
+                        <>
+                          <span className="text-[#22c55e]">{sessionKeys[k.id]}</span>
+                          <button onClick={() => copyText(sessionKeys[k.id], k.id + "-copy")} className="text-[#3a7a3a] hover:text-[#22c55e] shrink-0">
+                            {copied === k.id + "-copy" ? <CheckCircle2 size={10} className="text-[#22c55e]" /> : <Copy size={10} />}
+                          </button>
+                        </>
+                      ) : (
+                        // Only prefix stored — key gone after session
+                        <span className="text-[#4a6a4a]">
+                          {k.keyPrefix.replace(/\.\.\.?$/, "")}••••••••
+                        </span>
+                      )}
                     </div>
                   </td>
                   <td>
@@ -225,13 +263,23 @@ console.log(data.data.messageId);`;
                   <td className="text-[#5a7a5a]">{k.usageCount ?? 0}×</td>
                   <td className="text-[#5a7a5a] text-[11px]">{formatDate(k.createdAt)}</td>
                   <td>
-                    <button
-                      onClick={() => handleRevoke(k.id)}
-                      disabled={revoking === k.id}
-                      className="text-[#3a5a3a] hover:text-red-400 transition-colors disabled:opacity-40"
-                    >
-                      {revoking === k.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleRegenerate(k)}
+                        disabled={regenerating === k.id || revoking === k.id}
+                        className="text-[11px] text-[#3a5a3a] hover:text-[#22c55e] transition-colors disabled:opacity-40 font-mono"
+                        title="Régénérer (révoque l'ancienne clé)"
+                      >
+                        {regenerating === k.id ? <Loader2 size={11} className="animate-spin" /> : "↻"}
+                      </button>
+                      <button
+                        onClick={() => handleRevoke(k.id)}
+                        disabled={revoking === k.id || regenerating === k.id}
+                        className="text-[#3a5a3a] hover:text-red-400 transition-colors disabled:opacity-40"
+                      >
+                        {revoking === k.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
