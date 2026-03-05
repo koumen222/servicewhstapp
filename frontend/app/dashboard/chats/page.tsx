@@ -90,18 +90,19 @@ export default function ChatsPage() {
   const activeInstance = instances.find(i => i.status === "open" || i.connectionStatus === "open") || instances[0];
   
   // Real-time status hook — always use instance.name (customName) not instanceName
+  // Disable polling when a chat is open to prevent constant refreshing
   const {
     status: connectionStatus,
     connectionInfo,
   } = useInstanceStatus({
     instanceName: activeInstance?.name || "",
-    enabled: !!activeInstance?.name,
+    enabled: !!activeInstance?.name && !selectedChat,
     pollInterval: 5000,
   });
 
   const isConnected = connectionStatus === "connected";
 
-  // Real-time chats hook — only fetch when connected
+  // Real-time chats hook — only fetch when connected and no chat is open
   const {
     chats: realTimeChats,
     isLoading: chatsLoading,
@@ -109,7 +110,7 @@ export default function ChatsPage() {
     markAsRead,
   } = useRealTimeChats({
     instanceId: activeInstance?.name,
-    enabled: isConnected && !!activeInstance?.name,
+    enabled: isConnected && !!activeInstance?.name && !selectedChat,
     pollInterval: 3000,
   });
   
