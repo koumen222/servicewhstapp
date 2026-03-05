@@ -6,7 +6,7 @@ import type { Chat, ChatMessage } from "@/lib/types";
 
 interface UseRealTimeChatsOptions {
   instanceId?: string;
-  pollInterval?: number; // default 3000ms
+  pollInterval?: number; // default 60000ms — webhooks are primary, polling is fallback
   enabled?: boolean;
 }
 
@@ -19,7 +19,7 @@ interface RealTimeChatsState {
 
 export function useRealTimeChats({
   instanceId,
-  pollInterval = 3000,
+  pollInterval = 60_000,
   enabled = true,
 }: UseRealTimeChatsOptions = {}) {
   const [state, setState] = useState<RealTimeChatsState>({
@@ -32,30 +32,36 @@ export function useRealTimeChats({
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const mountedRef = useRef(true);
   const prevChatsRef = useRef<Chat[]>([]);
+  const isFirstFetchRef = useRef(true);
 
-  const fetchChats = useCallback(async () => {
+  const fetchChats = useCallback(async (isBackground = false) => {
     if (!enabled || !mountedRef.current) return;
 
-    try {
+    // Only show loading spinner on the very first fetch
+    if (!isBackground) {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
-      
+    }
+
+    try {
       if (!instanceId) {
         setState(prev => ({ ...prev, isLoading: false }));
         return;
       }
       const response = await instanceApi.getChats(instanceId);
+      if (!mountedRef.current) return;
+
       if (!response.data?.success) {
-        setState(prev => ({ ...prev, isLoading: false, error: response.data?.message || 'Failed to fetch chats' }));
+        if (!isBackground) {
+          setState(prev => ({ ...prev, isLoading: false, error: response.data?.message || 'Failed to fetch chats' }));
+        }
         return;
       }
       const newChats: Chat[] = response.data?.data?.chats || [];
-      
-      if (!mountedRef.current) return;
 
       // Check for new messages by comparing with previous chats
       const hasNewMessages = newChats.some(chat => {
         const prevChat = prevChatsRef.current.find(p => p.id === chat.id);
-        return !prevChat || 
+        return !prevChat ||
                chat.lastMessage?.id !== prevChat.lastMessage?.id ||
                chat.unreadCount !== prevChat.unreadCount;
       });
@@ -66,36 +72,22 @@ export function useRealTimeChats({
         ...prev,
         chats: newChats,
         isLoading: false,
+        error: null,
         lastUpdated: new Date(),
       }));
 
-      // Optional: You could emit events here for new messages
-      if (hasNewMessages) {
-        // Could dispatch custom events or call callbacks
-        console.log("New messages detected");
-      }
-
     } catch (error: any) {
       if (!mountedRef.current) return;
-      
-      console.error('Failed to fetch chats:', error);
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: error.response?.data?.message || 'Failed to fetch chats',
-      }));
+      // Background polls: silent failure — keep last known chats
+      if (!isBackground) {
+        setState(prev => ({
+          ...prev,
+          isLoading: false,
+          error: error.response?.data?.message || 'Failed to fetch chats',
+        }));
+      }
     }
   }, [instanceId, enabled]);
-
-  const startPolling = useCallback(() => {
-    if (intervalRef.current) return;
-    
-    // Fetch immediately
-    fetchChats();
-    
-    // Then poll every interval
-    intervalRef.current = setInterval(fetchChats, pollInterval);
-  }, [fetchChats, pollInterval]);
 
   const stopPolling = useCallback(() => {
     if (intervalRef.current) {
@@ -103,6 +95,19 @@ export function useRealTimeChats({
       intervalRef.current = null;
     }
   }, []);
+
+  const startPolling = useCallback(() => {
+    stopPolling();
+
+    if (isFirstFetchRef.current) {
+      isFirstFetchRef.current = false;
+      fetchChats(false); // initial fetch shows spinner
+    } else {
+      fetchChats(true); // subsequent re-enables are background
+    }
+
+    intervalRef.current = setInterval(() => fetchChats(true), pollInterval);
+  }, [fetchChats, pollInterval, stopPolling]);
 
   const refresh = useCallback(() => {
     fetchChats();

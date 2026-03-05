@@ -84,6 +84,7 @@ const MOCK_CHATS: Chat[] = [
 export default function ChatsPage() {
   const { instances } = useAppStore();
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
+  const [frozenInstanceName, setFrozenInstanceName] = useState<string | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState("");
   
   // Get active (connected) instance first, then any instance
@@ -150,9 +151,11 @@ export default function ChatsPage() {
   };
   
   const handleChatClick = async (chat: Chat) => {
+    // Freeze instanceName at click time — prevents ChatWindow from reloading
+    // messages if activeInstance changes reference during conversation
+    setFrozenInstanceName(activeInstance?.name);
     setSelectedChat(chat);
     
-    // Mark messages as read
     if (chat.unreadCount > 0) {
       await markAsRead(chat.id, []);
     }
@@ -371,7 +374,7 @@ export default function ChatsPage() {
           isOpen={!!selectedChat}
           onClose={() => setSelectedChat(null)}
           onSendMessage={handleSendMessage}
-          instanceName={activeInstance?.name}
+          instanceName={frozenInstanceName}
           isConnected={isConnected}
         />
       )}
