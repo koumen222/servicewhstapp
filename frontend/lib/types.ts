@@ -117,16 +117,17 @@ export interface InstanceStats {
 /** Real backend plan data — prices in XAF */
 export interface PlanDetails {
   name: string;
-  price: number;   // XAF
+  price: number;   // XAF (prix après réduction)
+  originalPrice?: number; // Prix avant réduction
   maxInstances: number;
   currency: 'XAF';
 }
 
 export const PLAN_CATALOG: Record<PlanType, PlanDetails> = {
-  free:       { name: 'Free',       price: 0,     maxInstances: 1,   currency: 'XAF' },
-  starter:    { name: 'Starter',    price: 4990,  maxInstances: 3,   currency: 'XAF' },
-  pro:        { name: 'Pro',        price: 14990, maxInstances: 10,  currency: 'XAF' },
-  enterprise: { name: 'Enterprise', price: 49990, maxInstances: 100, currency: 'XAF' },
+  free:       { name: 'Free',       price: 0,     maxInstances: 1,  currency: 'XAF' },
+  starter:    { name: 'Starter',    price: 2495,  originalPrice: 4990,  maxInstances: 1,  currency: 'XAF' },
+  pro:        { name: 'Pro',        price: 7495,  originalPrice: 14990, maxInstances: 5,  currency: 'XAF' },
+  enterprise: { name: 'Enterprise', price: 24995, originalPrice: 49990, maxInstances: 10, currency: 'XAF' },
 };
 
 export interface Payment {

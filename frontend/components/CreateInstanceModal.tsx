@@ -210,11 +210,11 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
   }
 
   const stepTitles: Record<Step, string> = {
-    form: "Create an instance",
-    choose: "Instance created!",
-    qr: "Scan QR Code",
-    phone: "Connect with Phone",
-    connected: "WhatsApp Connected!",
+    form: "Créer une instance",
+    choose: "Instance créée !",
+    qr: "Scanner le QR Code",
+    phone: "Connecter avec téléphone",
+    connected: "WhatsApp Connecté !",
   };
 
   return (
@@ -259,31 +259,31 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-[#8a9a8a] mb-1.5">
-                    Instance Name <span className="text-red-400">*</span>
+                    Nom de l'instance <span className="text-red-400">*</span>
                   </label>
                   <input
                     {...register("customName")}
-                    placeholder="my-bot"
+                    placeholder="mon-bot"
                     autoFocus
                     className={cn("input-dark w-full", errors.customName && "border-red-500/50")}
                   />
                   {errors.customName && (
                     <p className="mt-1 text-[11px] text-red-400">{errors.customName.message}</p>
                   )}
-                  <p className="mt-1 text-[10px] text-[#4a6a4a]">3–30 chars. Letters, numbers, hyphens, underscores only.</p>
+                  <p className="mt-1 text-[10px] text-[#4a6a4a]">3–30 caractères. Lettres, chiffres, tirets et underscores uniquement.</p>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#8a9a8a] mb-1.5">Integration</label>
+                  <label className="block text-xs font-medium text-[#8a9a8a] mb-1.5">Intégration</label>
                   <select {...register("integration")} className="input-dark w-full" style={{ appearance: "none" }}>
-                    <option value="WHATSAPP-BAILEYS">WhatsApp Baileys (recommended)</option>
+                    <option value="WHATSAPP-BAILEYS">WhatsApp Baileys (recommandé)</option>
                     <option value="WHATSAPP-BUSINESS">WhatsApp Business API</option>
                   </select>
                 </div>
               </div>
               <div className="flex gap-2 mt-5">
-                <button type="button" onClick={onClose} className="btn-ghost flex-1">Cancel</button>
+                <button type="button" onClick={onClose} className="btn-ghost flex-1">Annuler</button>
                 <button type="submit" disabled={isSubmitting} className="btn-green flex-1 flex items-center justify-center gap-2">
-                  {isSubmitting ? <><Loader2 size={13} className="animate-spin" />Creating…</> : <><Plus size={13} />Create instance</>}
+                  {isSubmitting ? <><Loader2 size={13} className="animate-spin" />Création…</> : <><Plus size={13} />Créer l'instance</>}
                 </button>
               </div>
             </form>
@@ -296,15 +296,15 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
                 <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: "#0d2510" }}>
                   <CheckCircle2 size={24} className="text-[#22c55e]" />
                 </div>
-                <p className="text-sm font-semibold text-white">Instance created successfully</p>
-                <p className="text-[11px] text-[#5a7a5a]">Choose how you want to connect WhatsApp</p>
+                <p className="text-sm font-semibold text-white">Instance créée avec succès</p>
+                <p className="text-[11px] text-[#5a7a5a]">Choisissez comment vous voulez connecter WhatsApp</p>
               </div>
 
               {/* API Key */}
               {apiKey && (
                 <div>
                   <p className="text-[11px] font-medium text-[#8a9a8a] mb-1.5">
-                    API Key <span className="text-yellow-500">(shown once — save it!)</span>
+                    Clé API <span className="text-yellow-500">(affichée une seule fois — sauvegardez-la !)</span>
                   </p>
                   <div className="flex items-center gap-2 p-2.5 rounded-lg bg-[#0a0a0a] border border-[#1e1e1e]">
                     <code className="flex-1 text-[11px] font-mono text-[#22c55e] truncate">
@@ -320,7 +320,7 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
                 </div>
               )}
 
-              <div className="text-[11px] font-medium text-[#8a9a8a] text-center">Connect WhatsApp</div>
+              <div className="text-[11px] font-medium text-[#8a9a8a] text-center">Connecter WhatsApp</div>
 
               <div className="grid grid-cols-2 gap-3">
                 <button
@@ -331,8 +331,8 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
                     <QrCode size={18} className="text-[#22c55e]" />
                   </div>
                   <div className="text-center">
-                    <p className="text-[12px] font-semibold text-white">Scan QR Code</p>
-                    <p className="text-[10px] text-[#5a7a5a] mt-0.5">Use WhatsApp camera</p>
+                    <p className="text-[12px] font-semibold text-white">Scanner QR Code</p>
+                    <p className="text-[10px] text-[#5a7a5a] mt-0.5">Utiliser la caméra WhatsApp</p>
                   </div>
                 </button>
 
@@ -344,13 +344,13 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
                     <Phone size={18} className="text-[#22c55e]" />
                   </div>
                   <div className="text-center">
-                    <p className="text-[12px] font-semibold text-white">Phone Number</p>
-                    <p className="text-[10px] text-[#5a7a5a] mt-0.5">Get pairing code</p>
+                    <p className="text-[12px] font-semibold text-white">Numéro de téléphone</p>
+                    <p className="text-[10px] text-[#5a7a5a] mt-0.5">Obtenir le code d'appairage</p>
                   </div>
                 </button>
               </div>
 
-              <button onClick={onClose} className="btn-ghost w-full text-[12px]">Skip for now</button>
+              <button onClick={onClose} className="btn-ghost w-full text-[12px]">Passer pour le moment</button>
             </div>
           )}
 
@@ -360,7 +360,7 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
               <div className="flex items-start gap-3 p-3 rounded-lg bg-[#0d1f0d] border border-[#1a2e1a]">
                 <Smartphone size={14} className="text-[#22c55e] mt-0.5 shrink-0" />
                 <p className="text-[11px] text-[#6a9a6a] leading-relaxed">
-                  Open WhatsApp → Linked Devices → Link a Device, then scan below.
+                  Ouvrir WhatsApp → Appareils connectés → Connecter un appareil, puis scanner ci-dessous.
                 </p>
               </div>
 
@@ -371,7 +371,7 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
                   "bg-[#6b7280]": connectionStatus === "disconnected",
                 })} />
                 <span className="text-[11px] text-[#5a7a5a]">
-                  {connectionStatus === "connecting" ? "Waiting for scan…" : "Scan the QR code to connect"}
+                  {connectionStatus === "connecting" ? "En attente du scan…" : "Scannez le QR code pour vous connecter"}
                 </span>
               </div>
 
@@ -379,7 +379,7 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
                 {qrLoading && (
                   <div className="flex flex-col items-center gap-2">
                     <Loader2 size={28} className="text-[#22c55e] animate-spin" />
-                    <p className="text-xs text-[#5a7a5a]">Loading QR…</p>
+                    <p className="text-xs text-[#5a7a5a]">Chargement du QR…</p>
                   </div>
                 )}
                 {!qrLoading && qrError && (
@@ -387,7 +387,7 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
                     <AlertCircle size={24} className="text-red-400" />
                     <p className="text-xs text-red-400">{qrError}</p>
                     <button onClick={refreshQR} className="text-[11px] text-[#22c55e] flex items-center gap-1 mt-1">
-                      <RefreshCw size={10} /> Try again
+                      <RefreshCw size={10} /> Réessayer
                     </button>
                   </div>
                 )}
@@ -398,11 +398,11 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
 
               <div className="flex gap-2">
                 <button onClick={refreshQR} disabled={qrLoading} className="btn-ghost flex-1 flex items-center justify-center gap-1.5">
-                  <RefreshCw size={13} className={qrLoading ? "animate-spin" : ""} /> Refresh
+                  <RefreshCw size={13} className={qrLoading ? "animate-spin" : ""} /> Actualiser
                 </button>
-                <button onClick={onClose} className="btn-green flex-1">Done</button>
+                <button onClick={onClose} className="btn-green flex-1">Terminé</button>
               </div>
-              <p className="text-center text-[10px] text-[#3a5a3a]">Status auto-checks every 5 seconds</p>
+              <p className="text-center text-[10px] text-[#3a5a3a]">Vérification automatique du statut toutes les 5 secondes</p>
             </div>
           )}
 
@@ -412,14 +412,14 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
               <div className="flex items-start gap-3 p-3 rounded-lg bg-[#0d1f0d] border border-[#1a2e1a]">
                 <Phone size={14} className="text-[#22c55e] mt-0.5 shrink-0" />
                 <p className="text-[11px] text-[#6a9a6a] leading-relaxed">
-                  Enter your phone number with country code. You'll get a pairing code to enter in WhatsApp → Linked Devices.
+                  Entrez votre numéro de téléphone avec l'indicatif pays. Vous recevrez un code d'appairage à saisir dans WhatsApp → Appareils connectés.
                 </p>
               </div>
 
               {!pairingCode ? (
                 <>
                   <div>
-                    <label className="block text-xs font-medium text-[#8a9a8a] mb-1.5">Phone Number</label>
+                    <label className="block text-xs font-medium text-[#8a9a8a] mb-1.5">Numéro de téléphone</label>
                     <input
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
@@ -432,23 +432,23 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
                         <AlertCircle size={11} />{phoneError}
                       </p>
                     )}
-                    <p className="mt-1 text-[10px] text-[#4a6a4a]">Include country code, e.g. +237XXXXXXXXX</p>
+                    <p className="mt-1 text-[10px] text-[#4a6a4a]">Inclure l'indicatif pays, ex: +237XXXXXXXXX</p>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => setStep("choose")} className="btn-ghost flex-1">Back</button>
+                    <button onClick={() => setStep("choose")} className="btn-ghost flex-1">Retour</button>
                     <button
                       onClick={handleConnectPhone}
                       disabled={phoneLoading || !phoneNumber.trim()}
                       className="btn-green flex-1 flex items-center justify-center gap-2"
                     >
-                      {phoneLoading ? <><Loader2 size={13} className="animate-spin" />Generating…</> : <>Get Pairing Code</>}
+                      {phoneLoading ? <><Loader2 size={13} className="animate-spin" />Génération…</> : <>Obtenir le code</>}
                     </button>
                   </div>
                 </>
               ) : (
                 <div className="space-y-4">
                   <div className="text-center">
-                    <p className="text-[11px] text-[#8a9a8a] mb-2">Enter this code in WhatsApp → Linked Devices</p>
+                    <p className="text-[11px] text-[#8a9a8a] mb-2">Entrez ce code dans WhatsApp → Appareils connectés</p>
                     <div className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-[#0d2510] border border-[#22c55e]/30">
                       <span className="text-2xl font-bold text-[#22c55e] tracking-[0.3em] font-mono">
                         {pairingCode}
@@ -463,12 +463,12 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
                       "bg-[#6b7280]": connectionStatus === "disconnected",
                     })} />
                     <span className="text-[11px] text-[#5a7a5a]">
-                      {connectionStatus === "connecting" ? "Waiting for confirmation…" : "Enter the code in WhatsApp"}
+                      {connectionStatus === "connecting" ? "En attente de confirmation…" : "Entrez le code dans WhatsApp"}
                     </span>
                   </div>
 
-                  <button onClick={onClose} className="btn-ghost w-full">Done</button>
-                  <p className="text-center text-[10px] text-[#3a5a3a]">Status auto-checks every 5 seconds</p>
+                  <button onClick={onClose} className="btn-ghost w-full">Terminé</button>
+                  <p className="text-center text-[10px] text-[#3a5a3a]">Vérification automatique du statut toutes les 5 secondes</p>
                 </div>
               )}
             </div>
@@ -488,20 +488,20 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
                   <CheckCircle2 size={32} className="text-[#22c55e]" />
                 </motion.div>
                 <div>
-                  <p className="text-[15px] font-bold text-[#22c55e]">Connected!</p>
+                  <p className="text-[15px] font-bold text-[#22c55e]">Connecté !</p>
                   <p className="text-[12px] text-white mt-1">{instance?.name}</p>
-                  <p className="text-[11px] text-[#5a7a5a] mt-1">WhatsApp is now active and ready to use</p>
+                  <p className="text-[11px] text-[#5a7a5a] mt-1">WhatsApp est maintenant actif et prêt à l'emploi</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2 p-3 rounded-lg bg-[#0d2510] border border-[#22c55e]/20">
                 <div className="w-2 h-2 rounded-full bg-[#22c55e]" />
                 <span className="text-[11px] text-[#6a9a6a]">
-                  🟢 Connected — You can now send and receive messages
+                  🟢 Connecté — Vous pouvez maintenant envoyer et recevoir des messages
                 </span>
               </div>
 
-              <button onClick={onClose} className="btn-green w-full">Go to Dashboard</button>
+              <button onClick={onClose} className="btn-green w-full">Aller au tableau de bord</button>
             </div>
           )}
         </motion.div>

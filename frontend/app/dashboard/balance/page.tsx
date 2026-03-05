@@ -16,10 +16,10 @@ const PLAN_META: Record<PlanType, { color: string; icon: typeof Zap; popular: bo
 };
 
 const PLAN_FEATURES: Record<PlanType, string[]> = {
-  free:       ["1 instance WhatsApp",    "Quota messages limité",    "Accès API REST",             "Support communauté"],
-  starter:    ["3 instances WhatsApp",   "Quota messages étendu",    "Webhooks",                   "Support email"],
-  pro:        ["10 instances WhatsApp",  "Quota messages élevé",     "Support prioritaire",        "Analytiques avancées"],
-  enterprise: ["100 instances WhatsApp", "Messages illimités",       "Support dédié",              "Intégrations sur mesure"],
+  free:       ["1 instance WhatsApp",    "500 messages/mois",        "Accès API REST",             "Support communauté"],
+  starter:    ["1 instance WhatsApp",    "100,000 messages/mois",    "Webhooks",                   "Support email"],
+  pro:        ["5 instances WhatsApp",   "1,000,000 messages/mois",  "Support prioritaire",        "Analytiques avancées"],
+  enterprise: ["10 instances WhatsApp",  "Messages illimités",       "Support dédié",              "Intégrations sur mesure"],
 };
 
 export default function BalancePage() {
@@ -119,12 +119,33 @@ export default function BalancePage() {
               </div>
 
               <p className="text-[13px] font-bold text-white">{plan.name}</p>
-              <div className="flex items-end gap-0.5 my-1.5">
-                <span className="text-xl font-extrabold" style={{ color: meta.color }}>
-                  {plan.price === 0 ? "Gratuit" : `${plan.price.toLocaleString("fr-FR")} XAF`}
-                </span>
-                {plan.price > 0 && (
-                  <span className="text-[10px] text-[#5a7a5a] mb-0.5">/mois</span>
+              <div className="my-1.5">
+                {plan.originalPrice && plan.price > 0 ? (
+                  <>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[11px] text-[#5a7a5a] line-through">
+                        {plan.originalPrice.toLocaleString("fr-FR")} XAF
+                      </span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-500/20 text-red-400">
+                        -50%
+                      </span>
+                    </div>
+                    <div className="flex items-end gap-0.5">
+                      <span className="text-xl font-extrabold" style={{ color: meta.color }}>
+                        {plan.price.toLocaleString("fr-FR")} XAF
+                      </span>
+                      <span className="text-[10px] text-[#5a7a5a] mb-0.5">/mois</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-end gap-0.5">
+                    <span className="text-xl font-extrabold" style={{ color: meta.color }}>
+                      {plan.price === 0 ? "Gratuit" : `${plan.price.toLocaleString("fr-FR")} XAF`}
+                    </span>
+                    {plan.price > 0 && (
+                      <span className="text-[10px] text-[#5a7a5a] mb-0.5">/mois</span>
+                    )}
+                  </div>
                 )}
               </div>
 

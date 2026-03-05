@@ -26,19 +26,22 @@ import { deleteCookie } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/dashboard/instances", label: "Instances", icon: LayoutGrid },
-  { href: "/dashboard/chats", label: "Chats", icon: MessageSquare },
+  { href: "/dashboard/chats", label: "Conversations", icon: MessageSquare },
   { href: "/dashboard/api", label: "API", icon: Code2 },
-  { href: "/docs", label: "Documentation", icon: BookOpen },
-  { href: "/dashboard/balance", label: "Balance", icon: CreditCard },
-  { href: "/dashboard/purchases", label: "Purchases", icon: ShoppingCart },
-  { href: "/dashboard/integrations", label: "Integrations", icon: Puzzle },
+  { href: "/dashboard/balance", label: "Solde", icon: CreditCard },
+  { href: "/dashboard/purchases", label: "Achats", icon: ShoppingCart },
+  { href: "/dashboard/integrations", label: "Intégrations", icon: Puzzle },
   { href: "/dashboard/proxy", label: "Proxy", icon: Globe },
-  { href: "/dashboard/account", label: "Account", icon: User },
+  { href: "/dashboard/account", label: "Compte", icon: User },
+];
+
+const EXTERNAL_LINKS = [
+  { href: "/docs", label: "Documentation", icon: BookOpen },
 ];
 
 const ADMIN_ITEMS = [
-  { href: "/admin/users", label: "Users", icon: ShieldCheck },
-  { href: "/admin/instances", label: "All Instances", icon: Wifi },
+  { href: "/admin/users", label: "Utilisateurs", icon: ShieldCheck },
+  { href: "/admin/instances", label: "Toutes les Instances", icon: Wifi },
 ];
 
 interface SidebarProps {
@@ -137,7 +140,7 @@ export function Sidebar({ mobile = false, onClose }: SidebarProps) {
       <nav className="flex-1 overflow-y-auto no-scrollbar py-3 px-2 space-y-0.5">
         {!collapsed && (
           <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-[#3a5a3a] mb-1">
-            Main
+            Principal
           </p>
         )}
 
@@ -221,7 +224,7 @@ export function Sidebar({ mobile = false, onClose }: SidebarProps) {
         {/* Documentation */}
         <div className="my-2 border-t border-[#162016]" />
         <a
-          href="https://green-api.com/docs"
+          href="/docs"
           target="_blank"
           rel="noopener noreferrer"
           title={collapsed ? "Documentation" : undefined}
@@ -282,7 +285,7 @@ export function Sidebar({ mobile = false, onClose }: SidebarProps) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={handleLogout}
-                title="Sign out"
+                title="Déconnexion"
                 className="shrink-0 text-[#3a5a3a] hover:text-red-400 transition-colors duration-150"
               >
                 <LogOut size={14} />

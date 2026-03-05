@@ -7,10 +7,10 @@ import crypto from 'crypto'
 const router = Router()
 
 export const PLANS = {
-  free:       { name: 'Free',       price: 0,     maxInstances: 1,   currency: 'XAF' },
-  starter:    { name: 'Starter',    price: 4990,  maxInstances: 3,   currency: 'XAF' },
-  pro:        { name: 'Pro',        price: 14990, maxInstances: 10,  currency: 'XAF' },
-  enterprise: { name: 'Enterprise', price: 49990, maxInstances: 100, currency: 'XAF' },
+  free:       { name: 'Free',       price: 0,     maxInstances: 1,  currency: 'XAF' },
+  starter:    { name: 'Starter',    price: 2495,  maxInstances: 1,  currency: 'XAF' },
+  pro:        { name: 'Pro',        price: 7495,  maxInstances: 5,  currency: 'XAF' },
+  enterprise: { name: 'Enterprise', price: 24995, maxInstances: 10, currency: 'XAF' },
 }
 
 router.get('/plans', (req, res) => {

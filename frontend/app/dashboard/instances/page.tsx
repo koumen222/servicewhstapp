@@ -134,7 +134,7 @@ export default function InstancesPage() {
             </span>
           </h2>
           <p className="text-[12px] text-[#5a7a5a] mt-0.5">
-            Manage your WhatsApp connections
+            Gérez vos connexions WhatsApp
           </p>
         </div>
 
@@ -145,20 +145,20 @@ export default function InstancesPage() {
             className="btn-ghost flex items-center gap-1.5"
           >
             <RefreshCw size={13} className={refreshing ? "animate-spin" : ""} />
-            Refresh
+            Actualiser
           </button>
 
           <button
             onClick={() => setShowCreate(true)}
             disabled={!canCreate}
-            title={!canCreate ? `Max ${user?.maxInstances} instances on your plan` : undefined}
+            title={!canCreate ? `Maximum ${user?.maxInstances} instances sur votre plan` : undefined}
             className={cn(
               "btn-green flex items-center gap-1.5",
               !canCreate && "opacity-50 cursor-not-allowed hover:bg-[#22c55e] hover:shadow-none hover:transform-none"
             )}
           >
             <Plus size={14} />
-            Create an instance
+            Créer une instance
           </button>
         </div>
       </div>
@@ -193,7 +193,7 @@ export default function InstancesPage() {
                     : "text-[#5a7a5a] hover:text-white"
                 )}
               >
-                {s === "open" ? "Connected" : s === "close" ? "Disconnected" : s}
+                {s === "open" ? "Connecté" : s === "close" ? "Déconnecté" : s === "all" ? "Tous" : s === "expired" ? "Expiré" : s === "connecting" ? "Connexion" : s}
               </button>
             )
           )}
@@ -242,16 +242,16 @@ export default function InstancesPage() {
                 <Filter size={20} className="text-[#4a6a4a]" />
               </div>
               <p className="text-sm font-medium text-white mb-1">
-                No instances match your filter
+                Aucune instance ne correspond à votre filtre
               </p>
               <p className="text-[12px] text-[#4a6a4a]">
-                Try adjusting your search or filter.
+                Essayez d'ajuster votre recherche ou filtre.
               </p>
               <button
                 onClick={() => { setSearch(""); setFilterStatus("all"); }}
                 className="mt-3 text-[11px] text-[#22c55e] hover:text-[#4ade80]"
               >
-                Clear filters
+                Effacer les filtres
               </button>
             </>
           ) : (
@@ -263,18 +263,18 @@ export default function InstancesPage() {
                 <Plus size={24} className="text-[#22c55e]" />
               </div>
               <p className="text-[15px] font-semibold text-white mb-1">
-                No instances yet
+                Aucune instance pour le moment
               </p>
               <p className="text-[13px] text-[#5a7a5a] mb-5 max-w-xs">
-                Create your first WhatsApp instance to start sending and
-                receiving messages.
+                Créez votre première instance WhatsApp pour commencer à envoyer et
+                recevoir des messages.
               </p>
               <button
                 onClick={() => setShowCreate(true)}
                 className="btn-green flex items-center gap-2"
               >
                 <Plus size={14} />
-                Create an instance
+                Créer une instance
               </button>
             </>
           )}
@@ -321,24 +321,24 @@ export default function InstancesPage() {
               style={{ background: "#111", border: "1px solid #1e1e1e" }}
             >
               <h3 className="text-sm font-semibold text-white mb-1">
-                Delete instance?
+                Supprimer l'instance ?
               </h3>
               <p className="text-[12px] text-[#5a7a5a] mb-4">
                 <span className="text-white font-medium">{deleteConfirm.name}</span>{" "}
-                will be permanently deleted. This cannot be undone.
+                sera définitivement supprimée. Cette action est irréversible.
               </p>
               <div className="flex gap-2">
                 <button
                   onClick={() => setDeleteConfirm(null)}
                   className="btn-ghost flex-1"
                 >
-                  Cancel
+                  Annuler
                 </button>
                 <button
                   onClick={() => handleDelete(deleteConfirm)}
                   className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-red-500/15 text-red-400 hover:bg-red-500/25 border border-red-500/25 transition-colors"
                 >
-                  Delete
+                  Supprimer
                 </button>
               </div>
             </motion.div>

@@ -9,18 +9,18 @@ export const PLAN_LIMITS = {
   },
   starter: {
     messagesPerDay: 500,
-    messagesPerMonth: 10000,
-    instancesMax: 3
+    messagesPerMonth: 100000,
+    instancesMax: 1
   },
   pro: {
-    messagesPerDay: 2000,
-    messagesPerMonth: 50000,
-    instancesMax: 10
+    messagesPerDay: 5000,
+    messagesPerMonth: 1000000,
+    instancesMax: 5
   },
   enterprise: {
     messagesPerDay: -1, // illimité
     messagesPerMonth: -1, // illimité
-    instancesMax: -1 // illimité
+    instancesMax: 10
   }
 } as const
 

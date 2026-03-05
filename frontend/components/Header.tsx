@@ -20,17 +20,17 @@ import { cn, deleteCookie } from "@/lib/utils";
 const LANG_OPTIONS = ["EN", "FR", "ES", "PT", "AR"];
 
 const PAGE_TITLES: Record<string, string> = {
-  "/dashboard": "Dashboard",
+  "/dashboard": "Tableau de bord",
   "/dashboard/instances": "Instances",
-  "/dashboard/chats": "Chats",
+  "/dashboard/chats": "Conversations",
   "/dashboard/api": "API",
-  "/dashboard/balance": "Balance",
-  "/dashboard/purchases": "Purchases",
-  "/dashboard/integrations": "Integrations",
+  "/dashboard/balance": "Solde",
+  "/dashboard/purchases": "Achats",
+  "/dashboard/integrations": "Intégrations",
   "/dashboard/proxy": "Proxy",
-  "/dashboard/account": "Account",
-  "/admin/users": "Users",
-  "/admin/instances": "All Instances",
+  "/dashboard/account": "Compte",
+  "/admin/users": "Utilisateurs",
+  "/admin/instances": "Toutes les Instances",
   "/admin/plans": "Plans",
 };
 
@@ -204,13 +204,13 @@ export function Header({ onMenuClick }: HeaderProps) {
                         onClick={() => { router.push("/dashboard/account"); setUserOpen(false); }}
                         className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-[#8a9a8a] hover:bg-[#161616] hover:text-white transition-colors"
                       >
-                        <User size={13} /> Account
+                        <User size={13} /> Compte
                       </button>
                       <button
                         onClick={() => { router.push("/dashboard/account"); setUserOpen(false); }}
                         className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-[#8a9a8a] hover:bg-[#161616] hover:text-white transition-colors"
                       >
-                        <Settings size={13} /> Settings
+                        <Settings size={13} /> Paramètres
                       </button>
                     </div>
 
@@ -219,7 +219,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                         onClick={handleLogout}
                         className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-red-400 hover:bg-[#1a0a0a] transition-colors"
                       >
-                        <LogOut size={13} /> Sign out
+                        <LogOut size={13} /> Déconnexion
                       </button>
                     </div>
                   </motion.div>
@@ -242,14 +242,14 @@ export function Header({ onMenuClick }: HeaderProps) {
             <div className="payment-banner mx-3 mb-2 px-3 py-2 flex items-center gap-2">
               <AlertTriangle size={13} className="text-red-400 shrink-0" />
               <p className="text-xs text-red-400">
-                <span className="font-semibold">Payment is required.</span>{" "}
-                One or more instances have expired. Please renew to restore access.
+                <span className="font-semibold">Paiement requis.</span>{" "}
+                Une ou plusieurs instances ont expiré. Veuillez renouveler pour restaurer l'accès.
               </p>
               <button
                 onClick={() => router.push("/dashboard/balance")}
                 className="ml-auto shrink-0 text-[10px] font-semibold text-red-300 hover:text-white bg-red-500/15 hover:bg-red-500/25 px-2 py-1 rounded transition-colors"
               >
-                Pay now →
+                Payer maintenant →
               </button>
             </div>
           </motion.div>
