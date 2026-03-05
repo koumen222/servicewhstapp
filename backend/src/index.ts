@@ -11,6 +11,7 @@ import publicRoutes from './routes/public.js'
 import instanceManagementRoutes from './routes/instanceManagement.js'
 import notificationRoutes from './routes/notifications.js'
 import subscriptionRoutes from './routes/subscriptions.js'
+import webhookRoutes from './routes/webhooks.js'
 import { 
   multiTenantIsolation, 
   userRateLimit, 
@@ -137,6 +138,10 @@ if (process.env.NODE_ENV !== 'production') {
   })
 }
 
+
+// =============== WEBHOOKS (sans authentification - Evolution API) ===============
+app.use('/webhooks', webhookRoutes)
+console.log('✅ Registered webhook endpoint: /webhooks/evolution')
 
 // =============== ROUTES PUBLIQUES (avec clés API) ===============
 app.use('/api/v1', publicRoutes)

@@ -4,12 +4,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { instanceApi } from "@/lib/api";
 import type { ConnectionStatus, InstanceConnectionInfo } from "@/lib/types";
 
-// Longer interval when connected — no need to check as often
-const CONNECTED_POLL_INTERVAL = 30_000;
+// Backend now receives webhooks from Evolution API, so polling is just a fallback
+const CONNECTED_POLL_INTERVAL = 120_000; // 2 minutes when connected
+const DEFAULT_POLL_INTERVAL = 60_000;    // 1 minute default (was 8s)
 
 interface UseInstanceStatusOptions {
   instanceName: string;
-  pollInterval?: number; // in milliseconds, default 8000
+  pollInterval?: number; // in milliseconds, default 60000 (1 min)
   enabled?: boolean;
 }
 
@@ -23,7 +24,7 @@ interface InstanceStatusState {
 
 export function useInstanceStatus({
   instanceName,
-  pollInterval = 8000, // Increased from 5s to 8s to reduce backend load
+  pollInterval = DEFAULT_POLL_INTERVAL, // 60s - backend receives webhooks, polling is fallback only
   enabled = true,
 }: UseInstanceStatusOptions) {
   const [state, setState] = useState<InstanceStatusState>({

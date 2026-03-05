@@ -59,6 +59,15 @@ router.post('/create', checkInstanceQuota, async (req: AuthRequest, res) => {
     console.log('[CREATE] Creating Evolution API instance:', fullInstanceName)
     const evolutionResponse = await evolutionAPI.createInstance(fullInstanceName, integration, false) // qrcode:false — no auto-connect
 
+    // Configurer le webhook pour recevoir les mises à jour de statut
+    const webhookUrl = `${getPublicApiBaseUrl(req) || env.BACKEND_PUBLIC_URL}/webhooks/evolution`
+    try {
+      await evolutionAPI.setWebhook(fullInstanceName, webhookUrl)
+      console.log('[CREATE] Webhook configured:', webhookUrl)
+    } catch (webhookError: any) {
+      console.warn('[CREATE] Failed to configure webhook (non-critical):', webhookError.message)
+    }
+
     const apiKey = crypto.randomBytes(32).toString('hex')
 
     const instance = await prisma.instance.create({

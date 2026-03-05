@@ -146,6 +146,29 @@ class EvolutionAPI {
       throw error
     }
   }
+
+  async setWebhook(instanceName: string, webhookUrl: string) {
+    try {
+      const { data } = await this.client.post(`/webhook/set/${instanceName}`, {
+        enabled: true,
+        url: webhookUrl,
+        webhookByEvents: true,
+        webhookBase64: false,
+        events: [
+          'CONNECTION_UPDATE',
+          'QRCODE_UPDATED',
+          'MESSAGES_UPSERT',
+          'MESSAGES_UPDATE',
+          'SEND_MESSAGE'
+        ]
+      })
+      console.log(`[Evolution] Webhook configured for ${instanceName}: ${webhookUrl}`)
+      return data
+    } catch (error: any) {
+      console.error('[Evolution] setWebhook error:', error.response?.data || error.message)
+      throw error
+    }
+  }
 }
 
 export const evolutionAPI = new EvolutionAPI()
