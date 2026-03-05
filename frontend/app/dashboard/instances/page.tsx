@@ -107,13 +107,6 @@ export default function InstancesPage() {
     }
   }
 
-  async function handleRestart(instance: Instance) {
-    try {
-      await instancesApi.restart(instance.id);
-    } catch {
-      // silent
-    }
-  }
 
   const filtered = instances.filter((i) => {
     const matchSearch =
@@ -304,7 +297,6 @@ export default function InstancesPage() {
                 instance={inst}
                 onQRCode={setQrInstance}
                 onDelete={() => handleDelete(inst)}
-                onRestart={handleRestart}
               />
             ))}
           </motion.div>

@@ -24,14 +24,12 @@ interface InstanceCardProps {
   instance: Instance;
   onQRCode: (instance: Instance) => void;
   onDelete: (instance: Instance) => void;
-  onRestart: (instance: Instance) => void;
 }
 
 export function InstanceCard({
   instance,
   onQRCode,
   onDelete,
-  onRestart,
 }: InstanceCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   
@@ -147,15 +145,6 @@ export function InstanceCard({
                 >
                   <QrCode size={13} /> Scan QR
                 </button>
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onRestart(instance);
-                  }}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-xs text-[#8a9a8a] hover:bg-[#161616] hover:text-white transition-colors"
-                >
-                  <RotateCcw size={13} /> Restart
-                </button>
                 <div className="my-1 border-t border-[#1a1a1a]" />
                 <button
                   onClick={() => {
@@ -269,20 +258,6 @@ export function InstanceCard({
         >
           <QrCode size={12} />
           {isConnected ? "QR Code" : isConnecting ? "Connecting…" : "Scan QR"}
-        </button>
-
-        <button
-          onClick={() => onRestart(instance)}
-          disabled={isExpired}
-          className={cn(
-            "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150",
-            isExpired
-              ? "bg-[#1a1a1a] text-[#3a3a3a] cursor-not-allowed"
-              : "btn-ghost"
-          )}
-        >
-          <RotateCcw size={12} />
-          Restart
         </button>
 
         <button
