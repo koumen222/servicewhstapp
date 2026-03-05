@@ -6,7 +6,7 @@ import { prisma } from '../lib/prisma.js'
 import { evolutionAPI } from '../lib/evolution.js'
 import { buildInstanceName } from '../utils/instanceName.js'
 import { checkInstanceQuota } from '../middleware/quota.js'
-import { getUsageStats } from '../utils/quotaManager.js'
+import { getUsageStats, canSendMessage, incrementMessageUsage } from '../utils/quotaManager.js'
 import { env } from '../config/env.js'
 
 const router = Router()
@@ -346,9 +346,28 @@ router.post('/send-message', async (req: AuthRequest, res) => {
     const userId = req.user!.id
     const fullInstanceName = buildInstanceName(userId, customName)
 
-    const dbInstance = await prisma.instance.findUnique({ where: { instanceName: fullInstanceName, userId } })
+    const dbInstance = await prisma.instance.findUnique({ 
+      where: { instanceName: fullInstanceName, userId },
+      include: { user: true }
+    })
     if (!dbInstance) {
       return res.status(404).json({ success: false, message: 'Instance not found' })
+    }
+
+    // Check quota limits before sending
+    const quotaCheck = await canSendMessage(dbInstance.id)
+    if (!quotaCheck.canSend) {
+      return res.status(403).json({
+        success: false,
+        message: quotaCheck.reason || 'Message quota exceeded',
+        code: 'QUOTA_EXCEEDED',
+        quota: {
+          dailyUsed: quotaCheck.dailyUsage,
+          dailyLimit: quotaCheck.dailyLimit,
+          monthlyUsed: quotaCheck.monthlyUsage,
+          monthlyLimit: quotaCheck.monthlyLimit
+        }
+      })
     }
 
     // Verify instance is connected before sending
@@ -393,7 +412,26 @@ router.post('/send-message', async (req: AuthRequest, res) => {
     console.log(`[SEND-MSG] Sending to ${cleanNumber} via ${fullInstanceName}`)
     const result = await evolutionAPI.sendTextMessage(fullInstanceName, cleanNumber, message)
 
+    // Log message to database
+    await prisma.messageLog.create({
+      data: {
+        instanceId: dbInstance.id,
+        direction: 'outbound',
+        recipient: cleanNumber,
+        content: message,
+        status: 'sent',
+        messageId: result?.key?.id || null
+      }
+    })
+
+    // Increment quota usage counters
+    await incrementMessageUsage(dbInstance.id)
+
+    // Update instance lastUsed
     await prisma.instance.update({ where: { id: dbInstance.id }, data: { lastUsed: new Date() } })
+
+    // Get updated quota info
+    const updatedQuota = await canSendMessage(dbInstance.id)
 
     return res.json({
       success: true,
@@ -405,6 +443,14 @@ router.post('/send-message', async (req: AuthRequest, res) => {
         status: result?.status || 'PENDING',
         number: cleanNumber,
         text: message
+      },
+      quota: {
+        dailyUsed: updatedQuota.dailyUsage,
+        dailyLimit: updatedQuota.dailyLimit,
+        monthlyUsed: updatedQuota.monthlyUsage,
+        monthlyLimit: updatedQuota.monthlyLimit,
+        dailyRemaining: updatedQuota.dailyLimit === -1 ? -1 : (updatedQuota.dailyLimit || 0) - (updatedQuota.dailyUsage || 0),
+        monthlyRemaining: updatedQuota.monthlyLimit === -1 ? -1 : (updatedQuota.monthlyLimit || 0) - (updatedQuota.monthlyUsage || 0)
       }
     })
   } catch (error: any) {

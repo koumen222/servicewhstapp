@@ -28,6 +28,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/instances", label: "Instances", icon: LayoutGrid },
   { href: "/dashboard/chats", label: "Chats", icon: MessageSquare },
   { href: "/dashboard/api", label: "API", icon: Code2 },
+  { href: "/docs", label: "Documentation", icon: BookOpen },
   { href: "/dashboard/balance", label: "Balance", icon: CreditCard },
   { href: "/dashboard/purchases", label: "Purchases", icon: ShoppingCart },
   { href: "/dashboard/integrations", label: "Integrations", icon: Puzzle },

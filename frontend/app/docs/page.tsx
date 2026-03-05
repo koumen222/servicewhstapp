@@ -377,14 +377,42 @@ Content-Type: application/json
   "message": "Bonjour ! Comment puis-je vous aider ?"
 }`}
                       />
-                      <div className="mt-4 bg-[#0d0d0d] border border-[#2a2a2a] rounded-xl p-4">
-                        <p className="text-sm font-semibold text-white mb-2">Formats de numéros acceptés:</p>
-                        <ul className="space-y-1 text-sm text-gray-400">
-                          <li>• <code className="text-[#00ff87]">33612345678</code> (numéro brut)</li>
-                          <li>• <code className="text-[#00ff87]">553198296801@s.whatsapp.net</code> (JID individuel)</li>
-                          <li>• <code className="text-[#00ff87]">10526998446088@lid</code> (Linked Device)</li>
-                          <li>• <code className="text-[#00ff87]">group@g.us</code> (groupe)</li>
-                        </ul>
+                      <div className="mt-4 space-y-4">
+                        <div className="bg-[#0d0d0d] border border-[#2a2a2a] rounded-xl p-4">
+                          <p className="text-sm font-semibold text-white mb-2">Formats de numéros acceptés:</p>
+                          <ul className="space-y-1 text-sm text-gray-400">
+                            <li>• <code className="text-[#00ff87]">33612345678</code> (numéro brut)</li>
+                            <li>• <code className="text-[#00ff87]">553198296801@s.whatsapp.net</code> (JID individuel)</li>
+                            <li>• <code className="text-[#00ff87]">10526998446088@lid</code> (Linked Device)</li>
+                            <li>• <code className="text-[#00ff87]">group@g.us</code> (groupe)</li>
+                          </ul>
+                        </div>
+                        <div className="bg-[#0d0d0d] border border-[#2a2a2a] rounded-xl p-4">
+                          <p className="text-sm font-semibold text-white mb-2">Réponse avec quota:</p>
+                          <CodeBlock
+                            id="send-message-response-quota"
+                            code={`{
+  "success": true,
+  "message": "Message sent successfully",
+  "data": {
+    "messageId": "BAE5FAB9E65A3DA8",
+    "remoteJid": "33612345678@s.whatsapp.net",
+    "timestamp": "2026-03-05T03:30:00.000Z",
+    "status": "PENDING",
+    "number": "33612345678",
+    "text": "Bonjour !"
+  },
+  "quota": {
+    "dailyUsed": 15,
+    "dailyLimit": 50,
+    "monthlyUsed": 234,
+    "monthlyLimit": 500,
+    "dailyRemaining": 35,
+    "monthlyRemaining": 266
+  }
+}`}
+                          />
+                        </div>
                       </div>
                     </div>
 
@@ -454,7 +482,11 @@ Authorization: Bearer {token}`}
                   </p>
 
                   <div className="space-y-6">
-                    <div className="bg-[#0d0d0d] border border-[#2a2a2a] rounded-xl p-4">
+                    <div className="bg-gradient-to-br from-[#00ff87]/10 to-[#60efff]/10 border border-[#00ff87]/20 rounded-xl p-4">
+                      <p className="text-sm font-semibold text-white mb-2">✅ Configuration automatique</p>
+                      <p className="text-sm text-gray-400 mb-3">
+                        Les webhooks sont configurés automatiquement lors de la création d'une instance.
+                      </p>
                       <p className="text-sm font-semibold text-white mb-2">URL du webhook:</p>
                       <code className="text-[#00ff87]">https://api.ecomcookpit.site/webhooks/evolution</code>
                     </div>
@@ -640,20 +672,22 @@ for (const chat of chatsData.chats) {
                           <th className="text-left py-3 px-4 text-gray-400 font-semibold">Plan</th>
                           <th className="text-left py-3 px-4 text-gray-400 font-semibold">Instances</th>
                           <th className="text-left py-3 px-4 text-gray-400 font-semibold">Messages/jour</th>
+                          <th className="text-left py-3 px-4 text-gray-400 font-semibold">Messages/mois</th>
                           <th className="text-left py-3 px-4 text-gray-400 font-semibold">Rate limit</th>
                         </tr>
                       </thead>
                       <tbody>
                         {[
-                          { plan: "Free", instances: "1", daily: "100", rate: "10 req/min" },
-                          { plan: "Basic", instances: "5", daily: "1,000", rate: "30 req/min" },
-                          { plan: "Pro", instances: "20", daily: "10,000", rate: "100 req/min" },
-                          { plan: "Enterprise", instances: "Illimité", daily: "Illimité", rate: "500 req/min" },
+                          { plan: "Free", instances: "1", daily: "50", monthly: "500", rate: "10 req/min" },
+                          { plan: "Starter", instances: "3", daily: "500", monthly: "10,000", rate: "30 req/min" },
+                          { plan: "Pro", instances: "10", daily: "2,000", monthly: "50,000", rate: "100 req/min" },
+                          { plan: "Enterprise", instances: "Illimité", daily: "Illimité", monthly: "Illimité", rate: "500 req/min" },
                         ].map((row, i) => (
                           <tr key={i} className="border-b border-[#2a2a2a]/50">
                             <td className="py-3 px-4 text-white font-medium">{row.plan}</td>
                             <td className="py-3 px-4 text-gray-300">{row.instances}</td>
                             <td className="py-3 px-4 text-gray-300">{row.daily}</td>
+                            <td className="py-3 px-4 text-gray-300">{row.monthly}</td>
                             <td className="py-3 px-4 text-gray-300">{row.rate}</td>
                           </tr>
                         ))}
