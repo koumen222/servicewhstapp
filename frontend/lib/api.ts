@@ -103,7 +103,12 @@ export const instanceApi = {
   /** GET /api/instance/status/:instanceName — reliable polling endpoint */
   getStatus: (instanceName: string) => {
     if (!instanceName?.trim()) {
+      console.error('❌ Invalid instanceName for status check:', instanceName);
       return Promise.reject(new Error('Instance name is required for status check'));
+    }
+    if (instanceName === 'ssss' || instanceName.length < 3) {
+      console.error('❌ Invalid instanceName detected:', instanceName);
+      return Promise.reject(new Error(`Invalid instance name: ${instanceName}`));
     }
     return api.get(`/api/instance/status/${encodeURIComponent(instanceName)}`);
   },
@@ -111,7 +116,12 @@ export const instanceApi = {
   /** GET /api/instance/connectionState/:instanceName */
   getState: (instanceName: string) => {
     if (!instanceName?.trim()) {
+      console.error('❌ Invalid instanceName for state check:', instanceName);
       return Promise.reject(new Error('Instance name is required for state check'));
+    }
+    if (instanceName === 'ssss' || instanceName.length < 3) {
+      console.error('❌ Invalid instanceName detected:', instanceName);
+      return Promise.reject(new Error(`Invalid instance name: ${instanceName}`));
     }
     return api.get(`/api/instance/connectionState/${encodeURIComponent(instanceName)}`);
   },
@@ -119,7 +129,12 @@ export const instanceApi = {
   /** GET /api/instance/qrcode/:instanceName */
   getQRCode: (instanceName: string) => {
     if (!instanceName?.trim()) {
+      console.error('❌ Invalid instanceName for QR code:', instanceName);
       return Promise.reject(new Error('Instance name is required for QR code'));
+    }
+    if (instanceName === 'ssss' || instanceName.length < 3) {
+      console.error('❌ Invalid instanceName detected:', instanceName);
+      return Promise.reject(new Error(`Invalid instance name: ${instanceName}`));
     }
     return api.get(`/api/instance/qrcode/${encodeURIComponent(instanceName)}`);
   },

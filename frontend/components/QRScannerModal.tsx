@@ -36,7 +36,7 @@ export function QRScannerModal({ instance, onClose }: QRScannerModalProps) {
     setLoading(true);
     setError(null);
     try {
-      const res = await instanceApi.getQRCode(instance.name);
+      const res = await instanceApi.getQRCode(instance.instanceName);
       if (!mountedRef.current) return;
 
       if (!res.data?.success) {
@@ -66,7 +66,7 @@ export function QRScannerModal({ instance, onClose }: QRScannerModalProps) {
     const pollStatus = async () => {
       if (!mountedRef.current || connected) return;
       try {
-        const res = await instanceApi.getStatus(instance.name);
+        const res = await instanceApi.getStatus(instance.instanceName);
         if (!mountedRef.current) return;
 
         if (!res.data?.success) return;
