@@ -12,6 +12,7 @@ import instanceManagementRoutes from './routes/instanceManagement.js'
 import notificationRoutes from './routes/notifications.js'
 import subscriptionRoutes from './routes/subscriptions.js'
 import webhookRoutes from './routes/webhooks.js'
+import apiKeysRoutes from './routes/apiKeys.js'
 import { 
   multiTenantIsolation, 
   userRateLimit, 
@@ -159,10 +160,7 @@ app.use('/api/notifications', authMiddleware, notificationRoutes)
 app.use('/api/subscriptions', authMiddleware, subscriptionRoutes)
 
 // =============== ROUTES DE GESTION DES CLÉS API ===============
-app.use('/api/api-keys', authMiddleware, userRateLimit, multiTenantIsolation, (req, res, next) => {
-  // Routes pour la gestion des clés API (à implémenter si nécessaire)
-  res.status(501).json({ error: 'API key management routes not yet implemented' })
-})
+app.use('/api/api-keys', authMiddleware, userRateLimit, multiTenantIsolation, apiKeysRoutes)
 
 // =============== ENDPOINTS DE SANTÉ ===============
 // Health check simple (sans authentification)

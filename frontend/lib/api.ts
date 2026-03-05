@@ -188,6 +188,27 @@ export const connectionApi = {
   reconnect: (instanceId: string) => api.post(`/api/instances/${instanceId}/reconnect`),
 };
 
+// ─── API Key Management  /api/api-keys/* ────────────────────────────────────
+export const apiKeysApi = {
+  /** GET /api/api-keys?instanceId= — list all active keys */
+  getAll: (instanceId?: string) =>
+    api.get("/api/api-keys", { params: instanceId ? { instanceId } : undefined }),
+
+  /** POST /api/api-keys — { instanceId, name?, permissions? } → full key returned once */
+  create: (instanceId: string, name?: string, permissions?: string[]) =>
+    api.post("/api/api-keys", { instanceId, name, permissions }),
+
+  /** DELETE /api/api-keys/:id — revoke a key */
+  revoke: (id: string) => api.delete(`/api/api-keys/${id}`),
+
+  /** PATCH /api/api-keys/:id/permissions — update permissions */
+  updatePermissions: (id: string, permissions: string[]) =>
+    api.patch(`/api/api-keys/${id}/permissions`, { permissions }),
+
+  /** GET /api/api-keys/:id/stats */
+  getStats: (id: string) => api.get(`/api/api-keys/${id}/stats`),
+};
+
 // ─── Public API  /api/v1/* (API key auth, not JWT) ──────────────────────────
 export const publicApi = {
   /** POST /api/v1/send-message — { number, text } with x-api-key header */

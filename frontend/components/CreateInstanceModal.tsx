@@ -48,6 +48,7 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
   const [apiKey, setApiKey] = useState("");
   const [showKey, setShowKey] = useState(false);
   const [keyCopied, setKeyCopied] = useState(false);
+  const [idCopied, setIdCopied] = useState(false);
   // QR state
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [qrLoading, setQrLoading] = useState(false);
@@ -209,6 +210,14 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
     }
   }
 
+  function copyId() {
+    if (instance?.id) {
+      navigator.clipboard.writeText(instance.id);
+      setIdCopied(true);
+      setTimeout(() => setIdCopied(false), 2000);
+    }
+  }
+
   const stepTitles: Record<Step, string> = {
     form: "Créer une instance",
     choose: "Instance créée !",
@@ -298,6 +307,17 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
                 </div>
                 <p className="text-sm font-semibold text-white">Instance créée avec succès</p>
                 <p className="text-[11px] text-[#5a7a5a]">Choisissez comment vous voulez connecter WhatsApp</p>
+              </div>
+
+              {/* Instance ID */}
+              <div>
+                <p className="text-[11px] font-medium text-[#8a9a8a] mb-1.5">ID de l'instance</p>
+                <div className="flex items-center gap-2 p-2.5 rounded-lg bg-[#0a0a0a] border border-[#1e1e1e]">
+                  <code className="flex-1 text-[11px] font-mono text-[#6a9a6a] truncate">{instance.id}</code>
+                  <button onClick={copyId} className="text-[#4a6a4a] hover:text-[#22c55e] transition-colors shrink-0">
+                    {idCopied ? <CheckCircle2 size={13} className="text-[#22c55e]" /> : <Copy size={13} />}
+                  </button>
+                </div>
               </div>
 
               {/* API Key */}

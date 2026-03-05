@@ -1,42 +1,66 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Key,
-  Copy,
-  Eye,
-  EyeOff,
-  Plus,
-  Trash2,
-  CheckCircle2,
-  Code2,
-  ExternalLink,
+  Key, Copy, Plus, Trash2, CheckCircle2, Code2, Loader2,
+  AlertTriangle, X, Shield,
 } from "lucide-react";
 import { useAppStore } from "@/store/useStore";
+import { apiKeysApi } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 
-const CODE_EXAMPLE = `// Send a message via WhatsApp SaaS API
-const response = await fetch(
-  'https://api.yourdomain.com/api/v1/message/sendText',
-  {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': 'YOUR_API_KEY'
-    },
-    body: JSON.stringify({
-      instanceName: 'your-instance-name',
-      remoteJid: '15551234567@s.whatsapp.net',
-      message: { text: 'Hello from the API!' }
-    })
-  }
-);`;
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+
+const ALL_PERMISSIONS = [
+  { id: "send_message",        label: "send_message" },
+  { id: "get_instance_status", label: "get_instance_status" },
+  { id: "manage_webhooks",     label: "manage_webhooks" },
+  { id: "read_messages",       label: "read_messages" },
+];
+
+interface LiveKey {
+  id: string;
+  name: string | null;
+  keyPrefix: string;
+  permissions: string[];
+  usageCount: number;
+  lastUsed: string | null;
+  createdAt: string;
+  instance: { id: string; customName: string; instanceName: string };
+}
 
 export default function ApiPage() {
   const { instances } = useAppStore();
-  const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
-  const [copied, setCopied] = useState<string | null>(null);
+
+  const [keys, setKeys]             = useState<LiveKey[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [copied, setCopied]         = useState<string | null>(null);
+  const [revoking, setRevoking]     = useState<string | null>(null);
+
+  // Create modal state
+  const [showCreate, setShowCreate] = useState(false);
+  const [newName, setNewName]       = useState("");
+  const [newInstance, setNewInstance] = useState("");
+  const [newPerms, setNewPerms]     = useState<string[]>(["send_message", "get_instance_status"]);
+  const [creating, setCreating]     = useState(false);
+  const [createError, setCreateError] = useState("");
+
+  // Revealed key (shown once after creation)
+  const [revealedKey, setRevealedKey] = useState<{ key: string; name: string } | null>(null);
+
+  const loadKeys = useCallback(async () => {
+    try {
+      const res = await apiKeysApi.getAll();
+      setKeys(res.data?.data ?? []);
+    } catch {
+      setKeys([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadKeys(); }, [loadKeys]);
 
   function copyText(text: string, id: string) {
     navigator.clipboard.writeText(text);
@@ -44,142 +68,169 @@ export default function ApiPage() {
     setTimeout(() => setCopied(null), 2000);
   }
 
-  const allKeys = instances.flatMap((inst) =>
-    (inst.apiKeys ?? []).map((k) => ({ ...k, instanceName: inst.name }))
-  );
+  async function handleCreate() {
+    if (!newInstance) { setCreateError("Sélectionnez une instance"); return; }
+    if (newPerms.length === 0) { setCreateError("Sélectionnez au moins une permission"); return; }
+    setCreating(true);
+    setCreateError("");
+    try {
+      const res = await apiKeysApi.create(newInstance, newName || undefined, newPerms);
+      const created = res.data?.data;
+      setRevealedKey({ key: created.key, name: created.name ?? "API Key" });
+      setShowCreate(false);
+      setNewName(""); setNewInstance(""); setNewPerms(["send_message", "get_instance_status"]);
+      await loadKeys();
+    } catch (e: any) {
+      setCreateError(e?.response?.data?.error ?? "Erreur lors de la création");
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  async function handleRevoke(id: string) {
+    setRevoking(id);
+    try {
+      await apiKeysApi.revoke(id);
+      setKeys((prev) => prev.filter((k) => k.id !== id));
+    } catch {/* silent */} finally {
+      setRevoking(null);
+    }
+  }
+
+  const codeExample = `// Envoyer un message via WhatsApp SaaS API
+const response = await fetch(
+  '${API_BASE}/api/v1/send-message',
+  {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': 'YOUR_API_KEY'
+    },
+    body: JSON.stringify({
+      number: '237612345678',
+      text: 'Bonjour depuis l\\'API !'
+    })
+  }
+);
+const data = await response.json();
+console.log(data.data.messageId);`;
 
   return (
     <div className="max-w-4xl space-y-5">
+
       {/* Intro */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl p-5"
-        style={{ background: "#111", border: "1px solid #1e1e1e" }}
-      >
-        <div className="flex items-start gap-4">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: "#0d2510" }}
-          >
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+        className="rounded-2xl p-5" style={{ background: "#111", border: "1px solid #1e1e1e" }}>
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#0d2510" }}>
             <Code2 size={18} className="text-[#22c55e]" />
           </div>
-          <div className="flex-1">
-            <h2 className="text-[14px] font-semibold text-white mb-1">
-              REST API Access
-            </h2>
+          <div>
+            <h2 className="text-[14px] font-semibold text-white mb-0.5">Accès API REST</h2>
             <p className="text-[12px] text-[#5a7a5a]">
-              Use API keys to authenticate requests to the WhatsApp SaaS API.
-              Each instance has its own set of keys with configurable permissions.
+              Utilisez des clés API pour authentifier vos requêtes. Chaque instance possède ses propres clés avec des permissions configurables.
             </p>
           </div>
-          <a
-            href="https://green-api.com/docs"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-ghost text-xs flex items-center gap-1.5 shrink-0"
-          >
-            <ExternalLink size={12} /> Docs
-          </a>
         </div>
       </motion.div>
 
-      {/* API Keys */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.05 }}
-        className="rounded-2xl overflow-hidden"
-        style={{ background: "#111", border: "1px solid #1e1e1e" }}
-      >
+      {/* Revealed key banner — shown once after creation */}
+      <AnimatePresence>
+        {revealedKey && (
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className="rounded-2xl p-4" style={{ background: "#071a0e", border: "1px solid #22c55e60" }}>
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] font-semibold text-[#22c55e] flex items-center gap-1.5 mb-1">
+                  <Shield size={12} /> Clé créée — copiez-la maintenant, elle ne sera plus affichée
+                </p>
+                <p className="text-[11px] text-[#5a7a5a] mb-2">{revealedKey.name}</p>
+                <div className="flex items-center gap-2 bg-[#0a0a0a] rounded-xl px-3 py-2 font-mono text-[12px] text-[#22c55e]">
+                  <span className="truncate">{revealedKey.key}</span>
+                  <button onClick={() => copyText(revealedKey.key, "revealed")} className="shrink-0 text-[#3a7a3a] hover:text-[#22c55e]">
+                    {copied === "revealed" ? <CheckCircle2 size={13} className="text-[#22c55e]" /> : <Copy size={13} />}
+                  </button>
+                </div>
+              </div>
+              <button onClick={() => setRevealedKey(null)} className="text-[#3a5a3a] hover:text-white shrink-0 mt-0.5">
+                <X size={14} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* API Keys table */}
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+        className="rounded-2xl overflow-hidden" style={{ background: "#111", border: "1px solid #1e1e1e" }}>
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#1a1a1a]">
           <h3 className="text-[13px] font-semibold text-white flex items-center gap-2">
             <Key size={14} className="text-[#22c55e]" />
-            API Keys
-            <span className="text-[11px] text-[#4a6a4a] font-normal">
-              ({allKeys.length})
-            </span>
+            Clés API
+            <span className="text-[11px] text-[#4a6a4a] font-normal">({keys.length})</span>
           </h3>
-          <button className="btn-green text-xs flex items-center gap-1.5 px-3 py-1.5">
-            <Plus size={12} />
-            New key
+          <button onClick={() => setShowCreate(true)} className="btn-green text-xs flex items-center gap-1.5 px-3 py-1.5">
+            <Plus size={12} /> Nouvelle clé
           </button>
         </div>
 
-        {allKeys.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-10">
+            <Loader2 size={18} className="animate-spin text-[#22c55e]" />
+          </div>
+        ) : keys.length === 0 ? (
           <div className="px-5 py-10 text-center">
-            <p className="text-[13px] text-[#5a7a5a]">
-              No API keys yet. Create an instance first to generate API keys.
-            </p>
+            <Key size={24} className="text-[#2a3a2a] mx-auto mb-2" />
+            <p className="text-[13px] text-[#5a7a5a]">Aucune clé API. Créez une instance puis générez une clé.</p>
           </div>
         ) : (
           <table className="w-full data-table">
             <thead>
               <tr>
-                <th className="text-left">Name</th>
+                <th className="text-left">Nom</th>
                 <th className="text-left">Instance</th>
-                <th className="text-left">Key</th>
+                <th className="text-left">Clé (préfixe)</th>
                 <th className="text-left">Permissions</th>
-                <th className="text-left">Used</th>
+                <th className="text-left">Utilisations</th>
+                <th className="text-left">Créée le</th>
                 <th />
               </tr>
             </thead>
             <tbody>
-              {allKeys.map((k) => (
+              {keys.map((k) => (
                 <tr key={k.id}>
-                  <td className="font-medium text-white">{k.name}</td>
+                  <td className="font-medium text-white">{k.name ?? "—"}</td>
                   <td>
                     <span className="px-1.5 py-0.5 rounded text-[10px] bg-[#0d2510] text-[#22c55e]">
-                      {k.instanceName}
+                      {k.instance?.customName ?? "—"}
                     </span>
                   </td>
                   <td>
-                    <div className="flex items-center gap-2 font-mono text-[11px]">
-                      <span className="text-[#5a7a5a]">
-                        {showKeys[k.id]
-                          ? k.keyPrefix + "…"
-                          : k.keyPrefix.slice(0, 8) + "••••••••"}
-                      </span>
-                      <button
-                        onClick={() =>
-                          setShowKeys((p) => ({ ...p, [k.id]: !p[k.id] }))
-                        }
-                        className="text-[#3a5a3a] hover:text-white"
-                      >
-                        {showKeys[k.id] ? (
-                          <EyeOff size={11} />
-                        ) : (
-                          <Eye size={11} />
-                        )}
-                      </button>
-                      <button
-                        onClick={() => copyText(k.keyPrefix, k.id + "-copy")}
-                        className="text-[#3a5a3a] hover:text-[#22c55e]"
-                      >
-                        {copied === k.id + "-copy" ? (
-                          <CheckCircle2 size={11} className="text-[#22c55e]" />
-                        ) : (
-                          <Copy size={11} />
-                        )}
+                    <div className="flex items-center gap-1.5 font-mono text-[11px] text-[#5a7a5a]">
+                      <span>{k.keyPrefix}</span>
+                      <button onClick={() => copyText(k.keyPrefix, k.id + "-copy")} className="text-[#3a5a3a] hover:text-[#22c55e]">
+                        {copied === k.id + "-copy"
+                          ? <CheckCircle2 size={10} className="text-[#22c55e]" />
+                          : <Copy size={10} />}
                       </button>
                     </div>
                   </td>
                   <td>
                     <div className="flex gap-1 flex-wrap">
-                      {(k.permissions ?? []).slice(0, 2).map((p) => (
-                        <span
-                          key={p}
-                          className="px-1 py-0.5 rounded text-[9px] bg-[#1a1a1a] text-[#6a8a6a]"
-                        >
-                          {p}
-                        </span>
+                      {(k.permissions ?? []).map((p) => (
+                        <span key={p} className="px-1 py-0.5 rounded text-[9px] bg-[#1a1a1a] text-[#6a8a6a]">{p}</span>
                       ))}
                     </div>
                   </td>
                   <td className="text-[#5a7a5a]">{k.usageCount ?? 0}×</td>
+                  <td className="text-[#5a7a5a] text-[11px]">{formatDate(k.createdAt)}</td>
                   <td>
-                    <button className="text-[#3a5a3a] hover:text-red-400 transition-colors">
-                      <Trash2 size={13} />
+                    <button
+                      onClick={() => handleRevoke(k.id)}
+                      disabled={revoking === k.id}
+                      className="text-[#3a5a3a] hover:text-red-400 transition-colors disabled:opacity-40"
+                    >
+                      {revoking === k.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
                     </button>
                   </td>
                 </tr>
@@ -190,39 +241,108 @@ export default function ApiPage() {
       </motion.div>
 
       {/* Code example */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="rounded-2xl overflow-hidden"
-        style={{ background: "#111", border: "1px solid #1e1e1e" }}
-      >
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+        className="rounded-2xl overflow-hidden" style={{ background: "#111", border: "1px solid #1e1e1e" }}>
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#1a1a1a]">
-          <h3 className="text-[13px] font-semibold text-white">
-            Quick Start — JavaScript
-          </h3>
-          <button
-            onClick={() => copyText(CODE_EXAMPLE, "code")}
-            className="btn-ghost text-xs flex items-center gap-1.5"
-          >
-            {copied === "code" ? (
-              <>
-                <CheckCircle2 size={12} className="text-[#22c55e]" /> Copied
-              </>
-            ) : (
-              <>
-                <Copy size={12} /> Copy
-              </>
-            )}
+          <h3 className="text-[13px] font-semibold text-white">Quick Start — JavaScript</h3>
+          <button onClick={() => copyText(codeExample, "code")} className="btn-ghost text-xs flex items-center gap-1.5">
+            {copied === "code" ? <><CheckCircle2 size={12} className="text-[#22c55e]" /> Copié</> : <><Copy size={12} /> Copier</>}
           </button>
         </div>
-        <pre
-          className="px-5 py-4 text-[11px] font-mono overflow-x-auto text-[#8adc8a] leading-relaxed"
-          style={{ background: "#080808" }}
-        >
-          {CODE_EXAMPLE}
+        <pre className="px-5 py-4 text-[11px] font-mono overflow-x-auto text-[#8adc8a] leading-relaxed" style={{ background: "#080808" }}>
+          {codeExample}
         </pre>
       </motion.div>
+
+      {/* Create key modal */}
+      <AnimatePresence>
+        {showCreate && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: "rgba(0,0,0,0.7)" }}
+            onClick={() => setShowCreate(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              className="rounded-2xl p-6 w-full max-w-md"
+              style={{ background: "#111", border: "1px solid #1e1e1e" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-[14px] font-semibold text-white flex items-center gap-2">
+                  <Key size={14} className="text-[#22c55e]" /> Nouvelle clé API
+                </h3>
+                <button onClick={() => setShowCreate(false)} className="text-[#3a5a3a] hover:text-white">
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Name */}
+                <div>
+                  <label className="text-[11px] text-[#8a9a8a] block mb-1">Nom (optionnel)</label>
+                  <input
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    placeholder="ex: Production Key"
+                    className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl px-3 py-2 text-[12px] text-white placeholder-[#3a5a3a] focus:border-[#22c55e] focus:outline-none"
+                  />
+                </div>
+
+                {/* Instance */}
+                <div>
+                  <label className="text-[11px] text-[#8a9a8a] block mb-1">Instance *</label>
+                  <select
+                    value={newInstance}
+                    onChange={(e) => setNewInstance(e.target.value)}
+                    className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl px-3 py-2 text-[12px] text-white focus:border-[#22c55e] focus:outline-none"
+                  >
+                    <option value="">— Sélectionner —</option>
+                    {instances.map((inst) => (
+                      <option key={inst.id} value={inst.id}>{inst.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Permissions */}
+                <div>
+                  <label className="text-[11px] text-[#8a9a8a] block mb-2">Permissions *</label>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {ALL_PERMISSIONS.map(({ id, label }) => (
+                      <label key={id}
+                        className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors"
+                        style={{
+                          background: newPerms.includes(id) ? "#0d2510" : "#0a0a0a",
+                          border: `1px solid ${newPerms.includes(id) ? "#22c55e40" : "#1a1a1a"}`,
+                        }}
+                      >
+                        <input type="checkbox" checked={newPerms.includes(id)}
+                          onChange={(e) => setNewPerms(e.target.checked ? [...newPerms, id] : newPerms.filter(p => p !== id))}
+                          className="accent-[#22c55e]" />
+                        <span className="text-[10px] font-mono" style={{ color: newPerms.includes(id) ? "#22c55e" : "#5a7a5a" }}>{label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {createError && (
+                  <div className="flex items-center gap-2 text-[11px] text-red-400 bg-red-950/30 rounded-xl px-3 py-2">
+                    <AlertTriangle size={12} /> {createError}
+                  </div>
+                )}
+
+                <div className="flex gap-2 pt-1">
+                  <button onClick={() => setShowCreate(false)} className="btn-ghost flex-1 py-2 text-xs">Annuler</button>
+                  <button onClick={handleCreate} disabled={creating} className="btn-green flex-1 py-2 text-xs flex items-center justify-center gap-1.5">
+                    {creating ? <><Loader2 size={12} className="animate-spin" /> Création…</> : <><Key size={12} /> Générer</>}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
