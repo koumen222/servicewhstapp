@@ -374,13 +374,17 @@ router.post('/send-message', async (req: AuthRequest, res) => {
       }
     }
 
-    // Strip JID suffixes — Evolution API expects plain number or number@s.whatsapp.net
-    // e.g. "553198296801@s.whatsapp.net" → "553198296801"
-    // e.g. "10526998446088@lid"           → "10526998446088" (Linked Device)
-    // e.g. "553198296801@g.us"            → pass as-is (group)
-    const cleanNumber = number.includes('@g.us')
-      ? number
-      : number.replace(/@s\.whatsapp\.net$/, '').replace(/@lid$/, '').replace(/[^0-9]/g, '')
+    // JID handling for Evolution API:
+    // "@g.us"            → pass full JID (group)
+    // "@lid"             → pass full JID (WhatsApp Linked Device — phone number hidden)
+    // "@s.whatsapp.net"  → strip suffix, send plain number
+    // plain number       → send as-is
+    let cleanNumber: string
+    if (number.includes('@g.us') || number.includes('@lid')) {
+      cleanNumber = number // pass full JID for groups and linked devices
+    } else {
+      cleanNumber = number.replace(/@s\.whatsapp\.net$/, '').replace(/[^0-9+]/g, '')
+    }
 
     if (!cleanNumber) {
       return res.status(400).json({ success: false, message: 'Invalid phone number format' })
