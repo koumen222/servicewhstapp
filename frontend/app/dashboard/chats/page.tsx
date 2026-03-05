@@ -11,76 +11,6 @@ import { useInstanceStatus } from "@/hooks/useInstanceStatus";
 import { instanceApi } from "@/lib/api";
 import type { Chat, ConnectionStatus as ConnectionStatusType } from "@/lib/types";
 
-// Mock data for development - will be replaced by real data from hooks
-const MOCK_CHATS: Chat[] = [
-  {
-    id: "1",
-    instanceId: "instance-1",
-    contactId: "+1 234 567 8900",
-    contactName: "John Smith",
-    lastMessage: {
-      id: "msg-1",
-      chatId: "1",
-      instanceId: "instance-1",
-      senderId: "+1 234 567 8900",
-      recipientId: "me",
-      content: "Hello! How can I help?",
-      messageType: "text",
-      status: "delivered",
-      isFromMe: false,
-      timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-    },
-    unreadCount: 3,
-    lastActivity: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-    isArchived: false,
-    isPinned: false,
-  },
-  {
-    id: "2",
-    instanceId: "instance-1",
-    contactId: "+44 20 7946 0958",
-    contactName: "Alice Johnson",
-    lastMessage: {
-      id: "msg-2",
-      chatId: "2",
-      instanceId: "instance-1",
-      senderId: "me",
-      recipientId: "+44 20 7946 0958",
-      content: "Thanks for your response.",
-      messageType: "text",
-      status: "read",
-      isFromMe: true,
-      timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-    },
-    unreadCount: 0,
-    lastActivity: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-    isArchived: false,
-    isPinned: false,
-  },
-  {
-    id: "3",
-    instanceId: "instance-1",
-    contactId: "+33 1 23 45 67 89",
-    contactName: "Marie Dubois",
-    lastMessage: {
-      id: "msg-3",
-      chatId: "3",
-      instanceId: "instance-1",
-      senderId: "+33 1 23 45 67 89",
-      recipientId: "me",
-      content: "When is my order arriving?",
-      messageType: "text",
-      status: "delivered",
-      isFromMe: false,
-      timestamp: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
-    },
-    unreadCount: 1,
-    lastActivity: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
-    isArchived: false,
-    isPinned: false,
-  },
-];
-
 export default function ChatsPage() {
   const { instances } = useAppStore();
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
@@ -115,8 +45,8 @@ export default function ChatsPage() {
     pollInterval: 3000,
   });
   
-  // Use real-time chats if available, otherwise show mocks only when not connected
-  const chats = realTimeChats.length > 0 ? realTimeChats : (isConnected ? [] : MOCK_CHATS);
+  // Use only real-time chats from API
+  const chats = realTimeChats;
   const hasInstances = instances.length > 0;
   const hasChats = chats.length > 0;
 
