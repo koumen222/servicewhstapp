@@ -12,6 +12,8 @@ import { env } from '../config/env.js'
 
 const router = Router()
 
+console.log('✅ Instance routes module loaded')
+
 router.use(authenticate)
 
 const getPublicApiBaseUrl = (req: AuthRequest): string => {
@@ -183,6 +185,7 @@ router.get('/connectionState/:instanceName', async (req: AuthRequest, res) => {
 // Reliable status endpoint for polling — returns {success, data: {status, profileName}}
 // Status mapping: open → connected, connecting → connecting, close → disconnected
 router.get('/status/:instanceName', async (req: AuthRequest, res) => {
+  console.log('[STATUS] Route hit - instanceName:', req.params.instanceName);
   try {
     const { instanceName: customName } = req.params
     const userId = req.user!.id
@@ -258,6 +261,7 @@ router.get('/connect/:instanceName', async (req: AuthRequest, res) => {
 })
 
 router.get('/qrcode/:instanceName', async (req: AuthRequest, res) => {
+  console.log('[QR] Route hit - instanceName:', req.params.instanceName);
   try {
     const { instanceName: customName } = req.params
     const userId = req.user!.id

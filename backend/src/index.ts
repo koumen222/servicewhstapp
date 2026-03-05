@@ -147,6 +147,7 @@ app.use('/api/auth', authRoutes)
 
 // Routes protégées par JWT avec isolation multi-tenant
 app.use('/api/instances', authMiddleware, userRateLimit, multiTenantIsolation, instanceManagementRoutes)
+console.log('✅ Registered routes: /api/instance/* (status, qrcode, create, etc.)')
 app.use('/api/instance', authMiddleware, userRateLimit, multiTenantIsolation, instanceRoutes)
 app.use('/api/message', authMiddleware, userRateLimit, multiTenantIsolation, messageRoutes)
 app.use('/api/notifications', authMiddleware, notificationRoutes)
