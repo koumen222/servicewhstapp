@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { verifyToken } from '../lib/jwt.js'
+import { prisma } from '../lib/prisma.js'
 
 // Types pour l'authentification JWT
 interface JWTPayload {
@@ -148,18 +149,12 @@ export const canCreateInstance = async (req: Request, res: Response, next: NextF
   }
 
   try {
-    // Compter les instances existantes de l'utilisateur
-    const { PrismaClient } = await import('@prisma/client')
-    const prisma = new PrismaClient()
-    
     const instanceCount = await prisma.instance.count({
       where: {
         userId: user.id,
         isActive: true
       }
     })
-
-    await prisma.$disconnect()
 
     if (instanceCount >= user.maxInstances) {
       return res.status(400).json({

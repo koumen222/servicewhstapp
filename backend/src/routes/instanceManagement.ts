@@ -1,12 +1,12 @@
 import express from 'express'
-import { PrismaClient } from '@prisma/client'
 import { ApiKeyService } from '../services/apiKeyService.js'
 import { QuotaService } from '../services/quotaService.js'
+import { prisma } from '../lib/prisma.js'
+import { buildInstanceName } from '../utils/instanceName.js'
 import axios from 'axios'
 import crypto from 'crypto'
 
 const router = express.Router()
-const prisma = new PrismaClient()
 
 // Client axios centralisé pour Evolution API
 const createEvolutionClient = () => {
@@ -89,15 +89,12 @@ router.post('/create-instance', async (req, res) => {
       })
     }
 
-    // Vérifier l'unicité du nom d'instance pour cet utilisateur
-    const existingInstance = await prisma.instance.findFirst({
-      where: {
-        userId,
-        customName: customName.trim()
-      }
-    })
+    // Générer le nom d'instance unique pour Evolution API (format stable, déterministe)
+    const instanceName = buildInstanceName(userId, customName.trim())
 
-    if (existingInstance) {
+    // Vérifier l'unicité par instanceName (contient userId + customName, donc garantit l'isolation)
+    const existingByName = await prisma.instance.findUnique({ where: { instanceName } })
+    if (existingByName) {
       return res.status(400).json({
         error: 'Instance name already exists',
         message: 'Choose a different name for your instance',
@@ -105,11 +102,13 @@ router.post('/create-instance', async (req, res) => {
       })
     }
 
-    // Générer le nom d'instance unique pour Evolution API
-    const instanceName = `user_${userId.substring(0, 8)}_${customName.trim()}_${Date.now()}`
-
-    // Créer l'instance dans Evolution API
+    // Créer l'instance dans Evolution API (sans qrcode pour éviter l'auto-connexion)
     const evolutionResponse = await createEvolutionInstance(instanceName, integration)
+
+    // Extraire la clé API Evolution de façon sécurisée
+    const evolutionApiKey = evolutionResponse?.hash?.apikey
+      || evolutionResponse?.apikey
+      || crypto.randomBytes(32).toString('hex')
 
     // Créer l'instance dans notre base de données
     const instance = await prisma.instance.create({
@@ -118,7 +117,7 @@ router.post('/create-instance', async (req, res) => {
         instanceName,
         customName: customName.trim(),
         status: 'close',
-        evolutionApiKey: evolutionResponse.hash.apikey,
+        evolutionApiKey,
         instanceUrl: process.env.EVOLUTION_API_URL,
         isActive: true
       }
@@ -229,25 +228,39 @@ router.get('/instances', async (req, res) => {
       orderBy: { createdAt: 'desc' }
     })
 
-    // Enrichir les données avec le statut Evolution API
+    // Status mapping: Evolution API raw state → frontend ConnectionStatus
+    const statusMap: Record<string, string> = {
+      open: 'connected',
+      connecting: 'connecting',
+      close: 'disconnected',
+      closed: 'disconnected',
+    }
+
+    // Enrichir les données avec le statut Evolution API (un appel par instance, pas fetchAll)
     const enrichedInstances = await Promise.all(
       instances.map(async (instance) => {
-        let connectionStatus = 'unknown'
+        let rawState = instance.status // fallback to DB value
         try {
-          const evolutionStatus = await getEvolutionInstanceStatus(
-            instance.instanceName,
-            instance.evolutionApiKey!
-          )
-          connectionStatus = evolutionStatus.connectionState || instance.status
+          const stateResp = await getEvolutionConnectionState(instance.instanceName)
+          rawState = stateResp.instance?.state || stateResp.state || instance.status
+          // Persist updated status to DB if changed
+          if (rawState !== instance.status) {
+            await prisma.instance.update({
+              where: { id: instance.id },
+              data: { status: rawState }
+            })
+          }
         } catch (error) {
-          console.warn(`Failed to get status for instance ${instance.instanceName}:`, error)
+          console.warn(`[INSTANCES] Could not get live status for ${instance.instanceName}, using DB:`, (error as any)?.message)
         }
+
+        const connectionStatus = statusMap[rawState] || 'disconnected'
 
         return {
           id: instance.id,
           name: instance.customName,
           instanceName: instance.instanceName,
-          status: instance.status,
+          status: rawState,
           connectionStatus,
           profileName: instance.profileName,
           profilePictureUrl: instance.profilePictureUrl,
@@ -275,7 +288,7 @@ router.get('/instances', async (req, res) => {
         instances: enrichedInstances,
         summary: {
           totalInstances: instances.length,
-          activeInstances: enrichedInstances.filter(i => i.connectionStatus === 'open').length,
+          activeInstances: enrichedInstances.filter(i => i.connectionStatus === 'connected').length,
           maxAllowed: req.user?.maxInstances || 1
         }
       }
@@ -505,7 +518,7 @@ async function createEvolutionInstance(instanceName: string, integration: string
   const payload = {
     instanceName,
     integration,
-    qrcode: true
+    qrcode: false // Do NOT auto-connect on creation — user must initiate via QR or phone
   }
   
   console.log('Sending request to: /instance/create')
@@ -534,16 +547,21 @@ async function deleteEvolutionInstance(instanceName: string, apiKey: string) {
   await evolution.delete(`/instance/delete/${instanceName}`)
 }
 
-async function getEvolutionInstanceStatus(instanceName: string, apiKey: string) {
+async function getEvolutionConnectionState(instanceName: string) {
   const evolution = createEvolutionClient()
   if (!evolution) {
     throw new Error('Evolution API configuration missing')
   }
-
-  const response = await evolution.get('/instance/fetchInstances')
-
-  const instances = Array.isArray(response.data) ? response.data : [response.data]
-  return instances.find((i: any) => i.instance?.instanceName === instanceName) || { connectionState: 'unknown' }
+  // If instance not found in Evolution (404), treat as disconnected
+  try {
+    const response = await evolution.get(`/instance/connectionState/${instanceName}`)
+    return response.data
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      return { instance: { state: 'close' } }
+    }
+    throw error
+  }
 }
 
 async function restartEvolutionInstance(instanceName: string, apiKey: string) {

@@ -40,6 +40,11 @@ class EvolutionAPI {
       const { data } = await this.client.get(`/instance/connectionState/${instanceName}`)
       return data
     } catch (error: any) {
+      // If instance doesn't exist in Evolution API, treat as disconnected instead of throwing
+      if (error.response?.status === 404) {
+        console.warn(`[Evolution] getConnectionState: instance ${instanceName} not found in Evolution API, treating as disconnected`)
+        return { instance: { state: 'close' } }
+      }
       console.error('[Evolution] getConnectionState error:', error.response?.data || error.message)
       throw error
     }
@@ -60,6 +65,18 @@ class EvolutionAPI {
       const { data } = await this.client.get(`/instance/connect/${instanceName}`)
       return data
     } catch (error: any) {
+      // If instance is already connected, Evolution API returns 4xx — treat as "no QR needed"
+      const status = error.response?.status
+      const msg: string = error.response?.data?.message || error.response?.data?.error || ''
+      if (
+        status === 400 ||
+        msg.toLowerCase().includes('connected') ||
+        msg.toLowerCase().includes('open') ||
+        msg.toLowerCase().includes('already')
+      ) {
+        console.log('[Evolution] fetchQRCode: instance already connected, returning null')
+        return { qrcode: { base64: null }, pairingCode: null, count: 0, alreadyConnected: true }
+      }
       console.error('[Evolution] fetchQRCode error:', error.response?.data || error.message)
       throw error
     }

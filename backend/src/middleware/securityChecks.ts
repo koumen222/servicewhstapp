@@ -15,29 +15,33 @@ export const multiTenantIsolation = async (req: Request, res: Response, next: Ne
 
     // Pour les requêtes authentifiées par JWT
     if (userId && req.params) {
-      await validateUserOwnership(userId, req.params, res)
+      const blocked = await validateUserOwnership(userId, req.params, res)
+      if (blocked) return
     }
 
     // Pour les requêtes authentifiées par API Key
     if (apiAuth && req.params) {
-      await validateApiKeyOwnership(apiAuth, req.params, res)
+      const blocked = await validateApiKeyOwnership(apiAuth, req.params, res)
+      if (blocked) return
     }
 
     next()
   } catch (error) {
     console.error('Multi-tenant isolation error:', error)
-    return res.status(403).json({
-      error: 'Access denied',
-      message: 'You are not authorized to access this resource',
-      code: 'ACCESS_DENIED'
-    })
+    if (!res.headersSent) {
+      return res.status(403).json({
+        error: 'Access denied',
+        message: 'You are not authorized to access this resource',
+        code: 'ACCESS_DENIED'
+      })
+    }
   }
 }
 
 /**
  * Valide que l'utilisateur possède bien les ressources demandées
  */
-async function validateUserOwnership(userId: string, params: any, res: Response) {
+async function validateUserOwnership(userId: string, params: any, res: Response): Promise<boolean> {
   // Vérifier l'ownership des instances
   if (params.instanceId) {
     const instance = await prisma.instance.findFirst({
@@ -49,11 +53,12 @@ async function validateUserOwnership(userId: string, params: any, res: Response)
     })
 
     if (!instance) {
-      return res.status(404).json({
+      res.status(404).json({
         error: 'Resource not found',
         message: 'The requested instance does not exist or you do not have access to it',
         code: 'INSTANCE_NOT_FOUND'
       })
+      return true // blocked
     }
   }
 
@@ -68,41 +73,48 @@ async function validateUserOwnership(userId: string, params: any, res: Response)
     })
 
     if (!apiKey) {
-      return res.status(404).json({
+      res.status(404).json({
         error: 'API key not found',
         message: 'The requested API key does not exist or you do not have access to it',
         code: 'API_KEY_NOT_FOUND'
       })
+      return true // blocked
     }
   }
+
+  return false // not blocked
 }
 
 /**
  * Valide que la clé API a bien accès aux ressources demandées
  */
-async function validateApiKeyOwnership(apiAuth: any, params: any, res: Response) {
+async function validateApiKeyOwnership(apiAuth: any, params: any, res: Response): Promise<boolean> {
   const { instance, apiKeyData, user } = apiAuth
 
   // S'assurer que l'instance dans l'URL correspond à l'instance de la clé API
   if (params.instanceId && params.instanceId !== instance.id) {
-    return res.status(403).json({
+    res.status(403).json({
       error: 'Access denied',
       message: 'This API key cannot access the specified instance',
       code: 'INSTANCE_ACCESS_DENIED'
     })
+    return true // blocked
   }
 
   // Vérifier les permissions spécifiques si nécessaire
   if (params.action) {
     const requiredPermission = getRequiredPermission(params.action)
     if (requiredPermission && !apiKeyData.permissions.includes(requiredPermission)) {
-      return res.status(403).json({
+      res.status(403).json({
         error: 'Insufficient permissions',
         message: `This API key does not have permission to ${params.action}`,
         code: 'INSUFFICIENT_PERMISSIONS'
       })
+      return true // blocked
     }
   }
+
+  return false // not blocked
 }
 
 /**
@@ -295,8 +307,7 @@ function isUnauthorizedAccess(req: Request): boolean {
 
 function isSuspiciousUserAgent(userAgent: string): boolean {
   const suspiciousAgents = [
-    'sqlmap', 'nmap', 'nikto', 'burpsuite', 'curl/7', 'python-requests',
-    'postman', 'insomnia', 'gobuster', 'dirbuster'
+    'sqlmap', 'nmap', 'nikto', 'burpsuite', 'gobuster', 'dirbuster'
   ]
   
   const lowerAgent = userAgent.toLowerCase()

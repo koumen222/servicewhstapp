@@ -5,7 +5,6 @@ import { AuthRequest } from '../types/index.js'
 import { prisma } from '../lib/prisma.js'
 import { evolutionAPI } from '../lib/evolution.js'
 import { buildInstanceName } from '../utils/instanceName.js'
-import { authenticate } from '../middleware/auth.js'
 import { checkInstanceQuota } from '../middleware/quota.js'
 import { getUsageStats } from '../utils/quotaManager.js'
 import { env } from '../config/env.js'
@@ -13,8 +12,6 @@ import { env } from '../config/env.js'
 const router = Router()
 
 console.log('✅ Instance routes module loaded')
-
-router.use(authenticate)
 
 const getPublicApiBaseUrl = (req: AuthRequest): string => {
   if (env.BACKEND_PUBLIC_URL) {
@@ -33,7 +30,7 @@ const getPublicApiBaseUrl = (req: AuthRequest): string => {
 const createInstanceSchema = z.object({
   instanceName: z.string().min(1),
   integration: z.string().optional().default('WHATSAPP-BAILEYS'),
-  qrcode: z.boolean().optional().default(true),
+  qrcode: z.boolean().optional().default(false), // Do NOT auto-connect on creation
 })
 
 router.post('/create', checkInstanceQuota, async (req: AuthRequest, res) => {
@@ -60,7 +57,7 @@ router.post('/create', checkInstanceQuota, async (req: AuthRequest, res) => {
     }
 
     console.log('[CREATE] Creating Evolution API instance:', fullInstanceName)
-    const evolutionResponse = await evolutionAPI.createInstance(fullInstanceName, integration, qrcode)
+    const evolutionResponse = await evolutionAPI.createInstance(fullInstanceName, integration, false) // qrcode:false — no auto-connect
 
     const apiKey = crypto.randomBytes(32).toString('hex')
 
@@ -350,10 +347,22 @@ router.post('/send-message', async (req: AuthRequest, res) => {
       const state = await evolutionAPI.getConnectionState(fullInstanceName)
       const rawState = state.instance?.state || state.state || 'close'
       if (rawState !== 'open') {
-        return res.status(400).json({ success: false, message: 'Instance is not connected. Please scan QR code first.' })
+        return res.status(400).json({
+          success: false,
+          message: 'Instance is not connected. Please scan QR code or use phone pairing first.',
+          code: 'INSTANCE_NOT_CONNECTED'
+        })
       }
     } catch (stateError: any) {
       console.warn('[SEND] Could not verify connection state:', stateError?.message)
+      // If Evolution API is unreachable, check the DB status as fallback
+      if (dbInstance.status !== 'open') {
+        return res.status(400).json({
+          success: false,
+          message: 'Instance is not connected. Please scan QR code or use phone pairing first.',
+          code: 'INSTANCE_NOT_CONNECTED'
+        })
+      }
     }
 
     const result = await evolutionAPI.sendTextMessage(fullInstanceName, number, message)
