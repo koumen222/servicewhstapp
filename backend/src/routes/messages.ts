@@ -23,8 +23,15 @@ router.post('/sendText/:instanceName', extractInstanceId, checkMessageQuota, asy
     const { instanceName: customName } = req.params
     const { number, text } = sendTextSchema.parse(req.body)
     const userId = req.user!.id
-    const fullInstanceName = buildInstanceName(userId, customName)
     const instanceId = req.instanceId!
+
+    // Find the instance by customName and userId
+    const dbInstance = await prisma.instance.findFirst({
+      where: { customName, userId, isActive: true }
+    })
+    if (!dbInstance) {
+      return res.status(404).json({ success: false, message: 'Instance not found' })
+    }
 
     // Créer une clé API temporaire pour ce message (ou utiliser une existante)
     let apiKey = await prisma.apiKey.findFirst({
@@ -54,7 +61,7 @@ router.post('/sendText/:instanceName', extractInstanceId, checkMessageQuota, asy
     let messageLog
     try {
       // Envoyer le message via Evolution API
-      const result = await evolutionAPI.sendTextMessage(fullInstanceName, number, text)
+      const result = await evolutionAPI.sendTextMessage(dbInstance.instanceName, number, text)
       
       // Enregistrer le message comme réussi
       messageLog = await prisma.messageLog.create({
