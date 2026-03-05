@@ -43,7 +43,7 @@ export function InstanceCard({
     status: realTimeStatus,
     connectionInfo,
   } = useInstanceStatus({
-    instanceName: instance.name,
+    instanceName: instance.instanceName, // Use real instance ID (5-digit number), not customName
     enabled: true,
     pollInterval: 5000,
   });
