@@ -154,7 +154,7 @@ router.get('/connectionState/:instanceName', async (req: AuthRequest, res) => {
     const userId = req.user!.id
 
     const dbInstance = await prisma.instance.findFirst({
-      where: { customName, userId, isActive: true }
+      where: { instanceName: customName, userId, isActive: true }
     })
     if (!dbInstance) {
       return res.status(404).json({ success: false, message: 'Instance not found' })
@@ -249,7 +249,7 @@ router.get('/connect/:instanceName', async (req: AuthRequest, res) => {
     const { instanceName: customName } = req.params
     const userId = req.user!.id
 
-    const dbInstance = await prisma.instance.findFirst({ where: { customName, userId, isActive: true } })
+    const dbInstance = await prisma.instance.findFirst({ where: { instanceName: customName, userId, isActive: true } })
     if (!dbInstance) {
       return res.status(404).json({ success: false, message: 'Instance not found' })
     }
@@ -303,7 +303,7 @@ router.post('/connect-phone', async (req: AuthRequest, res) => {
 
     const userId = req.user!.id
 
-    const dbInstance = await prisma.instance.findFirst({ where: { customName, userId, isActive: true } })
+    const dbInstance = await prisma.instance.findFirst({ where: { instanceName: customName, userId, isActive: true } })
     if (!dbInstance) {
       return res.status(404).json({ success: false, message: 'Instance not found' })
     }
@@ -341,7 +341,7 @@ router.post('/send-message', async (req: AuthRequest, res) => {
     const userId = req.user!.id
 
     const dbInstance = await prisma.instance.findFirst({ 
-      where: { customName, userId, isActive: true },
+      where: { instanceName: customName, userId, isActive: true },
       include: { user: true }
     })
     if (!dbInstance) {
@@ -609,7 +609,7 @@ router.get('/chats/:instanceName/:remoteJid/messages', async (req: AuthRequest, 
     const limit = parseInt(req.query.limit as string) || 50
     const userId = req.user!.id
 
-    const dbInstance = await prisma.instance.findFirst({ where: { customName, userId, isActive: true } })
+    const dbInstance = await prisma.instance.findFirst({ where: { instanceName: customName, userId, isActive: true } })
     if (!dbInstance) {
       return res.status(404).json({ success: false, message: 'Instance not found' })
     }
@@ -688,7 +688,7 @@ router.delete('/logout/:instanceName', async (req: AuthRequest, res) => {
     const userId = req.user!.id
 
     const dbInstance = await prisma.instance.findFirst({
-      where: { customName, userId, isActive: true }
+      where: { instanceName: customName, userId, isActive: true }
     })
     if (!dbInstance) {
       return res.status(404).json({ error: 'Instance non trouvée' })
@@ -715,7 +715,7 @@ router.delete('/delete/:instanceName', async (req: AuthRequest, res) => {
     const userId = req.user!.id
 
     const dbInstance = await prisma.instance.findFirst({
-      where: { customName, userId, isActive: true }
+      where: { instanceName: customName, userId, isActive: true }
     })
     if (!dbInstance) {
       return res.status(404).json({ error: 'Instance non trouvée' })
@@ -739,7 +739,7 @@ router.get('/credentials/:instanceName', async (req: AuthRequest, res) => {
     const userId = req.user!.id
 
     const dbInstance = await prisma.instance.findFirst({
-      where: { customName, userId, isActive: true }
+      where: { instanceName: customName, userId, isActive: true }
     })
     if (!dbInstance) {
       return res.status(404).json({ error: 'Instance non trouvée' })
@@ -767,7 +767,7 @@ router.get('/stats/:instanceName', async (req: AuthRequest, res) => {
     const userId = req.user!.id
 
     const dbInstance = await prisma.instance.findFirst({
-      where: { customName, userId, isActive: true }
+      where: { instanceName: customName, userId, isActive: true }
     })
     if (!dbInstance) {
       return res.status(404).json({ error: 'Instance non trouvée' })

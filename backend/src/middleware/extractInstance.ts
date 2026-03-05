@@ -18,7 +18,7 @@ export async function extractInstanceId(req: AuthRequest, res: Response, next: N
 
     // Vérifier que l'instance existe et appartient à l'utilisateur
     const dbInstance = await prisma.instance.findFirst({
-      where: { customName, userId, isActive: true }
+      where: { instanceName: customName, userId, isActive: true }
     })
 
     if (!dbInstance) {

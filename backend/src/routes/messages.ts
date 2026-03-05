@@ -27,7 +27,7 @@ router.post('/sendText/:instanceName', extractInstanceId, checkMessageQuota, asy
 
     // Find the instance by customName and userId
     const dbInstance = await prisma.instance.findFirst({
-      where: { customName, userId, isActive: true }
+      where: { instanceName: customName, userId, isActive: true }
     })
     if (!dbInstance) {
       return res.status(404).json({ success: false, message: 'Instance not found' })
