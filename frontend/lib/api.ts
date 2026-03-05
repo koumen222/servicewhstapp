@@ -276,3 +276,17 @@ export const publicApi = {
       { headers: { "x-api-key": apiKey } }
     ),
 };
+
+// ─── Integrations API  /api/integrations/* ──────────────────────────────────
+export const integrationsApi = {
+  /** POST /api/integrations/whatsapp/connect — { workspaceId?, instanceName, instanceId, apiKey } */
+  connectWhatsApp: (instanceName: string, instanceId: string, apiKey: string, workspaceId?: string) =>
+    api.post("/api/integrations/whatsapp/connect", { workspaceId, instanceName, instanceId, apiKey }),
+
+  /** POST /api/integrations/whatsapp/test-message — { instanceId, apiKey, number, text } */
+  testWhatsAppMessage: (instanceId: string, apiKey: string, number: string, text: string) =>
+    api.post("/api/integrations/whatsapp/test-message", { instanceId, apiKey, number, text }),
+
+  /** GET /api/integrations/whatsapp/status */
+  getWhatsAppStatus: () => api.get("/api/integrations/whatsapp/status"),
+};

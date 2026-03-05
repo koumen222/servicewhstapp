@@ -1,36 +1,9 @@
-import crypto from 'crypto'
 import { PrismaClient } from '@prisma/client'
+import { generateAndHashApiKey, verifyApiKey } from '../utils/apiKeyGenerator.js'
 
 const prisma = new PrismaClient()
 
 export class ApiKeyService {
-  /**
-   * Génère une clé API sécurisée avec préfixe
-   * Format: ak_live_xxxxxxxxxxxxxxxxxxxxxxxxxx (32 chars après préfixe)
-   */
-  private static generateApiKey(): string {
-    const randomBytes = crypto.randomBytes(24) // 24 bytes = 48 hex chars, on en prend 25
-    const keyBody = randomBytes.toString('hex').substring(0, 25)
-    return `ak_live_${keyBody}`
-  }
-
-  /**
-   * Hash une clé API avec SHA-256 + salt
-   */
-  private static hashApiKey(apiKey: string): string {
-    const salt = process.env.API_KEY_SALT || 'default-salt-change-me'
-    return crypto
-      .createHash('sha256')
-      .update(apiKey + salt)
-      .digest('hex')
-  }
-
-  /**
-   * Extrait le préfixe de la clé (premiers 16 caractères) pour identification
-   */
-  private static getKeyPrefix(apiKey: string): string {
-    return apiKey.substring(0, 16) + '...'
-  }
 
   /**
    * Crée une nouvelle clé API pour une instance
@@ -41,7 +14,11 @@ export class ApiKeyService {
     name?: string
     permissions?: string[]
     expiresAt?: Date
+    rateLimitPerMin?: number
   }): Promise<{ apiKey: string; keyData: any }> {
+    console.log('\n========== CREATE API KEY ==========')
+    console.log('User ID:', data.userId)
+    console.log('Instance ID:', data.instanceId)
     // Vérifier que l'instance appartient bien à l'utilisateur
     const instance = await prisma.instance.findFirst({
       where: {
@@ -59,21 +36,23 @@ export class ApiKeyService {
     const keyCount = await prisma.apiKey.count({
       where: {
         instanceId: data.instanceId,
-        isActive: true
+        isActive: true,
+        revoked: false
       }
     })
 
     const MAX_KEYS_PER_INSTANCE = 10 // Configurable
     if (keyCount >= MAX_KEYS_PER_INSTANCE) {
+      console.log(`❌ Maximum API keys reached: ${keyCount}/${MAX_KEYS_PER_INSTANCE}`)
       throw new Error(`Maximum number of API keys reached (${MAX_KEYS_PER_INSTANCE})`)
     }
 
-    const apiKey = this.generateApiKey()
-    const keyHash = this.hashApiKey(apiKey)
-    const keyPrefix = this.getKeyPrefix(apiKey)
+    console.log('🔑 Generating secure API key with bcrypt...')
+    const { apiKey, keyHash, keyPrefix } = await generateAndHashApiKey()
 
     const defaultPermissions = ['send_message', 'get_instance_status']
 
+    console.log('💾 Saving API key to database...')
     const keyData = await prisma.apiKey.create({
       data: {
         userId: data.userId,
@@ -83,7 +62,9 @@ export class ApiKeyService {
         name: data.name || `API Key - ${new Date().toISOString().split('T')[0]}`,
         permissions: data.permissions || defaultPermissions,
         expiresAt: data.expiresAt,
-        isActive: true
+        rateLimitPerMin: data.rateLimitPerMin || 60,
+        isActive: true,
+        revoked: false
       },
       include: {
         instance: {
@@ -95,6 +76,12 @@ export class ApiKeyService {
       }
     })
 
+    console.log('✅ API key created successfully')
+    console.log('  ID:', keyData.id)
+    console.log('  Prefix:', keyData.keyPrefix)
+    console.log('  Instance:', keyData.instance.instanceName)
+    console.log('====================================\n')
+
     return {
       apiKey, // Clé en clair (à retourner une seule fois)
       keyData: {
@@ -102,6 +89,7 @@ export class ApiKeyService {
         name: keyData.name,
         keyPrefix: keyData.keyPrefix,
         permissions: keyData.permissions,
+        rateLimitPerMin: keyData.rateLimitPerMin,
         instanceName: keyData.instance.instanceName,
         createdAt: keyData.createdAt,
         expiresAt: keyData.expiresAt
@@ -111,6 +99,7 @@ export class ApiKeyService {
 
   /**
    * Valide une clé API et retourne les informations d'instance si valide
+   * Note: Utilisez instanceApiKeyAuth middleware pour une meilleure sécurité
    */
   static async validateApiKey(apiKey: string): Promise<{
     isValid: boolean
@@ -119,12 +108,15 @@ export class ApiKeyService {
     user?: any
   }> {
     try {
-      const keyHash = this.hashApiKey(apiKey)
-
-      const apiKeyData = await prisma.apiKey.findUnique({
+      // Récupérer toutes les clés actives et non révoquées
+      const apiKeys = await prisma.apiKey.findMany({
         where: {
-          keyHash,
-          isActive: true
+          isActive: true,
+          revoked: false,
+          OR: [
+            { expiresAt: null },
+            { expiresAt: { gt: new Date() } }
+          ]
         },
         include: {
           instance: {
@@ -143,35 +135,35 @@ export class ApiKeyService {
         }
       })
 
-      if (!apiKeyData) {
-        return { isValid: false }
-      }
+      // Vérifier chaque clé avec bcrypt
+      for (const apiKeyData of apiKeys) {
+        const isValid = await verifyApiKey(apiKey, apiKeyData.keyHash)
+        
+        if (isValid) {
+          // Vérifier si l'instance et l'utilisateur sont actifs
+          if (!apiKeyData.instance.isActive || !apiKeyData.instance.user.isActive) {
+            return { isValid: false }
+          }
 
-      // Vérifier si la clé a expiré
-      if (apiKeyData.expiresAt && apiKeyData.expiresAt < new Date()) {
-        return { isValid: false }
-      }
+          // Mettre à jour les stats d'utilisation
+          await prisma.apiKey.update({
+            where: { id: apiKeyData.id },
+            data: {
+              lastUsed: new Date(),
+              usageCount: { increment: 1 }
+            }
+          })
 
-      // Vérifier si l'instance et l'utilisateur sont actifs
-      if (!apiKeyData.instance.isActive || !apiKeyData.instance.user.isActive) {
-        return { isValid: false }
-      }
-
-      // Mettre à jour les stats d'utilisation
-      await prisma.apiKey.update({
-        where: { id: apiKeyData.id },
-        data: {
-          lastUsed: new Date(),
-          usageCount: { increment: 1 }
+          return {
+            isValid: true,
+            instance: apiKeyData.instance,
+            apiKeyData,
+            user: apiKeyData.instance.user
+          }
         }
-      })
-
-      return {
-        isValid: true,
-        instance: apiKeyData.instance,
-        apiKeyData,
-        user: apiKeyData.instance.user
       }
+
+      return { isValid: false }
     } catch (error) {
       console.error('Error validating API key:', error)
       return { isValid: false }
@@ -218,9 +210,9 @@ export class ApiKeyService {
   }
 
   /**
-   * Désactive une clé API
+   * Désactive une clé API avec révocation explicite
    */
-  static async revokeApiKey(userId: string, keyId: string): Promise<boolean> {
+  static async revokeApiKey(userId: string, keyId: string, reason?: string): Promise<boolean> {
     const result = await prisma.apiKey.updateMany({
       where: {
         id: keyId,
@@ -229,9 +221,16 @@ export class ApiKeyService {
       },
       data: {
         isActive: false,
+        revoked: true,
+        revokedAt: new Date(),
+        revokedReason: reason || 'Revoked by user',
         updatedAt: new Date()
       }
     })
+
+    if (result.count > 0) {
+      console.log(`✅ API key ${keyId} revoked. Reason: ${reason || 'User request'}`)
+    }
 
     return result.count > 0
   }

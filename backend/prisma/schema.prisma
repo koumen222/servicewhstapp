@@ -92,13 +92,18 @@ model ApiKey {
   id                String   @id @default(uuid())
   userId            String
   instanceId        String
-  keyHash           String   @unique // Hash SHA-256 de la clé pour sécurité
+  keyHash           String   @unique // Hash bcrypt de la clé pour sécurité maximale
   keyPrefix         String   // Premiers caractères pour identification (ex: "ak_live_abc123...")
   name              String?  // Nom optionnel donné par l'utilisateur
   permissions       String[] // Liste des permissions accordées
   isActive          Boolean  @default(true)
+  revoked           Boolean  @default(false) // Révocation explicite
+  revokedAt         DateTime? // Date de révocation
+  revokedReason     String?  // Raison de la révocation
   lastUsed          DateTime?
+  lastUsedIp        String?  // Dernière IP utilisée
   usageCount        Int      @default(0)
+  rateLimitPerMin   Int      @default(60) // Limite de requêtes par minute
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   expiresAt         DateTime? // Optionnel: expiration de la clé
@@ -110,6 +115,8 @@ model ApiKey {
   @@index([keyHash])
   @@index([userId])
   @@index([instanceId])
+  @@index([isActive])
+  @@index([revoked])
 }
 
 model QuotaUsage {

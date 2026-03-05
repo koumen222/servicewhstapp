@@ -1,9 +1,19 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Puzzle, Webhook, Code2, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Puzzle, Webhook, Code2, ArrowRight, CheckCircle2, MessageSquare } from "lucide-react";
+import { useState } from "react";
+import WhatsAppIntegration from "@/components/WhatsAppIntegration";
 
 const INTEGRATIONS = [
+  {
+    name: "WhatsApp Instance",
+    desc: "Connect your existing WhatsApp instance via API key.",
+    icon: MessageSquare,
+    color: "#25D366",
+    status: "available",
+    component: "whatsapp",
+  },
   {
     name: "Webhook",
     desc: "Receive real-time events to your server when messages arrive.",
@@ -28,6 +38,36 @@ const INTEGRATIONS = [
 ];
 
 export default function IntegrationsPage() {
+  const [activeIntegration, setActiveIntegration] = useState<string | null>(null);
+
+  if (activeIntegration === "whatsapp") {
+    return (
+      <div className="max-w-3xl space-y-5">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <button
+            onClick={() => setActiveIntegration(null)}
+            className="text-[12px] text-[#5a7a5a] hover:text-white mb-4 flex items-center gap-1"
+          >
+            ← Back to Integrations
+          </button>
+          <h2 className="text-[15px] font-semibold text-white mb-1">
+            WhatsApp Instance Integration
+          </h2>
+          <p className="text-[12px] text-[#5a7a5a]">
+            Connect your existing WhatsApp instance from the SaaS service.
+          </p>
+        </motion.div>
+
+        <div className="bg-[#111] border border-[#1e1e1e] rounded-2xl p-6">
+          <WhatsAppIntegration />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-3xl space-y-5">
       <motion.div
@@ -67,7 +107,10 @@ export default function IntegrationsPage() {
                 <p className="text-[11px] text-[#5a7a5a] mt-0.5">{intg.desc}</p>
               </div>
               {intg.status === "available" ? (
-                <button className="flex items-center gap-1.5 text-[11px] text-[#22c55e] hover:text-[#4ade80] transition-colors shrink-0">
+                <button 
+                  onClick={() => intg.component && setActiveIntegration(intg.component)}
+                  className="flex items-center gap-1.5 text-[11px] text-[#22c55e] hover:text-[#4ade80] transition-colors shrink-0"
+                >
                   Configure <ArrowRight size={11} />
                 </button>
               ) : (

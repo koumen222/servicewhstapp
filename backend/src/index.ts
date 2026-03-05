@@ -13,6 +13,7 @@ import notificationRoutes from './routes/notifications.js'
 import subscriptionRoutes from './routes/subscriptions.js'
 import webhookRoutes from './routes/webhooks.js'
 import apiKeysRoutes from './routes/apiKeys.js'
+import integrationsRoutes from './routes/integrations.js'
 import { 
   multiTenantIsolation, 
   userRateLimit, 
@@ -161,6 +162,9 @@ app.use('/api/subscriptions', authMiddleware, subscriptionRoutes)
 
 // =============== ROUTES DE GESTION DES CLÉS API ===============
 app.use('/api/api-keys', authMiddleware, userRateLimit, multiTenantIsolation, apiKeysRoutes)
+
+// =============== ROUTES D'INTÉGRATION WHATSAPP ===============
+app.use('/api/integrations', authMiddleware, userRateLimit, integrationsRoutes)
 
 // =============== ENDPOINTS DE SANTÉ ===============
 // Health check simple (sans authentification)
