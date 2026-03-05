@@ -32,7 +32,15 @@ export function QRScannerModal({ instance, onClose }: QRScannerModalProps) {
   }, []);
 
   const fetchQR = useCallback(async () => {
-    if (!instance) return;
+    if (!instance) {
+      console.error("❌ Instance manquante pour QR code");
+      return;
+    }
+    if (!instance.instanceName) {
+      console.error("❌ Instance name manquant:", instance);
+      setError("Instance ID invalide. Impossible de générer le QR code.");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -40,20 +48,43 @@ export function QRScannerModal({ instance, onClose }: QRScannerModalProps) {
       if (!mountedRef.current) return;
 
       if (!res.data?.success) {
-        setError(res.data?.message || "Failed to get QR code");
+        const errorMsg = res.data?.message || "Failed to get QR code";
+        console.error("❌ QR code error:", errorMsg);
+        setError(errorMsg);
         return;
       }
       const qr = res.data.data?.qrCode;
       if (qr) {
         setQrData(qr.startsWith("data:") ? qr : `data:image/png;base64,${qr}`);
       } else {
-        setError("QR code not available. Instance may already be connected.");
+        console.error("❌ QR code vide dans la réponse");
+        setError("QR code non disponible. L'instance est peut-être déjà connectée.");
       }
     } catch (err: any) {
       if (!mountedRef.current) return;
-      const msg = err?.response?.data?.message || "Failed to load QR code. Is the instance running?";
-      console.error("Frontend error:", err);
-      setError(msg);
+      
+      const status = err?.response?.status;
+      const errorData = err?.response?.data;
+      let detailedMsg = "Erreur lors du chargement du QR code";
+      
+      if (status === 404) {
+        detailedMsg = `Instance introuvable (404). Vérifiez que l'instance existe sur le serveur.`;
+        console.error("❌ 404 - Instance non trouvée:", instance.instanceName);
+      } else if (status === 500) {
+        detailedMsg = `Erreur serveur (500). ${errorData?.message || 'Le serveur a rencontré une erreur.'}` ;
+        console.error("❌ 500 - Erreur serveur:", errorData);
+      } else if (status === 401 || status === 403) {
+        detailedMsg = `Non autorisé (${status}). Vérifiez vos permissions.`;
+        console.error(`❌ ${status} - Non autorisé`);
+      } else if (err?.code === 'ECONNREFUSED' || err?.code === 'ERR_NETWORK') {
+        detailedMsg = "Impossible de contacter le serveur. Vérifiez votre connexion.";
+        console.error("❌ Erreur réseau:", err?.code);
+      } else {
+        detailedMsg = errorData?.message || err?.message || "L'instance n'est peut-être pas démarrée.";
+        console.error("❌ QR code error:", { status, error: err, instanceName: instance.instanceName });
+      }
+      
+      setError(detailedMsg);
     } finally {
       if (mountedRef.current) setLoading(false);
     }

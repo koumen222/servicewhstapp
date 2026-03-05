@@ -139,14 +139,24 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
   }
 
   async function handleChooseQR() {
-    if (!instance) return;
+    if (!instance) {
+      console.error("❌ Instance manquante pour QR code");
+      return;
+    }
+    if (!instance.instanceName) {
+      console.error("❌ Instance name manquant:", instance);
+      setQrError("Instance ID invalide. Impossible de générer le QR code.");
+      return;
+    }
     setStep("qr");
     setQrLoading(true);
     setQrError(null);
     try {
       const res = await instanceApi.getQRCode(instance.instanceName);
       if (!res.data?.success) {
-        setQrError(res.data?.message || "Failed to get QR code");
+        const errorMsg = res.data?.message || "Failed to get QR code";
+        console.error("❌ QR code error:", errorMsg);
+        setQrError(errorMsg);
         return;
       }
       const qr = res.data.data?.qrCode;
@@ -154,28 +164,75 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
         setQrCode(qr.startsWith("data:") ? qr : `data:image/png;base64,${qr}`);
         startStatusPolling(instance.instanceName);
       } else {
-        setQrError("QR code not available. Instance may already be connected.");
+        console.error("❌ QR code vide dans la réponse");
+        setQrError("QR code non disponible. L'instance est peut-être déjà connectée.");
       }
     } catch (err: any) {
-      const msg = err?.response?.data?.message || "Failed to load QR code";
-      console.error("Frontend error:", err);
-      setQrError(msg);
+      const status = err?.response?.status;
+      const errorData = err?.response?.data;
+      let detailedMsg = "Erreur lors du chargement du QR code";
+      
+      if (status === 404) {
+        detailedMsg = `Instance introuvable (404). Vérifiez que l'instance existe.`;
+        console.error("❌ 404 - Instance non trouvée:", instance.instanceName);
+      } else if (status === 500) {
+        detailedMsg = `Erreur serveur (500). ${errorData?.message || 'Le serveur a rencontré une erreur.'}`;
+        console.error("❌ 500 - Erreur serveur:", errorData);
+      } else if (status === 401 || status === 403) {
+        detailedMsg = `Non autorisé (${status}). Vérifiez vos permissions.`;
+        console.error(`❌ ${status} - Non autorisé`);
+      } else {
+        detailedMsg = errorData?.message || err?.message || "Erreur inconnue";
+        console.error("❌ QR code error:", { status, error: err, instanceName: instance.instanceName });
+      }
+      
+      setQrError(detailedMsg);
     } finally {
       setQrLoading(false);
     }
   }
 
   async function refreshQR() {
-    if (!instance) return;
+    if (!instance) {
+      console.error("❌ Instance manquante pour refresh QR");
+      return;
+    }
+    if (!instance.instanceName) {
+      console.error("❌ Instance name manquant pour refresh:", instance);
+      setQrError("Instance ID invalide");
+      return;
+    }
     setQrLoading(true);
     setQrError(null);
     try {
       const res = await instanceApi.getQRCode(instance.instanceName);
-      if (!res.data?.success) { setQrError(res.data?.message || "Failed"); return; }
+      if (!res.data?.success) {
+        const errorMsg = res.data?.message || "Échec du rafraîchissement";
+        console.error("❌ Refresh QR error:", errorMsg);
+        setQrError(errorMsg);
+        return;
+      }
       const qr = res.data.data?.qrCode;
-      if (qr) setQrCode(qr.startsWith("data:") ? qr : `data:image/png;base64,${qr}`);
+      if (qr) {
+        setQrCode(qr.startsWith("data:") ? qr : `data:image/png;base64,${qr}`);
+      } else {
+        console.error("❌ QR code vide après refresh");
+        setQrError("QR code non disponible");
+      }
     } catch (err: any) {
-      setQrError(err?.response?.data?.message || "Failed to refresh QR code");
+      const status = err?.response?.status;
+      const errorData = err?.response?.data;
+      let detailedMsg = "Échec du rafraîchissement du QR code";
+      
+      if (status === 404) {
+        detailedMsg = `Instance introuvable (404)`;
+        console.error("❌ 404 - Instance non trouvée lors du refresh:", instance.instanceName);
+      } else {
+        detailedMsg = errorData?.message || err?.message || "Erreur inconnue";
+        console.error("❌ Refresh QR error:", { status, error: err });
+      }
+      
+      setQrError(detailedMsg);
     } finally {
       setQrLoading(false);
     }

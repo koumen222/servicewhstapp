@@ -136,7 +136,29 @@ export const instanceApi = {
       console.error('❌ Invalid instanceName detected:', instanceName);
       return Promise.reject(new Error(`Invalid instance name: ${instanceName}`));
     }
-    return api.get(`/api/instance/qrcode/${encodeURIComponent(instanceName)}`);
+    
+    console.log('🔍 Fetching QR code for instance:', instanceName);
+    return api.get(`/api/instance/qrcode/${encodeURIComponent(instanceName)}`)
+      .catch((error) => {
+        const status = error?.response?.status;
+        const errorData = error?.response?.data;
+        
+        if (status === 404) {
+          console.error(`❌ 404 - Instance QR code not found: ${instanceName}`);
+          console.error('   Raison: L\'instance n\'existe pas ou n\'est pas démarrée sur le serveur Evolution API');
+        } else if (status === 500) {
+          console.error(`❌ 500 - Server error for QR code: ${instanceName}`);
+          console.error('   Raison:', errorData?.message || 'Erreur interne du serveur');
+        } else if (status === 401 || status === 403) {
+          console.error(`❌ ${status} - Unauthorized for QR code: ${instanceName}`);
+          console.error('   Raison: Token invalide ou permissions insuffisantes');
+        } else {
+          console.error(`❌ QR code error (${status || 'unknown'}):`, errorData?.message || error?.message);
+          console.error('   Instance:', instanceName);
+        }
+        
+        throw error;
+      });
   },
 
   /** POST /api/instance/connect-phone — { instanceName, phoneNumber } */
