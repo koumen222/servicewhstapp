@@ -89,16 +89,23 @@ router.post('/create-instance', async (req, res) => {
       })
     }
 
-    // Générer le nom d'instance unique pour Evolution API (format stable, déterministe)
-    const instanceName = buildInstanceName(userId, customName.trim())
-
-    // Vérifier l'unicité par instanceName (contient userId + customName, donc garantit l'isolation)
-    const existingByName = await prisma.instance.findUnique({ where: { instanceName } })
-    if (existingByName) {
-      return res.status(400).json({
-        error: 'Instance name already exists',
-        message: 'Choose a different name for your instance',
-        code: 'DUPLICATE_NAME'
+    // Générer un ID unique à 5 chiffres (retry jusqu'à 5 fois en cas de collision)
+    let instanceName: string = ''
+    let attempts = 0
+    const maxAttempts = 5
+    
+    while (attempts < maxAttempts) {
+      instanceName = buildInstanceName(userId, customName.trim())
+      const existing = await prisma.instance.findUnique({ where: { instanceName } })
+      if (!existing) break
+      attempts++
+    }
+    
+    if (attempts >= maxAttempts) {
+      return res.status(500).json({
+        error: 'Failed to generate unique instance ID',
+        message: 'Please try again',
+        code: 'ID_GENERATION_FAILED'
       })
     }
 

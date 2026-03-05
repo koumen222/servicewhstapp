@@ -1,6 +1,7 @@
 export function buildInstanceName(userId: string, customName: string): string {
-  const sanitized = customName.toLowerCase().replace(/[^a-z0-9-]/g, '')
-  return `user_${userId.substring(0, 8)}_${sanitized}`
+  // Generate 5-digit random number (10000-99999)
+  const randomId = Math.floor(10000 + Math.random() * 90000).toString()
+  return randomId
 }
 
 export function extractCustomName(fullInstanceName: string): string {

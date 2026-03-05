@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   QrCode,
@@ -14,7 +14,10 @@ import {
   MessageSquare,
   Key,
   CreditCard,
+  Copy,
+  CheckCircle2,
 } from "lucide-react";
+import { apiKeysApi } from "@/lib/api";
 import { cn, getAvatarColor, timeAgo, formatNumber } from "@/lib/utils";
 import { StatusBadge } from "./StatusBadge";
 import { useInstanceStatus } from "@/hooks/useInstanceStatus";
@@ -32,6 +35,8 @@ export function InstanceCard({
   onDelete,
 }: InstanceCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [apiKeys, setApiKeys] = useState<any[]>([]);
+  const [copied, setCopied] = useState(false);
   
   // Real-time instance status
   const {
@@ -42,6 +47,25 @@ export function InstanceCard({
     enabled: true,
     pollInterval: 5000,
   });
+
+  // Load API keys for this instance
+  useEffect(() => {
+    async function loadKeys() {
+      try {
+        const res = await apiKeysApi.getAll(instance.id);
+        setApiKeys(res.data?.data ?? []);
+      } catch {
+        setApiKeys([]);
+      }
+    }
+    loadKeys();
+  }, [instance.id]);
+
+  function copyKey(key: string) {
+    navigator.clipboard.writeText(key);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
   
   // Normalize: real-time takes priority, fallback to DB status
   const currentStatus = realTimeStatus !== 'unknown' ? realTimeStatus :
@@ -224,6 +248,31 @@ export function InstanceCard({
           </div>
         );
       })()}
+
+      {/* ── API Key display ────────────────────── */}
+      {apiKeys.length > 0 && (
+        <div className="mt-3 px-3 py-2 rounded-lg" style={{ background: '#0a0a0a', border: '1px solid #1a1a1a' }}>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <Key size={11} className="text-[#22c55e] shrink-0" />
+              <span className="text-[10px] font-mono text-[#5a7a5a] truncate">
+                {apiKeys[0].keyPrefix}
+              </span>
+            </div>
+            <button
+              onClick={() => copyKey(apiKeys[0].keyPrefix)}
+              className="text-[#3a7a3a] hover:text-[#22c55e] transition-colors shrink-0"
+              title="Copier la clé API"
+            >
+              {copied ? (
+                <CheckCircle2 size={11} className="text-[#22c55e]" />
+              ) : (
+                <Copy size={11} />
+              )}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Expired banner ──────────────────────── */}
       {isExpired && (
