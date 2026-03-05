@@ -193,12 +193,11 @@ router.get('/connectionState/:instanceName', async (req: AuthRequest, res) => {
 router.get('/status/:instanceName', async (req: AuthRequest, res) => {
   console.log('[STATUS] Route hit - instanceName:', req.params.instanceName);
   try {
-    const { instanceName: customName } = req.params
+    const { instanceName } = req.params // Now this is the real 5-digit ID or old format
     const userId = req.user!.id
-    const fullInstanceName = buildInstanceName(userId, customName)
 
     const dbInstance = await prisma.instance.findUnique({
-      where: { instanceName: fullInstanceName, userId }
+      where: { instanceName, userId }
     })
     if (!dbInstance) {
       return res.status(404).json({ success: false, message: 'Instance not found' })
@@ -206,7 +205,7 @@ router.get('/status/:instanceName', async (req: AuthRequest, res) => {
 
     let rawState = dbInstance.status
     try {
-      const state = await evolutionAPI.getConnectionState(fullInstanceName)
+      const state = await evolutionAPI.getConnectionState(instanceName)
       rawState = state.instance?.state || state.state || dbInstance.status
 
       // Persist the latest status
@@ -269,16 +268,15 @@ router.get('/connect/:instanceName', async (req: AuthRequest, res) => {
 router.get('/qrcode/:instanceName', async (req: AuthRequest, res) => {
   console.log('[QR] Route hit - instanceName:', req.params.instanceName);
   try {
-    const { instanceName: customName } = req.params
+    const { instanceName } = req.params // Now this is the real 5-digit ID or old format
     const userId = req.user!.id
-    const fullInstanceName = buildInstanceName(userId, customName)
 
-    const dbInstance = await prisma.instance.findUnique({ where: { instanceName: fullInstanceName, userId } })
+    const dbInstance = await prisma.instance.findUnique({ where: { instanceName, userId } })
     if (!dbInstance) {
       return res.status(404).json({ success: false, message: 'Instance not found' })
     }
 
-    const qrData = await evolutionAPI.fetchQRCode(fullInstanceName)
+    const qrData = await evolutionAPI.fetchQRCode(instanceName)
     const qrBase64 = qrData?.qrcode?.base64 || qrData?.base64 || null
 
     return res.json({
