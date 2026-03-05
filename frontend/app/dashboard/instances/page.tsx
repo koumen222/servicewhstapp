@@ -19,44 +19,7 @@ import { CreateInstanceModal } from "@/components/CreateInstanceModal";
 import { cn } from "@/lib/utils";
 import type { Instance, InstanceStatus } from "@/lib/types";
 
-const MOCK_INSTANCES: Instance[] = [
-  {
-    id: "mock-1",
-    name: "Production Bot",
-    instanceName: "user_demo_Production-Bot_1706789012",
-    status: "open",
-    connectionStatus: "open",
-    profileName: "Acme Support",
-    createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-    apiKeys: [],
-    quotas: [{ type: "messages", used: 1250, limit: 5000, remaining: 3750 }],
-    stats: { messagesLast30Days: 1250, totalApiKeys: 2 },
-  },
-  {
-    id: "mock-2",
-    name: "Support Chat",
-    instanceName: "user_demo_Support-Chat_1706789013",
-    status: "expired",
-    connectionStatus: "expired",
-    profileName: null,
-    createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
-    apiKeys: [],
-    quotas: [{ type: "messages", used: 890, limit: 1000, remaining: 110 }],
-    stats: { messagesLast30Days: 0, totalApiKeys: 1 },
-  },
-  {
-    id: "mock-3",
-    name: "Marketing Bot",
-    instanceName: "user_demo_Marketing-Bot_1706789014",
-    status: "close",
-    connectionStatus: "close",
-    profileName: null,
-    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    apiKeys: [],
-    quotas: [{ type: "messages", used: 0, limit: 1000, remaining: 1000 }],
-    stats: { messagesLast30Days: 0, totalApiKeys: 1 },
-  },
-];
+const MOCK_INSTANCES: Instance[] = [];
 
 type FilterStatus = "all" | InstanceStatus;
 
