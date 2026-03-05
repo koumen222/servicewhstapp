@@ -18,7 +18,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { apiKeysApi } from "@/lib/api";
-import { cn, getAvatarColor, timeAgo, formatNumber } from "@/lib/utils";
+import { cn, getAvatarColor, timeAgo, formatNumber, formatInstanceIdForDisplay } from "@/lib/utils";
 import { StatusBadge } from "./StatusBadge";
 import { useInstanceStatus } from "@/hooks/useInstanceStatus";
 import type { Instance } from "@/lib/types";
@@ -120,11 +120,7 @@ export function InstanceCard({
           </div>
 
           <p className="text-[11px] text-[#4a6a4a] mt-0.5 font-mono truncate">
-            {instance.instanceName
-              ? instance.instanceName.length > 36
-                ? instance.instanceName.slice(0, 36) + "…"
-                : instance.instanceName
-              : instance.id}
+            ID: {formatInstanceIdForDisplay(instance.instanceName || instance.id)}
           </p>
 
           {instance.profileName && (

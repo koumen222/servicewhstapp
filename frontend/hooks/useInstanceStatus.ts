@@ -40,7 +40,13 @@ export function useInstanceStatus({
   const currentStatusRef = useRef<ConnectionStatus>('unknown');
 
   const fetchStatus = useCallback(async (isBackground = false) => {
-    if (!enabled || !mountedRef.current || !instanceName) return;
+    // Validate instanceName before making API call
+    if (!enabled || !mountedRef.current || !instanceName || instanceName.trim().length === 0) {
+      if (!isBackground && !instanceName) {
+        setState(prev => ({ ...prev, isLoading: false, error: 'Invalid instance ID' }));
+      }
+      return;
+    }
 
     // Only show loading spinner on the initial fetch, not background polls
     if (!isBackground) {

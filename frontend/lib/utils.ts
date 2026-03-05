@@ -70,3 +70,44 @@ export function deleteCookie(name: string): void {
   if (typeof document === "undefined") return;
   document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
 }
+
+/**
+ * Validate if an instance ID is valid for API calls
+ * @param id - Instance ID to validate
+ * @returns true if ID is valid (non-empty string or UUID)
+ */
+export function isValidInstanceId(id: string | undefined | null): boolean {
+  if (!id || typeof id !== 'string') return false;
+  const trimmed = id.trim();
+  if (trimmed.length === 0) return false;
+  return true;
+}
+
+/**
+ * Format instance ID for display in UI
+ * Extracts only digits and limits to 6 characters for cleaner display
+ * @param id - Instance ID (can be UUID, 5-digit number, or custom name)
+ * @returns Formatted ID for display (original if no digits, or first 6 digits)
+ */
+export function formatInstanceIdForDisplay(id: string): string {
+  if (!id) return 'N/A';
+  
+  // If it's a 5-digit number, show as-is
+  if (/^\d{5}$/.test(id)) {
+    return `#${id}`;
+  }
+  
+  // If it's a UUID, show first 8 chars
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+    return `#${id.substring(0, 8)}`;
+  }
+  
+  // For custom names or old format, extract digits if any
+  const digits = id.replace(/\D/g, '');
+  if (digits.length > 0) {
+    return `#${digits.slice(0, 6)}`;
+  }
+  
+  // Fallback: show first 8 chars of original
+  return id.substring(0, 8);
+}

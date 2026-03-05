@@ -69,48 +69,68 @@ export const authApi = {
 // ─── Instance Management  /api/instances/* ──────────────────────────────────
 //  Uses instanceManagement.ts routes (by DB id)
 export const instancesApi = {
-  /** GET /api/instances/instances — list all user instances */
-  getAll: () => api.get("/api/instances/instances"),
+  /** GET /api/instances — list all user instances */
+  getAll: () => api.get("/api/instances"),
 
   /** POST /api/instances/create-instance — { customName, integration? } */
   create: (customName: string, integration = "WHATSAPP-BAILEYS") =>
     api.post("/api/instances/create-instance", { customName, integration }),
 
-  /** DELETE /api/instances/instances/:id */
-  delete: (id: string) => api.delete(`/api/instances/instances/${id}`),
+  /** DELETE /api/instances/:id */
+  delete: (id: string) => api.delete(`/api/instances/${id}`),
 
-  /** POST /api/instances/instances/:id/restart */
-  restart: (id: string) => api.post(`/api/instances/instances/${id}/restart`),
+  /** POST /api/instances/:id/restart */
+  restart: (id: string) => api.post(`/api/instances/${id}/restart`),
 
-  /** GET /api/instances/instances/:id/qr-code */
-  getQRCode: (id: string) => api.get(`/api/instances/instances/${id}/qr-code`),
+  /** GET /api/instances/:id/qr-code */
+  getQRCode: (id: string) => api.get(`/api/instances/${id}/qr-code`),
 };
 
 // ─── Instance Routes  /api/instance/* ───────────────────────────────────────
-//  Uses instances.ts routes (by customName)
+//  Uses instances.ts routes (by instanceName - the real ID)
 export const instanceApi = {
   /** GET /api/instance/fetchInstances */
   fetchAll: () => api.get("/api/instance/fetchInstances"),
 
   /** POST /api/instance/create — { instanceName, integration?, qrcode? } */
-  create: (instanceName: string, integration = "WHATSAPP-BAILEYS", qrcode = true) =>
-    api.post("/api/instance/create", { instanceName, integration, qrcode }),
+  create: (instanceName: string, integration = "WHATSAPP-BAILEYS", qrcode = true) => {
+    if (!instanceName?.trim()) {
+      return Promise.reject(new Error('Instance name is required'));
+    }
+    return api.post("/api/instance/create", { instanceName, integration, qrcode });
+  },
 
   /** GET /api/instance/status/:instanceName — reliable polling endpoint */
-  getStatus: (instanceName: string) =>
-    api.get(`/api/instance/status/${encodeURIComponent(instanceName)}`),
+  getStatus: (instanceName: string) => {
+    if (!instanceName?.trim()) {
+      return Promise.reject(new Error('Instance name is required for status check'));
+    }
+    return api.get(`/api/instance/status/${encodeURIComponent(instanceName)}`);
+  },
 
   /** GET /api/instance/connectionState/:instanceName */
-  getState: (instanceName: string) =>
-    api.get(`/api/instance/connectionState/${encodeURIComponent(instanceName)}`),
+  getState: (instanceName: string) => {
+    if (!instanceName?.trim()) {
+      return Promise.reject(new Error('Instance name is required for state check'));
+    }
+    return api.get(`/api/instance/connectionState/${encodeURIComponent(instanceName)}`);
+  },
 
   /** GET /api/instance/qrcode/:instanceName */
-  getQRCode: (instanceName: string) =>
-    api.get(`/api/instance/qrcode/${encodeURIComponent(instanceName)}`),
+  getQRCode: (instanceName: string) => {
+    if (!instanceName?.trim()) {
+      return Promise.reject(new Error('Instance name is required for QR code'));
+    }
+    return api.get(`/api/instance/qrcode/${encodeURIComponent(instanceName)}`);
+  },
 
   /** POST /api/instance/connect-phone — { instanceName, phoneNumber } */
-  connectPhone: (instanceName: string, phoneNumber: string) =>
-    api.post("/api/instance/connect-phone", { instanceName, phoneNumber }),
+  connectPhone: (instanceName: string, phoneNumber: string) => {
+    if (!instanceName?.trim() || !phoneNumber?.trim()) {
+      return Promise.reject(new Error('Instance name and phone number are required'));
+    }
+    return api.post("/api/instance/connect-phone", { instanceName, phoneNumber });
+  },
 
   /** POST /api/instance/send-message — { instanceName, number, message } */
   sendMessage: (instanceName: string, number: string, message: string) =>
