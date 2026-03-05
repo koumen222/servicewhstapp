@@ -388,13 +388,20 @@ router.get('/chats/:instanceName', async (req: AuthRequest, res) => {
     const userId = req.user!.id
     const fullInstanceName = buildInstanceName(userId, customName)
 
+    console.log(`[CHATS] Fetching chats for customName="${customName}", fullInstanceName="${fullInstanceName}", userId="${userId}"`)
+
     const dbInstance = await prisma.instance.findUnique({ where: { instanceName: fullInstanceName, userId } })
     if (!dbInstance) {
+      console.warn(`[CHATS] Instance not found in DB: ${fullInstanceName}`)
       return res.status(404).json({ success: false, message: 'Instance not found' })
     }
 
+    console.log(`[CHATS] DB instance found, status="${dbInstance.status}", calling Evolution API...`)
+
     const rawChats = await evolutionAPI.getChats(fullInstanceName)
     const chatsArray = Array.isArray(rawChats) ? rawChats : []
+
+    console.log(`[CHATS] Evolution API returned ${chatsArray.length} chats`)
 
     const chats = chatsArray.map((chat: any) => ({
       id: chat.id || chat.remoteJid,
@@ -420,8 +427,28 @@ router.get('/chats/:instanceName', async (req: AuthRequest, res) => {
       data: { chats, total: chats.length }
     })
   } catch (error: any) {
-    const msg = error?.response?.data?.message || error?.message || 'Failed to fetch chats'
-    console.error('[CHATS]', msg)
+    const evolutionError = error?.response?.data
+    const statusCode = error?.response?.status
+    const msg = evolutionError?.message || evolutionError?.error || error?.message || 'Failed to fetch chats'
+    
+    console.error('[CHATS] Error details:', {
+      customName: req.params.instanceName,
+      fullInstanceName: buildInstanceName(req.user!.id, req.params.instanceName),
+      statusCode,
+      evolutionError,
+      errorMessage: msg
+    })
+
+    // If instance doesn't exist in Evolution API (404), return empty chats instead of error
+    if (statusCode === 404) {
+      console.warn('[CHATS] Instance not found in Evolution API, returning empty chats')
+      return res.json({
+        success: true,
+        data: { chats: [], total: 0 },
+        warning: 'Instance not connected to WhatsApp yet'
+      })
+    }
+
     return res.status(500).json({ success: false, message: msg })
   }
 })
