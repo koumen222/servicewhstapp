@@ -96,7 +96,17 @@ class EvolutionAPI {
 
   async sendTextMessage(instanceName: string, number: string, text: string) {
     try {
-      const { data } = await this.client.post(`/message/sendText/${instanceName}`, { number, text })
+      const { data } = await this.client.post(`/message/sendText/${instanceName}`, {
+        number,
+        text,
+        delay: 0,
+        linkPreview: true
+      })
+      console.log('[Evolution] Message sent successfully:', {
+        messageId: data?.key?.id,
+        remoteJid: data?.key?.remoteJid,
+        status: data?.status
+      })
       return data
     } catch (error: any) {
       console.error('[Evolution] sendTextMessage error:', error.response?.data || error.message)
@@ -117,9 +127,14 @@ class EvolutionAPI {
   async getChatMessages(instanceName: string, remoteJid: string, limit = 50) {
     try {
       const { data } = await this.client.post(`/chat/findMessages/${instanceName}`, {
-        where: { key: { remoteJid } },
-        limit,
+        where: {
+          key: {
+            remoteJid: remoteJid
+          }
+        },
+        limit: limit
       })
+      console.log(`[Evolution] Retrieved ${Array.isArray(data) ? data.length : 0} messages for ${remoteJid}`)
       return data
     } catch (error: any) {
       console.error('[Evolution] getChatMessages error:', error.response?.data || error.message)
@@ -152,14 +167,26 @@ class EvolutionAPI {
       const { data } = await this.client.post(`/webhook/set/${instanceName}`, {
         enabled: true,
         url: webhookUrl,
-        webhookByEvents: true,
+        webhookByEvents: false,
         webhookBase64: false,
         events: [
-          'CONNECTION_UPDATE',
+          'APPLICATION_STARTUP',
           'QRCODE_UPDATED',
+          'CONNECTION_UPDATE',
+          'MESSAGES_SET',
           'MESSAGES_UPSERT',
           'MESSAGES_UPDATE',
-          'SEND_MESSAGE'
+          'MESSAGES_DELETE',
+          'SEND_MESSAGE',
+          'CHATS_SET',
+          'CHATS_UPSERT',
+          'CHATS_UPDATE',
+          'CHATS_DELETE',
+          'CONTACTS_SET',
+          'CONTACTS_UPSERT',
+          'CONTACTS_UPDATE',
+          'PRESENCE_UPDATE',
+          'CALL'
         ]
       })
       console.log(`[Evolution] Webhook configured for ${instanceName}: ${webhookUrl}`)

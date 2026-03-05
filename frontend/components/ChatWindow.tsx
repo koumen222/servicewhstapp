@@ -101,15 +101,26 @@ export function ChatWindow({ chat, isOpen, onClose, onSendMessage, instanceName,
     const loadMessages = async () => {
       setIsLoading(true);
       try {
-        if (!instanceName) { setMessages(chat.messages || []); return; }
+        if (!instanceName) { 
+          console.log('[ChatWindow] No instance name, using fallback messages');
+          setMessages(chat.messages || []); 
+          setIsLoading(false);
+          return; 
+        }
+        
+        console.log('[ChatWindow] Loading messages for:', { instanceName, contactId: chat.contactId });
         const response = await instanceApi.getChatMessages(instanceName, chat.contactId);
+        
         if (response.data?.success) {
-          setMessages(response.data.data?.messages || []);
+          const loadedMessages = response.data.data?.messages || [];
+          console.log('[ChatWindow] Loaded messages:', loadedMessages.length);
+          setMessages(loadedMessages);
         } else {
+          console.warn('[ChatWindow] API returned unsuccessful response, using fallback');
           setMessages(chat.messages || []);
         }
-      } catch (error) {
-        console.error('Failed to load messages:', error);
+      } catch (error: any) {
+        console.error('[ChatWindow] Failed to load messages:', error?.response?.data || error?.message);
         // Use chat.messages as fallback
         setMessages(chat.messages || []);
       } finally {
@@ -118,7 +129,7 @@ export function ChatWindow({ chat, isOpen, onClose, onSendMessage, instanceName,
     };
 
     loadMessages();
-  }, [chat.id, isOpen]);
+  }, [chat.id, isOpen, instanceName]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {

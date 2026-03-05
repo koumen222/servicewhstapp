@@ -381,7 +381,14 @@ router.post('/send-message', async (req: AuthRequest, res) => {
     return res.json({
       success: true,
       message: 'Message sent successfully',
-      data: { messageId: result?.key?.id || null, number, message }
+      data: {
+        messageId: result?.key?.id || null,
+        remoteJid: result?.key?.remoteJid || number,
+        timestamp: result?.messageTimestamp || new Date().toISOString(),
+        status: result?.status || 'PENDING',
+        number,
+        text: message
+      }
     })
   } catch (error: any) {
     const msg = error?.response?.data?.message || error?.message || 'Failed to send message'
@@ -412,24 +419,45 @@ router.get('/chats/:instanceName', async (req: AuthRequest, res) => {
 
     console.log(`[CHATS] Evolution API returned ${chatsArray.length} chats`)
 
-    const chats = chatsArray.map((chat: any) => ({
-      id: chat.id || chat.remoteJid,
-      contactId: chat.id || chat.remoteJid,
-      contactName: chat.pushName || chat.name || chat.id?.replace('@s.whatsapp.net', '') || 'Unknown',
-      contactAvatar: chat.profilePictureUrl || null,
-      unreadCount: chat.unreadCount || 0,
-      lastActivity: chat.updatedAt || chat.messageTimestamp || new Date().toISOString(),
-      lastMessage: chat.lastMessage ? {
-        content: chat.lastMessage?.message?.conversation || chat.lastMessage?.message?.extendedTextMessage?.text || '',
-        isFromMe: chat.lastMessage?.key?.fromMe || false,
-        timestamp: chat.lastMessage?.messageTimestamp
-          ? new Date(Number(chat.lastMessage.messageTimestamp) * 1000).toISOString()
-          : new Date().toISOString(),
-        status: 'delivered',
-      } : null,
-      isArchived: false,
-      isPinned: false,
-    }))
+    const chats = chatsArray.map((chat: any) => {
+      // Extract last message content
+      let lastMessageContent = ''
+      if (chat.lastMessage?.message) {
+        const msg = chat.lastMessage.message
+        lastMessageContent = msg.conversation || 
+                           msg.extendedTextMessage?.text || 
+                           msg.imageMessage?.caption || 
+                           (msg.imageMessage ? '[Image]' : '') ||
+                           (msg.videoMessage ? '[Video]' : '') ||
+                           (msg.audioMessage ? '[Audio]' : '') ||
+                           (msg.documentMessage ? '[Document]' : '') ||
+                           (msg.stickerMessage ? '[Sticker]' : '') ||
+                           ''
+      }
+
+      return {
+        id: chat.id || chat.remoteJid,
+        contactId: chat.id || chat.remoteJid,
+        contactName: chat.pushName || chat.name || chat.id?.replace('@s.whatsapp.net', '').replace('@g.us', '') || 'Unknown',
+        contactAvatar: chat.profilePictureUrl || null,
+        unreadCount: chat.unreadCount || 0,
+        lastActivity: chat.updatedAt || 
+                     (chat.lastMessage?.messageTimestamp 
+                       ? new Date(Number(chat.lastMessage.messageTimestamp) * 1000).toISOString()
+                       : new Date().toISOString()),
+        lastMessage: chat.lastMessage ? {
+          id: chat.lastMessage.key?.id || 'unknown',
+          content: lastMessageContent,
+          isFromMe: chat.lastMessage.key?.fromMe || false,
+          timestamp: chat.lastMessage.messageTimestamp
+            ? new Date(Number(chat.lastMessage.messageTimestamp) * 1000).toISOString()
+            : new Date().toISOString(),
+          status: 'delivered',
+        } : null,
+        isArchived: false,
+        isPinned: false,
+      }
+    })
 
     return res.json({
       success: true,
@@ -478,19 +506,49 @@ router.get('/chats/:instanceName/:remoteJid/messages', async (req: AuthRequest, 
     const rawMessages = await evolutionAPI.getChatMessages(fullInstanceName, decodeURIComponent(remoteJid), limit)
     const messagesArray = Array.isArray(rawMessages) ? rawMessages : (rawMessages?.messages || [])
 
-    const messages = messagesArray.map((msg: any) => ({
-      id: msg.key?.id || msg.id,
-      content: msg.message?.conversation ||
-               msg.message?.extendedTextMessage?.text ||
-               msg.message?.imageMessage?.caption ||
-               '[Media]',
-      isFromMe: msg.key?.fromMe || false,
-      timestamp: msg.messageTimestamp
-        ? new Date(Number(msg.messageTimestamp) * 1000).toISOString()
-        : new Date().toISOString(),
-      status: msg.key?.fromMe ? 'sent' : 'delivered',
-      messageType: msg.message?.imageMessage ? 'image' : 'text',
-    }))
+    const messages = messagesArray.map((msg: any) => {
+      // Extract message content from various possible fields
+      let content = '[Message]'
+      let messageType = 'text'
+
+      if (msg.message) {
+        if (msg.message.conversation) {
+          content = msg.message.conversation
+        } else if (msg.message.extendedTextMessage?.text) {
+          content = msg.message.extendedTextMessage.text
+        } else if (msg.message.imageMessage) {
+          content = msg.message.imageMessage.caption || '[Image]'
+          messageType = 'image'
+        } else if (msg.message.videoMessage) {
+          content = msg.message.videoMessage.caption || '[Video]'
+          messageType = 'video'
+        } else if (msg.message.audioMessage) {
+          content = '[Audio]'
+          messageType = 'audio'
+        } else if (msg.message.documentMessage) {
+          content = msg.message.documentMessage.fileName || '[Document]'
+          messageType = 'document'
+        } else if (msg.message.stickerMessage) {
+          content = '[Sticker]'
+          messageType = 'sticker'
+        } else if (msg.message.contactMessage) {
+          content = `[Contact: ${msg.message.contactMessage.displayName || 'Unknown'}]`
+          messageType = 'contact'
+        }
+      }
+
+      return {
+        id: msg.key?.id || msg.id || `msg_${Date.now()}`,
+        content,
+        isFromMe: msg.key?.fromMe || false,
+        timestamp: msg.messageTimestamp
+          ? new Date(Number(msg.messageTimestamp) * 1000).toISOString()
+          : new Date().toISOString(),
+        status: msg.key?.fromMe ? (msg.status || 'sent') : 'delivered',
+        messageType,
+        remoteJid: msg.key?.remoteJid || remoteJid
+      }
+    })
 
     return res.json({
       success: true,

@@ -40,16 +40,50 @@ router.post('/evolution', async (req: Request, res: Response) => {
 
     // Traiter selon le type d'événement
     switch (event.event) {
+      case 'CONNECTION_UPDATE':
       case 'connection.update':
         await handleConnectionUpdate(dbInstance.id, event.data)
         break
 
+      case 'QRCODE_UPDATED':
       case 'qrcode.updated':
         await handleQRCodeUpdate(dbInstance.id, event.data)
         break
 
+      case 'MESSAGES_UPSERT':
       case 'messages.upsert':
         await handleMessageUpsert(dbInstance.id, event.data)
+        break
+
+      case 'MESSAGES_UPDATE':
+      case 'messages.update':
+        console.log(`[WEBHOOK] Message update for instance ${dbInstance.id}`)
+        break
+
+      case 'SEND_MESSAGE':
+        console.log(`[WEBHOOK] Message sent from instance ${dbInstance.id}`)
+        await prisma.instance.update({
+          where: { id: dbInstance.id },
+          data: { lastUsed: new Date() }
+        })
+        break
+
+      case 'CHATS_UPSERT':
+      case 'CHATS_UPDATE':
+        console.log(`[WEBHOOK] Chat update for instance ${dbInstance.id}`)
+        await prisma.instance.update({
+          where: { id: dbInstance.id },
+          data: { lastUsed: new Date() }
+        })
+        break
+
+      case 'CONTACTS_UPSERT':
+      case 'CONTACTS_UPDATE':
+        console.log(`[WEBHOOK] Contact update for instance ${dbInstance.id}`)
+        break
+
+      case 'PRESENCE_UPDATE':
+        console.log(`[WEBHOOK] Presence update for instance ${dbInstance.id}`)
         break
 
       default:
@@ -69,9 +103,15 @@ router.post('/evolution', async (req: Request, res: Response) => {
  */
 async function handleConnectionUpdate(instanceId: string, data: any) {
   try {
-    const state = data.state || data.status || 'close'
+    // Evolution API envoie: { state: 'open'|'connecting'|'close', instance: {...} }
+    const state = data.state || data.status || data.instance?.state || 'close'
+    const instanceData = data.instance || {}
     
-    console.log(`[WEBHOOK] Connection update for instance ${instanceId}: ${state}`)
+    console.log(`[WEBHOOK] Connection update for instance ${instanceId}:`, {
+      state,
+      profileName: instanceData.profileName,
+      hasProfilePicture: !!instanceData.profilePictureUrl
+    })
 
     // Mapping des états Evolution vers nos états
     const statusMap: Record<string, string> = {
@@ -84,14 +124,22 @@ async function handleConnectionUpdate(instanceId: string, data: any) {
     const mappedState = statusMap[state] || 'close'
 
     // Mettre à jour le statut dans la DB
+    const updateData: any = {
+      status: mappedState,
+      lastUsed: new Date()
+    }
+
+    // Ajouter les infos de profil si disponibles
+    if (instanceData.profileName) {
+      updateData.profileName = instanceData.profileName
+    }
+    if (instanceData.profilePictureUrl) {
+      updateData.profilePictureUrl = instanceData.profilePictureUrl
+    }
+
     await prisma.instance.update({
       where: { id: instanceId },
-      data: {
-        status: mappedState,
-        profileName: data.profileName || undefined,
-        profilePictureUrl: data.profilePictureUrl || undefined,
-        lastUsed: new Date()
-      }
+      data: updateData
     })
 
     console.log(`[WEBHOOK] Instance ${instanceId} status updated to: ${mappedState}`)

@@ -20,12 +20,24 @@ Lors de la création d'une instance, le backend configure automatiquement le web
 // URL du webhook
 const webhookUrl = `${BACKEND_PUBLIC_URL}/webhooks/evolution`
 
-// Événements surveillés
-- CONNECTION_UPDATE  → Changements de statut (open, close, connecting)
-- QRCODE_UPDATED     → Nouveau QR code généré
-- MESSAGES_UPSERT    → Nouveaux messages reçus
-- MESSAGES_UPDATE    → Messages mis à jour
-- SEND_MESSAGE       → Messages envoyés
+// Événements surveillés (noms officiels Evolution API)
+- APPLICATION_STARTUP  → Démarrage de l'application
+- CONNECTION_UPDATE    → Changements de statut (open, close, connecting)
+- QRCODE_UPDATED       → Nouveau QR code généré
+- MESSAGES_SET         → Synchronisation initiale des messages
+- MESSAGES_UPSERT      → Nouveaux messages reçus
+- MESSAGES_UPDATE      → Messages mis à jour
+- MESSAGES_DELETE      → Messages supprimés
+- SEND_MESSAGE         → Messages envoyés
+- CHATS_SET            → Synchronisation initiale des chats
+- CHATS_UPSERT         → Nouveaux chats ou chats mis à jour
+- CHATS_UPDATE         → Chats modifiés
+- CHATS_DELETE         → Chats supprimés
+- CONTACTS_SET         → Synchronisation initiale des contacts
+- CONTACTS_UPSERT      → Nouveaux contacts
+- CONTACTS_UPDATE      → Contacts modifiés
+- PRESENCE_UPDATE      → Changement de statut de présence
+- CALL                 → Événements d'appel
 ```
 
 ## Endpoint webhook
