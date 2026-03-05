@@ -152,17 +152,16 @@ router.get('/connectionState/:instanceName', async (req: AuthRequest, res) => {
   try {
     const { instanceName: customName } = req.params
     const userId = req.user!.id
-    const fullInstanceName = buildInstanceName(userId, customName)
 
-    const dbInstance = await prisma.instance.findUnique({
-      where: { instanceName: fullInstanceName, userId }
+    const dbInstance = await prisma.instance.findFirst({
+      where: { customName, userId, isActive: true }
     })
     if (!dbInstance) {
       return res.status(404).json({ success: false, message: 'Instance not found' })
     }
 
     try {
-      const state = await evolutionAPI.getConnectionState(fullInstanceName)
+      const state = await evolutionAPI.getConnectionState(dbInstance.instanceName)
       const rawState = state.instance?.state || state.state || 'close'
 
       await prisma.instance.update({
@@ -172,13 +171,13 @@ router.get('/connectionState/:instanceName', async (req: AuthRequest, res) => {
 
       return res.json({
         success: true,
-        data: { state: rawState, instanceName: fullInstanceName }
+        data: { state: rawState, instanceName: dbInstance.instanceName }
       })
     } catch (evolutionError: any) {
       console.warn('[STATE] Evolution API error, using DB fallback:', evolutionError?.message)
       return res.json({
         success: true,
-        data: { state: dbInstance.status, instanceName: fullInstanceName }
+        data: { state: dbInstance.status, instanceName: dbInstance.instanceName }
       })
     }
   } catch (error: any) {
@@ -249,14 +248,13 @@ router.get('/connect/:instanceName', async (req: AuthRequest, res) => {
   try {
     const { instanceName: customName } = req.params
     const userId = req.user!.id
-    const fullInstanceName = buildInstanceName(userId, customName)
 
-    const dbInstance = await prisma.instance.findUnique({ where: { instanceName: fullInstanceName, userId } })
+    const dbInstance = await prisma.instance.findFirst({ where: { customName, userId, isActive: true } })
     if (!dbInstance) {
       return res.status(404).json({ success: false, message: 'Instance not found' })
     }
 
-    const result = await evolutionAPI.connectInstance(fullInstanceName)
+    const result = await evolutionAPI.connectInstance(dbInstance.instanceName)
     return res.json({ success: true, data: result })
   } catch (error: any) {
     const msg = error?.response?.data?.message || error?.message || 'Unknown error'
@@ -304,9 +302,8 @@ router.post('/connect-phone', async (req: AuthRequest, res) => {
     }
 
     const userId = req.user!.id
-    const fullInstanceName = buildInstanceName(userId, customName)
 
-    const dbInstance = await prisma.instance.findUnique({ where: { instanceName: fullInstanceName, userId } })
+    const dbInstance = await prisma.instance.findFirst({ where: { customName, userId, isActive: true } })
     if (!dbInstance) {
       return res.status(404).json({ success: false, message: 'Instance not found' })
     }
@@ -314,8 +311,8 @@ router.post('/connect-phone', async (req: AuthRequest, res) => {
     // Clean phone number: strip spaces, +, and non-digits
     const cleanNumber = phoneNumber.replace(/\D/g, '')
 
-    console.log('[PHONE] Requesting pairing code for:', cleanNumber, 'instance:', fullInstanceName)
-    const result = await evolutionAPI.connectWithPhoneNumber(fullInstanceName, cleanNumber)
+    console.log('[PHONE] Requesting pairing code for:', cleanNumber, 'instance:', dbInstance.instanceName)
+    const result = await evolutionAPI.connectWithPhoneNumber(dbInstance.instanceName, cleanNumber)
 
     return res.json({
       success: true,
@@ -342,10 +339,9 @@ router.post('/send-message', async (req: AuthRequest, res) => {
     }
 
     const userId = req.user!.id
-    const fullInstanceName = buildInstanceName(userId, customName)
 
-    const dbInstance = await prisma.instance.findUnique({ 
-      where: { instanceName: fullInstanceName, userId },
+    const dbInstance = await prisma.instance.findFirst({ 
+      where: { customName, userId, isActive: true },
       include: { user: true }
     })
     if (!dbInstance) {
@@ -370,7 +366,7 @@ router.post('/send-message', async (req: AuthRequest, res) => {
 
     // Verify instance is connected before sending
     try {
-      const state = await evolutionAPI.getConnectionState(fullInstanceName)
+      const state = await evolutionAPI.getConnectionState(dbInstance.instanceName)
       const rawState = state.instance?.state || state.state || 'close'
       if (rawState !== 'open') {
         return res.status(400).json({
@@ -407,7 +403,7 @@ router.post('/send-message', async (req: AuthRequest, res) => {
       return res.status(400).json({ success: false, message: 'Invalid phone number format' })
     }
 
-    console.log(`[SEND-MSG] Sending to ${cleanNumber} via ${fullInstanceName}`)
+    console.log(`[SEND-MSG] Sending to ${cleanNumber} via ${dbInstance.instanceName}`)
     
     // Get or create API key BEFORE sending (required for logging)
     let apiKey = await prisma.apiKey.findFirst({
@@ -432,7 +428,7 @@ router.post('/send-message', async (req: AuthRequest, res) => {
     let result
     let sendError = null
     try {
-      result = await evolutionAPI.sendTextMessage(fullInstanceName, cleanNumber, message)
+      result = await evolutionAPI.sendTextMessage(dbInstance.instanceName, cleanNumber, message)
     } catch (err: any) {
       sendError = err
       console.error('[SEND-MSG] Evolution API error:', err?.message)
@@ -612,16 +608,15 @@ router.get('/chats/:instanceName/:remoteJid/messages', async (req: AuthRequest, 
     const { instanceName: customName, remoteJid } = req.params
     const limit = parseInt(req.query.limit as string) || 50
     const userId = req.user!.id
-    const fullInstanceName = buildInstanceName(userId, customName)
 
-    const dbInstance = await prisma.instance.findUnique({ where: { instanceName: fullInstanceName, userId } })
+    const dbInstance = await prisma.instance.findFirst({ where: { customName, userId, isActive: true } })
     if (!dbInstance) {
       return res.status(404).json({ success: false, message: 'Instance not found' })
     }
 
     const decodedJid = decodeURIComponent(remoteJid)
-    console.log(`[MESSAGES] Fetching messages: instance=${fullInstanceName}, remoteJid=${decodedJid}`)
-    const rawMessages = await evolutionAPI.getChatMessages(fullInstanceName, decodedJid, limit)
+    console.log(`[MESSAGES] Fetching messages: instance=${dbInstance.instanceName}, remoteJid=${decodedJid}`)
+    const rawMessages = await evolutionAPI.getChatMessages(dbInstance.instanceName, decodedJid, limit)
     // Evolution API may return: array | { messages: [] } | { message: [] }
     const messagesArray = Array.isArray(rawMessages)
       ? rawMessages
@@ -691,16 +686,15 @@ router.delete('/logout/:instanceName', async (req: AuthRequest, res) => {
   try {
     const { instanceName: customName } = req.params
     const userId = req.user!.id
-    const fullInstanceName = buildInstanceName(userId, customName)
 
-    const dbInstance = await prisma.instance.findUnique({
-      where: { instanceName: fullInstanceName, userId }
+    const dbInstance = await prisma.instance.findFirst({
+      where: { customName, userId, isActive: true }
     })
     if (!dbInstance) {
       return res.status(404).json({ error: 'Instance non trouvée' })
     }
 
-    const result = await evolutionAPI.logoutInstance(fullInstanceName)
+    const result = await evolutionAPI.logoutInstance(dbInstance.instanceName)
 
     await prisma.instance.update({
       where: { id: dbInstance.id },
@@ -719,16 +713,15 @@ router.delete('/delete/:instanceName', async (req: AuthRequest, res) => {
   try {
     const { instanceName: customName } = req.params
     const userId = req.user!.id
-    const fullInstanceName = buildInstanceName(userId, customName)
 
-    const dbInstance = await prisma.instance.findUnique({
-      where: { instanceName: fullInstanceName, userId }
+    const dbInstance = await prisma.instance.findFirst({
+      where: { customName, userId, isActive: true }
     })
     if (!dbInstance) {
       return res.status(404).json({ error: 'Instance non trouvée' })
     }
 
-    await evolutionAPI.deleteInstance(fullInstanceName)
+    await evolutionAPI.deleteInstance(dbInstance.instanceName)
     await prisma.instance.delete({ where: { id: dbInstance.id } })
 
     res.json({ success: true })
@@ -744,10 +737,9 @@ router.get('/credentials/:instanceName', async (req: AuthRequest, res) => {
   try {
     const { instanceName: customName } = req.params
     const userId = req.user!.id
-    const fullInstanceName = buildInstanceName(userId, customName)
 
-    const dbInstance = await prisma.instance.findUnique({
-      where: { instanceName: fullInstanceName, userId }
+    const dbInstance = await prisma.instance.findFirst({
+      where: { customName, userId, isActive: true }
     })
     if (!dbInstance) {
       return res.status(404).json({ error: 'Instance non trouvée' })
@@ -773,10 +765,9 @@ router.get('/stats/:instanceName', async (req: AuthRequest, res) => {
   try {
     const { instanceName: customName } = req.params
     const userId = req.user!.id
-    const fullInstanceName = buildInstanceName(userId, customName)
 
-    const dbInstance = await prisma.instance.findUnique({
-      where: { instanceName: fullInstanceName, userId }
+    const dbInstance = await prisma.instance.findFirst({
+      where: { customName, userId, isActive: true }
     })
     if (!dbInstance) {
       return res.status(404).json({ error: 'Instance non trouvée' })

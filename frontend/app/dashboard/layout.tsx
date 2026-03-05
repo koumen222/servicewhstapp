@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
 import { useAppStore } from "@/store/useStore";
+import { instancesApi } from "@/lib/api";
 
 export default function DashboardLayout({
   children,
@@ -13,7 +14,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { user, setUser } = useAppStore();
+  const { user, setUser, setInstances } = useAppStore();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
@@ -37,6 +38,17 @@ export default function DashboardLayout({
         router.push("/login");
       }
     }
+
+    // Charger les instances en arrière-plan (non-bloquant)
+    instancesApi.getAll()
+      .then(res => {
+        const data = res.data?.data?.instances ?? [];
+        setInstances(data);
+      })
+      .catch(error => {
+        console.error('Failed to load instances:', error);
+        setInstances([]);
+      });
   }, []);
 
   if (!hydrated) {

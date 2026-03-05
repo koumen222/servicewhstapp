@@ -63,8 +63,10 @@ export default function InstancesPage() {
     try {
       await instancesApi.delete(instance.id);
       removeInstance(instance.id);
-    } catch {
-      removeInstance(instance.id);
+    } catch (err: any) {
+      console.error('[DELETE] Failed to delete instance:', err?.response?.data || err?.message);
+      // Reload from server to get the real state
+      loadInstances(false);
     } finally {
       setDeleteConfirm(null);
     }
@@ -313,10 +315,12 @@ export default function InstancesPage() {
       <QRScannerModal instance={qrInstance} onClose={() => setQrInstance(null)} />
       {showCreate && (
         <CreateInstanceModal
-          onClose={() => setShowCreate(false)}
+          onClose={() => {
+            setShowCreate(false);
+            loadInstances(false);
+          }}
           onCreated={(inst) => {
             addInstance(inst);
-            setShowCreate(false);
           }}
         />
       )}

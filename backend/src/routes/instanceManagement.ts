@@ -190,7 +190,7 @@ router.post('/create-instance', async (req, res) => {
  * GET /instances
  * Lister toutes les instances de l'utilisateur connecté
  */
-router.get('/instances', async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const userId = req.user?.id
 
@@ -318,7 +318,7 @@ router.get('/instances', async (req, res) => {
  * DELETE /instances/:instanceId
  * Supprimer une instance (avec isolation multi-tenant)
  */
-router.delete('/instances/:instanceId', async (req, res) => {
+router.delete('/:instanceId', async (req, res) => {
   try {
     const { instanceId } = req.params
     const userId = req.user?.id
@@ -357,12 +357,8 @@ router.delete('/instances/:instanceId', async (req, res) => {
 
     // Supprimer en cascade : les clés API, quotas, et logs sont supprimés automatiquement
     // grâce aux contraintes onDelete: Cascade dans le schéma Prisma
-    await prisma.instance.update({
-      where: { id: instanceId },
-      data: {
-        isActive: false,
-        updatedAt: new Date()
-      }
+    await prisma.instance.delete({
+      where: { id: instanceId }
     })
 
     const response = {
@@ -392,7 +388,7 @@ router.delete('/instances/:instanceId', async (req, res) => {
  * POST /instances/:instanceId/restart
  * Redémarrer une instance WhatsApp
  */
-router.post('/instances/:instanceId/restart', async (req, res) => {
+router.post('/:instanceId/restart', async (req, res) => {
   try {
     const { instanceId } = req.params
     const userId = req.user?.id
@@ -457,7 +453,7 @@ router.post('/instances/:instanceId/restart', async (req, res) => {
  * GET /instances/:instanceId/qr-code
  * Obtenir le QR code pour la connexion WhatsApp
  */
-router.get('/instances/:instanceId/qr-code', async (req, res) => {
+router.get('/:instanceId/qr-code', async (req, res) => {
   try {
     const { instanceId } = req.params
     const userId = req.user?.id
