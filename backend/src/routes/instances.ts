@@ -374,7 +374,19 @@ router.post('/send-message', async (req: AuthRequest, res) => {
       }
     }
 
-    const result = await evolutionAPI.sendTextMessage(fullInstanceName, number, message)
+    // Strip JID suffix — Evolution API expects plain number or number@s.whatsapp.net
+    // e.g. "553198296801@s.whatsapp.net" → "553198296801"
+    // e.g. "553198296801@g.us" → pass as-is (group)
+    const cleanNumber = number.includes('@g.us')
+      ? number
+      : number.replace('@s.whatsapp.net', '').replace(/\D/g, '')
+
+    if (!cleanNumber) {
+      return res.status(400).json({ success: false, message: 'Invalid phone number format' })
+    }
+
+    console.log(`[SEND-MSG] Sending to ${cleanNumber} via ${fullInstanceName}`)
+    const result = await evolutionAPI.sendTextMessage(fullInstanceName, cleanNumber, message)
 
     await prisma.instance.update({ where: { id: dbInstance.id }, data: { lastUsed: new Date() } })
 
@@ -386,13 +398,14 @@ router.post('/send-message', async (req: AuthRequest, res) => {
         remoteJid: result?.key?.remoteJid || number,
         timestamp: result?.messageTimestamp || new Date().toISOString(),
         status: result?.status || 'PENDING',
-        number,
+        number: cleanNumber,
         text: message
       }
     })
   } catch (error: any) {
-    const msg = error?.response?.data?.message || error?.message || 'Failed to send message'
-    console.error('[SEND-MSG]', msg)
+    const evolutionMsg = error?.response?.data?.message || error?.response?.data?.error
+    const msg = evolutionMsg || error?.message || 'Failed to send message'
+    console.error('[SEND-MSG] Error:', { number: req.body?.number, statusCode: error?.response?.status, msg })
     return res.status(500).json({ success: false, message: msg })
   }
 })
@@ -435,10 +448,13 @@ router.get('/chats/:instanceName', async (req: AuthRequest, res) => {
                            ''
       }
 
+      // remoteJid is the actual WhatsApp JID (e.g. 5511999@s.whatsapp.net)
+      // chat.id in Evolution API may be an internal ID — always prefer remoteJid
+      const jid = chat.remoteJid || chat.id || ''
       return {
-        id: chat.id || chat.remoteJid,
-        contactId: chat.id || chat.remoteJid,
-        contactName: chat.pushName || chat.name || chat.id?.replace('@s.whatsapp.net', '').replace('@g.us', '') || 'Unknown',
+        id: jid,
+        contactId: jid,
+        contactName: chat.pushName || chat.name || jid.replace('@s.whatsapp.net', '').replace('@g.us', '') || 'Unknown',
         contactAvatar: chat.profilePictureUrl || null,
         unreadCount: chat.unreadCount || 0,
         lastActivity: chat.updatedAt || 
@@ -503,7 +519,9 @@ router.get('/chats/:instanceName/:remoteJid/messages', async (req: AuthRequest, 
       return res.status(404).json({ success: false, message: 'Instance not found' })
     }
 
-    const rawMessages = await evolutionAPI.getChatMessages(fullInstanceName, decodeURIComponent(remoteJid), limit)
+    const decodedJid = decodeURIComponent(remoteJid)
+    console.log(`[MESSAGES] Fetching messages: instance=${fullInstanceName}, remoteJid=${decodedJid}`)
+    const rawMessages = await evolutionAPI.getChatMessages(fullInstanceName, decodedJid, limit)
     const messagesArray = Array.isArray(rawMessages) ? rawMessages : (rawMessages?.messages || [])
 
     const messages = messagesArray.map((msg: any) => {
@@ -555,8 +573,13 @@ router.get('/chats/:instanceName/:remoteJid/messages', async (req: AuthRequest, 
       data: { messages, total: messages.length }
     })
   } catch (error: any) {
-    const msg = error?.response?.data?.message || error?.message || 'Failed to fetch messages'
-    console.error('[MESSAGES]', msg)
+    const statusCode = error?.response?.status
+    const msg = error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Failed to fetch messages'
+    console.error('[MESSAGES] Error:', { remoteJid: req.params.remoteJid, statusCode, msg })
+    // Return empty messages instead of 500 for not-found/disconnected cases
+    if (statusCode === 404 || statusCode === 400) {
+      return res.json({ success: true, data: { messages: [], total: 0 }, warning: msg })
+    }
     return res.status(500).json({ success: false, message: msg })
   }
 })
