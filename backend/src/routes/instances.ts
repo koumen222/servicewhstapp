@@ -515,21 +515,20 @@ router.post('/send-message', async (req: AuthRequest, res) => {
 // Fetch chats from Evolution API
 router.get('/chats/:instanceName', async (req: AuthRequest, res) => {
   try {
-    const { instanceName: customName } = req.params
+    const { instanceName } = req.params // Real 5-digit ID — same pattern as /status and /qrcode
     const userId = req.user!.id
-    const fullInstanceName = buildInstanceName(userId, customName)
 
-    console.log(`[CHATS] Fetching chats for customName="${customName}", fullInstanceName="${fullInstanceName}", userId="${userId}"`)
+    console.log(`[CHATS] Fetching chats for instanceName="${instanceName}", userId="${userId}"`)
 
-    const dbInstance = await prisma.instance.findUnique({ where: { instanceName: fullInstanceName, userId } })
+    const dbInstance = await prisma.instance.findUnique({ where: { instanceName, userId } })
     if (!dbInstance) {
-      console.warn(`[CHATS] Instance not found in DB: ${fullInstanceName}`)
+      console.warn(`[CHATS] Instance not found in DB: ${instanceName}`)
       return res.status(404).json({ success: false, message: 'Instance not found' })
     }
 
     console.log(`[CHATS] DB instance found, status="${dbInstance.status}", calling Evolution API...`)
 
-    const rawChats = await evolutionAPI.getChats(fullInstanceName)
+    const rawChats = await evolutionAPI.getChats(instanceName)
     const chatsArray = Array.isArray(rawChats) ? rawChats : []
 
     console.log(`[CHATS] Evolution API returned ${chatsArray.length} chats`)
@@ -587,8 +586,7 @@ router.get('/chats/:instanceName', async (req: AuthRequest, res) => {
     const msg = evolutionError?.message || evolutionError?.error || error?.message || 'Failed to fetch chats'
     
     console.error('[CHATS] Error details:', {
-      customName: req.params.instanceName,
-      fullInstanceName: buildInstanceName(req.user!.id, req.params.instanceName),
+      instanceName: req.params.instanceName,
       statusCode,
       evolutionError,
       errorMessage: msg

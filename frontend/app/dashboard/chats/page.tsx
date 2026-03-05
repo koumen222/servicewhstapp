@@ -20,14 +20,14 @@ export default function ChatsPage() {
   // Get active (connected) instance first, then any instance
   const activeInstance = instances.find(i => i.status === "open" || i.connectionStatus === "open") || instances[0];
   
-  // Real-time status hook — always use instance.name (customName) not instanceName
+  // Real-time status hook — use instance.instanceName (5-digit real ID), NOT instance.name (customName)
   // Disable polling when a chat is open to prevent constant refreshing
   const {
     status: connectionStatus,
     connectionInfo,
   } = useInstanceStatus({
-    instanceName: activeInstance?.name || "",
-    enabled: !!activeInstance?.name && !selectedChat,
+    instanceName: activeInstance?.instanceName || "",
+    enabled: !!activeInstance?.instanceName && !selectedChat,
     pollInterval: 5000,
   });
 
@@ -40,8 +40,8 @@ export default function ChatsPage() {
     addMessageOptimistically,
     markAsRead,
   } = useRealTimeChats({
-    instanceId: activeInstance?.name,
-    enabled: isConnected && !!activeInstance?.name && !selectedChat,
+    instanceId: activeInstance?.instanceName,
+    enabled: isConnected && !!activeInstance?.instanceName && !selectedChat,
     pollInterval: 3000,
   });
   
@@ -65,9 +65,9 @@ export default function ChatsPage() {
         throw new Error("Instance is not connected. Please connect WhatsApp first.");
       }
 
-      // Send message via API using customName
+      // Send message via API using real instanceName (5-digit ID)
       const res = await instanceApi.sendMessage(
-        activeInstance.name,
+        activeInstance.instanceName,
         selectedChat.contactId,
         message
       );
@@ -83,7 +83,7 @@ export default function ChatsPage() {
   const handleChatClick = async (chat: Chat) => {
     // Freeze instanceName at click time — prevents ChatWindow from reloading
     // messages if activeInstance changes reference during conversation
-    setFrozenInstanceName(activeInstance?.name);
+    setFrozenInstanceName(activeInstance?.instanceName);
     setSelectedChat(chat);
     
     if (chat.unreadCount > 0) {
