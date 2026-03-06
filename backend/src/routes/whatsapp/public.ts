@@ -1,32 +1,73 @@
 import { Router, Request, Response } from 'express'
 import { WhatsAppService } from '../../services/whatsAppService.js'
+import { InstanceService } from '../../services/instanceService.js'
 
 const router = Router()
 
 /**
- * POST /api/v1/whatsapp/send-direct
- * Public endpoint to send WhatsApp messages using direct instance credentials.
- * This endpoint does NOT require JWT authentication.
- * Security is handled by the instanceToken.
+ * POST /api/v1/external/whatsapp/link
+ * Enregistrer une instance Evolution existante dans la base de données du service.
+ * Permet de lier une instance déjà créée sur Evolution à un utilisateur du SaaS.
  */
-router.post('/whatsapp/send-direct', async (req: Request, res: Response) => {
+router.post('/whatsapp/link', async (req: Request, res: Response) => {
+  try {
+    const { instanceName, instanceToken, userId, customName } = req.body
+
+    console.log(`[Public API] Link instance request: ${instanceName} for user ${userId}`)
+
+    if (!instanceName || !instanceToken || !userId) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Champs manquants', 
+        details: 'instanceName, instanceToken et userId sont requis.' 
+      })
+    }
+
+    // Créer l'enregistrement dans user_instances
+    const newInstance = await InstanceService.createUserInstance({
+      userId,
+      instanceName,
+      instanceToken,
+      customName: customName || instanceName,
+      status: 'open', // On assume qu'elle est ouverte si on la lie avec un token
+      isActive: true
+    })
+
+    res.json({
+      success: true,
+      message: 'Instance liée avec succès',
+      data: {
+        id: newInstance._id,
+        instanceName: newInstance.instanceName
+      }
+    })
+  } catch (error: any) {
+    console.error('[Public API] Link instance error:', error.message)
+    res.status(500).json({ 
+      success: false, 
+      error: 'Échec du lien de l\'instance', 
+      details: error.message 
+    })
+  }
+})
+
+/**
+ * POST /api/v1/external/whatsapp/send
+ * Endpoint simplifié pour l'envoi de message.
+ * Utilise les identifiants fournis pour envoyer directement.
+ */
+router.post('/whatsapp/send', async (req: Request, res: Response) => {
   try {
     const { instanceName, instanceToken, number, message } = req.body
-
-    console.log(`[Public API] Direct send request for instance: ${instanceName} to ${number}`)
 
     if (!instanceName || !instanceToken || !number || !message) {
       return res.status(400).json({ 
         success: false, 
-        error: 'Missing required fields', 
-        details: 'instanceName, instanceToken, number, and message are all required.' 
+        error: 'Champs manquants', 
+        details: 'instanceName, instanceToken, number et message sont requis.' 
       })
     }
 
-    // In a real production scenario, we might want to verify that instanceToken 
-    // matches what we have in DB for this instanceName. 
-    // However, the user asked for something that "works directly" based on these two.
-    
     const result = await WhatsAppService.sendDirect(instanceName, instanceToken, number, message)
 
     res.json({
@@ -35,10 +76,10 @@ router.post('/whatsapp/send-direct', async (req: Request, res: Response) => {
       data: result
     })
   } catch (error: any) {
-    console.error('[Public API] Direct send error:', error.message)
+    console.error('[Public API] Send error:', error.message)
     res.status(500).json({ 
       success: false, 
-      error: 'Échec de l\'envoi du message', 
+      error: 'Échec de l\'envoi', 
       details: error.message 
     })
   }
