@@ -2,29 +2,43 @@ import axios from "axios";
 
 // Détection automatique de l'environnement
 const getBaseURL = () => {
-  // 1. Priorité à la variable d'environnement (si définie dans .env.local ou sur le serveur)
+  // 1. FORCER l'utilisation de l'API de production pour tous les domaines publics
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname;
+    
+    // TOUJOURS utiliser l'API de production pour les domaines publics
+    if (hostname === "zechat.site" || hostname === "www.zechat.site" || 
+        hostname === "ecomcookpit.site" || hostname === "www.ecomcookpit.site" ||
+        !hostname.includes('localhost') && !hostname.includes('127.0.0.1')) {
+      console.log(`🌐 Using production API for domain: ${hostname}`);
+      return "https://api.ecomcookpit.site";
+    }
+  }
+  
+  // 2. Priorité ABSOLUE à la variable d'environnement (si définie dans .env.local)
   if (process.env.NEXT_PUBLIC_API_URL) {
+    console.log(`⚙️ Using environment variable API: ${process.env.NEXT_PUBLIC_API_URL}`);
     return process.env.NEXT_PUBLIC_API_URL;
   }
 
-  // 2. Si on est côté serveur (SSR) sans variable, fallback sur localhost
-  if (typeof window === "undefined") {
+  // 3. Si on est côté serveur (SSR) ou localhost, utiliser localhost
+  if (typeof window === "undefined" || 
+      (typeof window !== "undefined" && 
+       (window.location.hostname.includes('localhost') || 
+        window.location.hostname.includes('127.0.0.1')))) {
+    console.log(`🏠 Using localhost API for development`);
     return "http://localhost:3001";
   }
   
-  // 3. Côté client : détection par hostname
-  const hostname = window.location.hostname;
-  
-  // Si on est sur un domaine de production connu
-  if (hostname === "ecomcookpit.site" || hostname === "www.ecomcookpit.site" || hostname === "zechat.site" || hostname === "www.zechat.site") {
-    return "https://api.ecomcookpit.site";
-  }
-
-  // Par défaut pour tout le reste (localhost, IP locale, domaines de test), utiliser le backend local
-  return "http://localhost:3001";
+  // 4. Fallback par défaut pour tout le reste
+  console.log(`🔄 Using fallback production API`);
+  return "https://api.ecomcookpit.site";
 };
 
 const BASE_URL = getBaseURL();
+
+// Log de l'URL API utilisée pour debug
+console.log(`🚀 API Base URL initialized to: ${BASE_URL}`);
 
 export const api = axios.create({
   baseURL: BASE_URL,
@@ -33,21 +47,37 @@ export const api = axios.create({
   timeout: 15000,
 });
 
-// Add request interceptor for authentication
+// Fusionner les intercepteurs request (debug + auth)
 api.interceptors.request.use(
   (config) => {
+    // Log de la requête
+    console.log(`📡 API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+    
+    // Ajouter le token d'authentification
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("auth_token");
       if (token) config.headers.Authorization = `Bearer ${token}`;
     }
+    
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error('❌ API Request Error:', error);
+    return Promise.reject(error);
+  }
 );
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log(`✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
+    return response;
+  },
   async (error) => {
+    console.error(`❌ API Response Error: ${error.config?.method?.toUpperCase()} ${error.config?.url} - ${error.response?.status || 'NETWORK'}`);
+    if (error.code === 'ERR_CONNECTION_REFUSED') {
+      console.error('💀 Connection refused - Backend is not running!');
+    }
+    
     if (error.response?.status === 401) {
       if (typeof window !== "undefined") {
         localStorage.removeItem("auth_token");

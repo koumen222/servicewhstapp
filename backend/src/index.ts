@@ -3,7 +3,7 @@ import cors from 'cors'
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
 import { env } from './config/env.js'
-import { connectMongo } from './lib/mongo.js'
+import { connectMongo, closeMongo } from './lib/mongo.js'
 import authRoutes from './routes/auth.js'
 import instancesNewRoutes from './routes/instances-new.js'
 import instanceManagementRoutes from './routes/instanceManagement.js'
@@ -122,11 +122,30 @@ if (process.env.NODE_ENV !== 'production') {
 
 
 // =============== INITIALISATION BASES DE DONNÉES ===============
-// Initialiser MongoDB (instances WhatsApp)
-connectMongo().catch(err => {
-  console.error('❌ Failed to connect to MongoDB:', err)
-  process.exit(1)
-})
+// Initialiser MongoDB avec retry et gestion d'erreur robuste
+let mongoRetryCount = 0
+const maxMongoRetries = 5
+
+async function initializeMongoWithRetry() {
+  try {
+    await connectMongo()
+    console.log('✅ MongoDB initialized successfully')
+  } catch (error) {
+    mongoRetryCount++
+    console.error(`❌ MongoDB connection attempt ${mongoRetryCount}/${maxMongoRetries} failed:`, error)
+    
+    if (mongoRetryCount < maxMongoRetries) {
+      console.log(`🔄 Retrying MongoDB connection in 5 seconds... (${mongoRetryCount}/${maxMongoRetries})`)
+      setTimeout(initializeMongoWithRetry, 5000)
+    } else {
+      console.error('💀 Max MongoDB retries reached. Continuing without MongoDB...')
+      console.error('   Some features will not work without MongoDB.')
+    }
+  }
+}
+
+// Démarrer l'initialisation MongoDB en arrière-plan
+initializeMongoWithRetry()
 
 // =============== WEBHOOKS (sans authentification - Evolution API) ===============
 // app.use('/webhooks', webhookRoutes)
@@ -218,6 +237,12 @@ const PORT = Number(env.PORT) || 3001
 const gracefulShutdown = (signal: string) => {
   console.log(`📴 Received ${signal}, shutting down gracefully...`)
   
+  // Fermer MongoDB
+  closeMongo().then(() => {
+    console.log('🔴 MongoDB connection closed')
+  }).catch((err: any) => {
+    console.error('❌ Error closing MongoDB:', err)
+  })
   
   process.exit(0)
 }

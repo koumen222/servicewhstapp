@@ -4,8 +4,27 @@ let client: MongoClient | null = null
 let db: Db | null = null
 
 export async function connectMongo(): Promise<Db> {
+  // Si la connexion existe déjà, vérifier qu'elle est toujours active
   if (db && client) {
-    return db
+    try {
+      // Tester la connexion avec un ping
+      await db.admin().ping()
+      return db
+    } catch (error) {
+      console.log('⚠️ MongoDB connection lost, reconnecting...')
+      // La connexion n'est plus active, continuer avec une nouvelle connexion
+    }
+  }
+
+  // Fermer la connexion précédente si elle existe
+  if (client) {
+    try {
+      await client.close()
+    } catch (error) {
+      console.log('⚠️ Failed to close previous MongoDB connection:', error)
+    }
+    client = null
+    db = null
   }
 
   const uri = process.env.MONGODB_URI
@@ -14,13 +33,28 @@ export async function connectMongo(): Promise<Db> {
   }
 
   try {
-    client = new MongoClient(uri)
+    console.log('🔄 Connecting to MongoDB...')
+    client = new MongoClient(uri, {
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 30000,
+      connectTimeoutMS: 10000,
+      retryWrites: true,
+      w: 'majority'
+    })
     await client.connect()
     db = client.db() // Uses database name from URI
-    console.log('✅ Connected to MongoDB')
+    console.log('✅ Connected to MongoDB successfully')
+    
+    // Vérifier la connexion avec un ping
+    await db.admin().ping()
+    console.log('🏓 MongoDB ping successful')
+    
     return db
   } catch (error) {
     console.error('❌ Failed to connect to MongoDB:', error)
+    client = null
+    db = null
     throw error
   }
 }
