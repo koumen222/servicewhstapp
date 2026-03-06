@@ -1,51 +1,77 @@
 import Link from "next/link";
-import { CheckCircle2, MessageSquare, ArrowRight } from "lucide-react";
+import { CheckCircle2, MessageSquare, ArrowRight, Zap, Star, CreditCard, Building2 } from "lucide-react";
 
 export default function PricingPage() {
   const tiers = [
     {
-      name: "Starter",
-      price: "29€",
-      description: "Parfait pour les petites entreprises qui débutent.",
+      id: "free",
+      name: "Free",
+      price: "0 XAF",
+      description: "Pour tester et débuter gratuitement.",
       features: [
-        "1 Instance WhatsApp",
-        "Messages illimités",
-        "API Standard",
-        "Support par email",
-        "Tableau de bord basique",
+        "1 instance WhatsApp",
+        "500 messages/mois",
+        "Accès API REST",
+        "Support communauté",
       ],
-      cta: "Commencer l'essai",
+      cta: "Commencer gratuitement",
       highlighted: false,
+      color: "#5a7a5a",
+      icon: Zap,
     },
     {
-      name: "Pro",
-      price: "79€",
-      description: "La solution complète pour les entreprises en croissance.",
+      id: "starter",
+      name: "Starter",
+      price: "15 000 XAF",
+      originalPrice: "30 000 XAF",
+      discount: "-50%",
+      description: "Idéal pour les petites entreprises.",
       features: [
-        "5 Instances WhatsApp",
-        "Messages illimités",
-        "API Prioritaire",
-        "Support 24/7",
-        "Statistiques avancées",
-        "Gestion d'équipe",
+        "1 instance WhatsApp",
+        "100,000 messages/mois",
+        "Webhooks",
+        "Support email",
+      ],
+      cta: "Choisir Starter",
+      highlighted: true,
+      color: "#22c55e",
+      icon: Star,
+    },
+    {
+      id: "pro",
+      name: "Pro",
+      price: "45 000 XAF",
+      originalPrice: "90 000 XAF",
+      discount: "-50%",
+      description: "Pour les entreprises en pleine croissance.",
+      features: [
+        "5 instances WhatsApp",
+        "1,000,000 messages/mois",
+        "Support prioritaire",
+        "Analytiques avancées",
       ],
       cta: "Choisir Pro",
-      highlighted: true,
+      highlighted: false,
+      color: "#3b82f6",
+      icon: CreditCard,
     },
     {
-      name: "Business",
-      price: "199€",
-      description: "Puissance maximale pour les grandes structures.",
+      id: "enterprise",
+      name: "Enterprise",
+      price: "150 000 XAF",
+      originalPrice: "300 000 XAF",
+      discount: "-50%",
+      description: "Solution sur mesure pour grands comptes.",
       features: [
-        "Instances illimitées",
+        "10 instances WhatsApp",
         "Messages illimités",
-        "API Dédiée",
-        "Gestionnaire de compte",
-        "Webhooks personnalisés",
-        "SLA 99.9%",
+        "Support dédié",
+        "Intégrations sur mesure",
       ],
-      cta: "Contacter la vente",
+      cta: "Contactez-nous",
       highlighted: false,
+      color: "#8b5cf6",
+      icon: Building2,
     },
   ];
 
@@ -89,46 +115,65 @@ export default function PricingPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
             {tiers.map((tier, i) => (
               <div 
                 key={i} 
-                className={`p-8 rounded-3xl border ${
+                className={`p-6 rounded-3xl border transition-all duration-300 flex flex-col ${
                   tier.highlighted 
-                    ? "bg-white/10 border-green-500 shadow-2xl shadow-green-500/10 scale-105 relative z-10" 
+                    ? "bg-[#0d2010] border-[#22c55e50] shadow-2xl shadow-green-500/10 scale-105 relative z-10" 
                     : "bg-white/5 border-white/10 hover:border-white/20"
-                } transition-all duration-300 flex flex-col`}
+                }`}
               >
                 {tier.highlighted && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-green-500 text-white text-xs font-bold px-4 py-1 rounded-full">
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#22c55e] text-black text-[10px] font-bold px-3 py-1 rounded-full whitespace-nowrap">
                     PLUS POPULAIRE
                   </div>
                 )}
-                <div className="mb-8">
-                  <h3 className="text-xl font-bold text-white mb-2">{tier.name}</h3>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-extrabold text-white">{tier.price}</span>
-                    <span className="text-zinc-500">/mois</span>
+                
+                <div className="mb-6">
+                  <div 
+                    className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
+                    style={{ background: `${tier.color}18` }}
+                  >
+                    <tier.icon size={18} style={{ color: tier.color }} />
                   </div>
-                  <p className="mt-4 text-zinc-400 text-sm">{tier.description}</p>
+                  <h3 className="text-lg font-bold text-white mb-1">{tier.name}</h3>
+                  
+                  <div className="flex flex-col gap-0.5">
+                    {tier.originalPrice && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-zinc-500 line-through">{tier.originalPrice}</span>
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-500/20 text-red-400">{tier.discount}</span>
+                      </div>
+                    )}
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-2xl font-extrabold text-white" style={{ color: tier.highlighted ? '#22c55e' : 'white' }}>
+                        {tier.price}
+                      </span>
+                      {tier.id !== 'free' && <span className="text-zinc-500 text-xs">/mois</span>}
+                    </div>
+                  </div>
+                  <p className="mt-3 text-zinc-400 text-xs leading-relaxed">{tier.description}</p>
                 </div>
 
-                <ul className="space-y-4 mb-8 flex-1">
+                <ul className="space-y-3 mb-8 flex-1">
                   {tier.features.map((feature, j) => (
-                    <li key={j} className="flex items-center gap-3 text-zinc-300 text-sm">
-                      <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
-                      {feature}
+                    <li key={j} className="flex items-start gap-2.5 text-zinc-300 text-xs">
+                      <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
+                      <span>{feature}</span>
                     </li>
                   ))}
                 </ul>
 
                 <Link 
                   href="/register"
-                  className={`w-full py-4 rounded-xl text-center font-bold transition-all ${
-                    tier.highlighted
+                  className={`w-full py-3 rounded-xl text-center text-sm font-bold transition-all ${
+                    tier.highlighted || tier.id === 'free'
                       ? "bg-green-600 text-white hover:bg-green-500 shadow-lg shadow-green-900/20"
                       : "bg-white/10 text-white hover:bg-white/20"
                   }`}
+                  style={tier.highlighted ? { backgroundColor: tier.color } : {}}
                 >
                   {tier.cta}
                 </Link>

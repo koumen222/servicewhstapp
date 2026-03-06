@@ -2,21 +2,26 @@ import axios from "axios";
 
 // Détection automatique de l'environnement
 const getBaseURL = () => {
-  // Si on est côté serveur (SSR), utiliser la variable d'environnement
+  // 1. Priorité à la variable d'environnement (si définie dans .env.local ou sur le serveur)
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+
+  // 2. Si on est côté serveur (SSR) sans variable, fallback sur localhost
   if (typeof window === "undefined") {
-    return process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+    return "http://localhost:3001";
   }
   
-  // Côté client : détecter si on est en local ou en production
+  // 3. Côté client : détection par hostname
   const hostname = window.location.hostname;
   
-  if (hostname === "localhost" || hostname === "127.0.0.1") {
-    // Environnement local - frontend sur port 3002, backend sur 3001
-    return "http://localhost:3001";
-  } else {
-    // Environnement de production
+  // Si on est sur un domaine de production connu
+  if (hostname === "zechat.site" || hostname === "www.zechat.site") {
     return "https://api.zechat.site";
   }
+
+  // Par défaut pour tout le reste (localhost, IP locale, domaines de test), utiliser le backend local
+  return "http://localhost:3001";
 };
 
 const BASE_URL = getBaseURL();
