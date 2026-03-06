@@ -141,7 +141,7 @@ export default function InstancesPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search instances…"
+            placeholder="Rechercher des instances…"
             className="input-dark w-full pl-8 text-xs h-8"
           />
         </div>

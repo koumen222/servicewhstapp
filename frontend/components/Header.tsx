@@ -46,7 +46,7 @@ export function Header({ onMenuClick }: HeaderProps) {
   const [langOpen, setLangOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
 
-  const title = PAGE_TITLES[pathname] ?? "Dashboard";
+  const title = PAGE_TITLES[pathname] ?? "Tableau de bord";
   const hasExpired = instances.some(
     (i) => i.status === "expired" || i.connectionStatus === "expired"
   );
@@ -88,7 +88,7 @@ export function Header({ onMenuClick }: HeaderProps) {
               )}
             >
               <Globe size={13} />
-              {lang}
+              {lang === "EN" ? "EN" : "FR"}
               <ChevronDown size={11} />
             </button>
             {langOpen && (
@@ -115,7 +115,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                       }}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      {LANG_OPTIONS.map((l) => (
+                      {["FR", "EN"].map((l) => (
                         <button
                           key={l}
                           onClick={() => { setLang(l); setLangOpen(false); }}

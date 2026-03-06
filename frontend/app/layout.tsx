@@ -3,11 +3,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | WhatsApp SaaS",
-    default: "WhatsApp SaaS — Instance Manager",
+    template: "%s | WhatsApp Business SaaS",
+    default: "WhatsApp Business SaaS — Gestionnaire d'instances en Afrique",
   },
   description:
-    "Professional WhatsApp multi-tenant instance management platform",
+    "Plateforme professionnelle de gestion d'instances WhatsApp multi-comptes pour les entreprises africaines.",
   icons: {
     icon: "/favicon.ico",
   },
@@ -19,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="fr" className="dark" suppressHydrationWarning>
       <body className="antialiased bg-[#0f0f0f] text-[#f0f0f0]">
         {children}
       </body>

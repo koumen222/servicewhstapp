@@ -27,9 +27,9 @@ import type { Instance } from "@/lib/types";
 const schema = z.object({
   customName: z
     .string()
-    .min(3, "Minimum 3 characters")
-    .max(30, "Maximum 30 characters")
-    .regex(/^[a-zA-Z0-9_-]+$/, "Only letters, numbers, underscores and hyphens"),
+    .min(3, "Minimum 3 caractères")
+    .max(30, "Maximum 30 caractères")
+    .regex(/^[a-zA-Z0-9_-]+$/, "Lettres, chiffres, tirets et underscores uniquement"),
   integration: z.enum(["WHATSAPP-BAILEYS", "WHATSAPP-BUSINESS"]).optional(),
 });
 
@@ -110,7 +110,7 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
       const result = res.data;
 
       if (!result?.success) {
-        setError("customName", { message: result?.message || "Failed to create instance" });
+        setError("customName", { message: result?.message || "Échec de la création de l'instance" });
         return;
       }
 
@@ -140,14 +140,14 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
       const errorData = err?.response?.data;
       const providerMessage = errorData?.providerData?.response?.message?.[0];
 
-      let msg = errorData?.message || errorData?.error || "Failed to create instance";
+      let msg = errorData?.message || errorData?.error || "Échec de la création de l'instance";
 
       if (status === 409 || errorData?.code === "INSTANCE_NAME_ALREADY_EXISTS") {
-        msg = "Ce nom d'instance est déjà utilisé sur Evolution. Choisissez un autre nom.";
+        msg = "Ce nom d'instance est déjà utilisé. Veuillez en choisir un autre.";
       } else if (!err?.response) {
-        msg = "Erreur réseau: backend indisponible. Vérifiez que le serveur API est lancé sur http://localhost:3001.";
+        msg = "Erreur réseau: serveur indisponible.";
       } else if (status === 502 && providerMessage) {
-        msg = `Evolution API: ${providerMessage}`;
+        msg = `Erreur API: ${providerMessage}`;
       }
 
       console.error("Frontend error:", err);
@@ -162,7 +162,7 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
     }
     if (!instance.instanceName) {
       console.error("❌ Instance name manquant:", instance);
-      setQrError("Instance ID invalide. Impossible de générer le QR code.");
+      setQrError("ID d'instance invalide. Impossible de générer le code QR.");
       return;
     }
     setStep("qr");
@@ -171,7 +171,7 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
     try {
       const res = await instanceApi.getQRCode(instance.instanceName);
       if (!res.data?.success) {
-        const errorMsg = res.data?.message || "Failed to get QR code";
+        const errorMsg = res.data?.message || "Échec de la récupération du code QR";
         console.error("❌ QR code error:", errorMsg);
         setQrError(errorMsg);
         return;
@@ -182,25 +182,21 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
         startStatusPolling(instance.instanceName);
       } else {
         console.error("❌ QR code vide dans la réponse");
-        setQrError("QR code non disponible. L'instance est peut-être déjà connectée.");
+        setQrError("Code QR non disponible. L'instance est peut-être déjà connectée.");
       }
     } catch (err: any) {
       const status = err?.response?.status;
       const errorData = err?.response?.data;
-      let detailedMsg = "Erreur lors du chargement du QR code";
+      let detailedMsg = "Erreur lors du chargement du code QR";
       
       if (status === 404) {
-        detailedMsg = `Instance introuvable (404). Vérifiez que l'instance existe.`;
-        console.error("❌ 404 - Instance non trouvée:", instance.instanceName);
+        detailedMsg = `Instance introuvable. Vérifiez que l'instance existe.`;
       } else if (status === 500) {
         detailedMsg = `Erreur serveur (500). ${errorData?.message || 'Le serveur a rencontré une erreur.'}`;
-        console.error("❌ 500 - Erreur serveur:", errorData);
       } else if (status === 401 || status === 403) {
-        detailedMsg = `Non autorisé (${status}). Vérifiez vos permissions.`;
-        console.error(`❌ ${status} - Non autorisé`);
+        detailedMsg = `Non autorisé. Vérifiez vos permissions.`;
       } else {
         detailedMsg = errorData?.message || err?.message || "Erreur inconnue";
-        console.error("❌ QR code error:", { status, error: err, instanceName: instance.instanceName });
       }
       
       setQrError(detailedMsg);
@@ -216,7 +212,7 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
     }
     if (!instance.instanceName) {
       console.error("❌ Instance name manquant pour refresh:", instance);
-      setQrError("Instance ID invalide");
+      setQrError("ID d'instance invalide");
       return;
     }
     setQrLoading(true);
@@ -235,19 +231,17 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
         setQrCode(qr.startsWith("data:") ? qr : `data:image/png;base64,${qr}`);
       } else {
         console.error("❌ QR code vide après refresh");
-        setQrError("QR code non disponible");
+        setQrError("Code QR non disponible");
       }
     } catch (err: any) {
       const status = err?.response?.status;
       const errorData = err?.response?.data;
-      let detailedMsg = "Échec du rafraîchissement du QR code";
+      let detailedMsg = "Échec du rafraîchissement du code QR";
       
       if (status === 404) {
-        detailedMsg = `Instance introuvable (404)`;
-        console.error("❌ 404 - Instance non trouvée lors du refresh:", instance.instanceName);
+        detailedMsg = `Instance introuvable`;
       } else {
         detailedMsg = errorData?.message || err?.message || "Erreur inconnue";
-        console.error("❌ Refresh QR error:", { status, error: err });
       }
       
       setQrError(detailedMsg);
@@ -263,13 +257,13 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
     try {
       const res = await instanceApi.connectPhone(instance.instanceName, phoneNumber.trim());
       if (!res.data?.success) {
-        setPhoneError(res.data?.message || "Failed to generate pairing code");
+        setPhoneError(res.data?.message || "Échec de la génération du code d'appairage");
         return;
       }
       setPairingCode(res.data.data?.pairingCode);
       startStatusPolling(instance.instanceName);
     } catch (err: any) {
-      const msg = err?.response?.data?.message || "Failed to generate pairing code";
+      const msg = err?.response?.data?.message || "Échec de la génération du code d'appairage";
       console.error("Frontend error:", err);
       setPhoneError(msg);
     } finally {
@@ -296,8 +290,8 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
   const stepTitles: Record<Step, string> = {
     form: "Créer une instance",
     choose: "Instance créée !",
-    qr: "Scanner le QR Code",
-    phone: "Connecter avec téléphone",
+    qr: "Scanner le code QR",
+    phone: "Connecter par téléphone",
     connected: "WhatsApp Connecté !",
   };
 
@@ -326,7 +320,7 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
               <h2 className="text-[14px] font-semibold text-white">{stepTitles[step]}</h2>
               <p className="text-[11px] text-[#5a7a5a] mt-0.5">
                 {step === "form"
-                  ? `Plan: ${user?.plan?.toUpperCase() ?? "FREE"} · ${user?.maxInstances ?? 1} max`
+                  ? `Plan: ${user?.plan?.toUpperCase() ?? "GRATUIT"} · ${user?.maxInstances ?? 1} max`
                   : instance?.name ?? ""}
               </p>
             </div>
@@ -355,7 +349,7 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
                   </label>
                   <input
                     {...register("customName")}
-                    placeholder="mon-bot"
+                    placeholder="ma-boutique"
                     autoFocus
                     className={cn("input-dark w-full", errors.customName && "border-red-500/50")}
                   />
@@ -429,7 +423,7 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
                     </button>
                   </div>
                   <p className="mt-1 text-[10px] text-[#4a6a4a]">
-                    Header attendu: <code className="text-[#6a9a6a]">Authorization: Instance-Token &#123;token&#125;</code>
+                    Header attendu: <code className="text-[#6a9a6a]">Authorization: Bearer &#123;token&#125;</code>
                   </p>
                 </div>
               )}
@@ -481,7 +475,7 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
               <div className="flex items-start gap-3 p-3 rounded-lg bg-[#0d1f0d] border border-[#1a2e1a]">
                 <Smartphone size={14} className="text-[#22c55e] mt-0.5 shrink-0" />
                 <p className="text-[11px] text-[#6a9a6a] leading-relaxed">
-                  Ouvrir WhatsApp → Appareils connectés → Connecter un appareil, puis scanner ci-dessous.
+                  Ouvrez WhatsApp → Appareils connectés → Connecter un appareil, puis scannez ci-dessous.
                 </p>
               </div>
 
@@ -492,7 +486,7 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
                   "bg-[#6b7280]": connectionStatus === "disconnected",
                 })} />
                 <span className="text-[11px] text-[#5a7a5a]">
-                  {connectionStatus === "connecting" ? "En attente du scan…" : "Scannez le QR code pour vous connecter"}
+                  {connectionStatus === "connecting" ? "En attente du scan…" : "Scannez le code QR pour vous connecter"}
                 </span>
               </div>
 
@@ -500,7 +494,7 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
                 {qrLoading && (
                   <div className="flex flex-col items-center gap-2">
                     <Loader2 size={28} className="text-[#22c55e] animate-spin" />
-                    <p className="text-xs text-[#5a7a5a]">Chargement du QR…</p>
+                    <p className="text-xs text-[#5a7a5a]">Chargement du code QR…</p>
                   </div>
                 )}
                 {!qrLoading && qrError && (
@@ -513,7 +507,7 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
                   </div>
                 )}
                 {!qrLoading && !qrError && qrCode && (
-                  <img src={qrCode} alt="QR Code" className="w-52 h-52 object-contain p-2" style={{ imageRendering: "pixelated" }} />
+                  <img src={qrCode} alt="Code QR" className="w-52 h-52 object-contain p-2" style={{ imageRendering: "pixelated" }} />
                 )}
               </div>
 
@@ -551,7 +545,7 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
                     <input
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
-                      placeholder="+237XXXXXXXXX"
+                      placeholder="+33XXXXXXXXX"
                       className="input-dark w-full"
                       autoFocus
                     />
@@ -560,7 +554,7 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
                         <AlertCircle size={11} />{phoneError}
                       </p>
                     )}
-                    <p className="mt-1 text-[10px] text-[#4a6a4a]">Inclure l'indicatif pays, ex: +237XXXXXXXXX</p>
+                    <p className="mt-1 text-[10px] text-[#4a6a4a]">Inclure l'indicatif pays, ex: +33XXXXXXXXX</p>
                   </div>
                   <div className="flex gap-2">
                     <button onClick={() => setStep("choose")} className="btn-ghost flex-1">Retour</button>

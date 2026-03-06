@@ -82,7 +82,7 @@ export function InstanceCard({
   const isConnecting = currentStatus === 'connecting';
 
   const statusDotColor = isConnected ? '#22c55e' : isConnecting ? '#f59e0b' : isExpired ? '#ef4444' : '#6b7280';
-  const statusLabel = isConnected ? '🟢 Connected' : isConnecting ? '🟡 Connecting…' : isExpired ? '🔴 Expired' : '⚫ Disconnected';
+  const statusLabel = isConnected ? '🟢 Connecté' : isConnecting ? '🟡 Connexion…' : isExpired ? '🔴 Expiré' : '⚫ Déconnecté';
 
   const avatarColor = getAvatarColor(instance.name);
   const initials = instance.name
@@ -179,7 +179,7 @@ export function InstanceCard({
                   }}
                   className="flex items-center gap-2 w-full px-3 py-2 text-xs text-[#8a9a8a] hover:bg-[#161616] hover:text-white transition-colors"
                 >
-                  <QrCode size={13} /> Scan QR
+                  <QrCode size={13} /> Scanner QR
                 </button>
                 <div className="my-1 border-t border-[#1a1a1a]" />
                 <button
@@ -189,7 +189,7 @@ export function InstanceCard({
                   }}
                   className="flex items-center gap-2 w-full px-3 py-2 text-xs text-red-400 hover:bg-[#1a0a0a] transition-colors"
                 >
-                  <Trash2 size={13} /> Delete
+                  <Trash2 size={13} /> Supprimer
                 </button>
               </motion.div>
             </>
@@ -216,12 +216,12 @@ export function InstanceCard({
         <div className="flex items-center gap-1.5 text-[11px] text-[#5a7a5a]">
           <MessageSquare size={11} className="shrink-0" />
           <span>
-            {formatNumber(instance.stats?.messagesLast30Days ?? 0)} msgs/30d
+            {formatNumber(instance.stats?.messagesLast30Days ?? 0)} msgs/30j
           </span>
         </div>
         <div className="flex items-center gap-1.5 text-[11px] text-[#5a7a5a]">
           <Key size={11} className="shrink-0" />
-          <span>{instance.stats?.totalApiKeys ?? 0} API keys</span>
+          <span>{instance.stats?.totalApiKeys ?? 0} clés API</span>
         </div>
         <div className="flex items-center gap-1.5 text-[11px] text-[#5a7a5a]">
           <Clock size={11} className="shrink-0" />
@@ -237,7 +237,7 @@ export function InstanceCard({
           <div className="mt-3">
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] text-[#4a6a4a]">
-                Messages quota
+                Quota de messages
               </span>
               <span className="text-[10px] text-[#5a7a5a]">
                 {formatNumber(q.used)} / {formatNumber(q.limit)}
@@ -278,12 +278,12 @@ export function InstanceCard({
         >
           <AlertCircle size={12} className="text-red-400 shrink-0" />
           <p className="text-[11px] text-red-400 flex-1">
-            <span className="font-semibold">Payment is required</span> to use
-            this instance.
+            <span className="font-semibold">Paiement requis</span> pour utiliser
+            cette instance.
           </p>
           <button className="btn-danger text-[10px] px-2 py-1 flex items-center gap-1">
             <CreditCard size={10} />
-            Pay
+            Payer
           </button>
         </motion.div>
       )}
@@ -301,7 +301,7 @@ export function InstanceCard({
           )}
         >
           <QrCode size={12} />
-          {isConnected ? "QR Code" : isConnecting ? "Connecting…" : "Scan QR"}
+          {isConnected ? "QR Code" : isConnecting ? "Connexion…" : "Scanner QR"}
         </button>
 
         <button

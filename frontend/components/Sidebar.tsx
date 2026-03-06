@@ -93,7 +93,7 @@ export function Sidebar({ mobile = false, onClose }: SidebarProps) {
               boxShadow: "0 0 12px rgba(34,197,94,0.35)",
             }}
           >
-            W
+            E
           </div>
           <AnimatePresence>
             {!collapsed && (
@@ -104,7 +104,7 @@ export function Sidebar({ mobile = false, onClose }: SidebarProps) {
                 transition={{ duration: 0.15 }}
                 className="font-semibold text-sm tracking-wide text-white whitespace-nowrap overflow-hidden"
               >
-                WhatsApp SaaS
+                EcomCookpit
               </motion.span>
             )}
           </AnimatePresence>
@@ -270,7 +270,7 @@ export function Sidebar({ mobile = false, onClose }: SidebarProps) {
                 className="flex-1 min-w-0"
               >
                 <p className="text-xs font-medium text-[#c8d8c8] truncate">
-                  {user?.name ?? "User"}
+                  {user?.name ?? "Utilisateur"}
                 </p>
                 <p className="text-[10px] text-[#4a6a4a] truncate">
                   {user?.email ?? ""}

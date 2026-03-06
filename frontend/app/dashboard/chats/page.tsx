@@ -105,12 +105,12 @@ export default function ChatsPage() {
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
     
     if (diffInMinutes < 60) {
-      return `${diffInMinutes}m ago`;
+      return `il y a ${diffInMinutes}m`;
     } else if (diffInMinutes < 24 * 60) {
       const hours = Math.floor(diffInMinutes / 60);
-      return `${hours}h ago`;
+      return `il y a ${hours}h`;
     } else {
-      return "yesterday";
+      return "hier";
     }
   };
   
@@ -128,7 +128,7 @@ export default function ChatsPage() {
           <div>
             <h2 className="text-[15px] font-semibold text-white flex items-center gap-2">
               <MessageSquare size={16} />
-              Chats
+              Conversations
               {totalUnreadMessages > 0 && (
                 <span className="px-2 py-0.5 text-[10px] font-bold bg-[#22c55e] text-black rounded-full">
                   {totalUnreadMessages}
@@ -136,7 +136,7 @@ export default function ChatsPage() {
               )}
             </h2>
             <p className="text-[12px] text-[#5a7a5a] mt-0.5">
-              {hasChats ? `${chats.length} conversations` : "No conversations yet"}
+              {hasChats ? `${chats.length} conversations` : "Aucune conversation pour le moment"}
             </p>
           </div>
           
@@ -173,7 +173,7 @@ export default function ChatsPage() {
           <input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search conversations…"
+            placeholder="Rechercher des conversations…"
             className="input-dark w-full pl-8 text-xs"
           />
         </div>
@@ -192,9 +192,9 @@ export default function ChatsPage() {
             <div className="w-16 h-16 rounded-2xl bg-[#0d2510] flex items-center justify-center mx-auto mb-4">
               <MessageCircle size={24} className="text-[#22c55e]" />
             </div>
-            <p className="text-white font-medium mb-2">No conversations found</p>
+            <p className="text-white font-medium mb-2">Aucune conversation trouvée</p>
             <p className="text-[12px] text-[#5a7a5a]">
-              {searchQuery ? "Try adjusting your search" : "Start messaging to see conversations here"}
+              {searchQuery ? "Essayez d'ajuster votre recherche" : "Commencez à envoyer des messages pour voir les conversations ici"}
             </p>
           </motion.div>
         ) : (
@@ -290,10 +290,10 @@ export default function ChatsPage() {
               <Wifi size={20} className="text-[#4a6a4a]" />
             </div>
             <p className="text-[13px] font-medium text-white mb-1">
-              No WhatsApp instances connected
+              Aucune instance WhatsApp connectée
             </p>
             <p className="text-[12px] text-[#4a6a4a]">
-              Connect a WhatsApp instance to see real conversations here.
+              Connectez une instance WhatsApp pour voir vos conversations ici.
             </p>
           </div>
         )}

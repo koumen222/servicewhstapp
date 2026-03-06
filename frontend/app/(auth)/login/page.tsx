@@ -14,8 +14,8 @@ import { setCookie } from "@/lib/utils";
 import type { User } from "@/lib/types";
 
 const schema = z.object({
-  email: z.string().email("Invalid email"),
-  password: z.string().min(1, "Password required"),
+  email: z.string().email("Email invalide"),
+  password: z.string().min(1, "Mot de passe requis"),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -46,7 +46,7 @@ export default function LoginPage() {
       router.push("/dashboard");
     } catch (err: unknown) {
       const msg =
-        (err as any)?.response?.data?.error ?? "Login failed. Please try again.";
+        (err as any)?.response?.data?.error ?? "Échec de la connexion. Veuillez réessayer.";
       setServerError(msg);
     }
   }
@@ -63,10 +63,10 @@ export default function LoginPage() {
               boxShadow: "0 0 20px rgba(34,197,94,0.3)",
             }}
           >
-            W
+            E
           </div>
           <span className="text-white font-semibold text-[15px]">
-            WhatsApp SaaS
+            EcomCookpit
           </span>
         </div>
 
@@ -78,11 +78,10 @@ export default function LoginPage() {
             <MessageSquare size={22} className="text-[#22c55e]" />
           </div>
           <blockquote className="text-[22px] font-semibold text-white leading-snug mb-4">
-            "The most powerful WhatsApp automation platform for businesses."
+            "La plateforme d'automatisation WhatsApp la plus puissante pour les entreprises en Afrique."
           </blockquote>
           <p className="text-[13px] text-[#5a7a5a]">
-            Manage multiple WhatsApp instances, automate messaging, and scale
-            your customer communications.
+            Gérez plusieurs instances WhatsApp, automatisez vos messages et développez votre relation client.
           </p>
         </div>
 
@@ -99,7 +98,7 @@ export default function LoginPage() {
             ))}
           </div>
           <p className="text-[12px] text-[#5a7a5a]">
-            Join <span className="text-[#22c55e] font-medium">2,000+</span> businesses
+            Rejoignez plus de <span className="text-[#22c55e] font-medium">500</span> entreprises locales
           </p>
         </div>
       </div>
@@ -118,14 +117,14 @@ export default function LoginPage() {
               className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-black text-sm"
               style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}
             >
-              W
+              E
             </div>
-            <span className="text-white font-semibold">WhatsApp SaaS</span>
+            <span className="text-white font-semibold">EcomCookpit</span>
           </div>
 
-          <h1 className="text-2xl font-bold text-white mb-1">Welcome back</h1>
+          <h1 className="text-2xl font-bold text-white mb-1">Bon retour parmi nous</h1>
           <p className="text-[13px] text-[#5a7a5a] mb-7">
-            Sign in to your account to continue
+            Connectez-vous à votre compte pour continuer
           </p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -138,12 +137,12 @@ export default function LoginPage() {
 
             <div>
               <label className="block text-xs font-medium text-[#8a9a8a] mb-1.5">
-                Email address
+                Adresse email
               </label>
               <input
                 {...register("email")}
                 type="email"
-                placeholder="you@example.com"
+                placeholder="nom@exemple.com"
                 autoComplete="email"
                 autoFocus
                 className="input-dark w-full"
@@ -158,13 +157,13 @@ export default function LoginPage() {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-medium text-[#8a9a8a]">
-                  Password
+                  Mot de passe
                 </label>
                 <button
                   type="button"
                   className="text-[11px] text-[#22c55e] hover:text-[#4ade80] transition-colors"
                 >
-                  Forgot password?
+                  Mot de passe oublié ?
                 </button>
               </div>
               <div className="relative">
@@ -198,21 +197,21 @@ export default function LoginPage() {
               {isSubmitting ? (
                 <>
                   <Loader2 size={14} className="animate-spin" />
-                  Signing in…
+                  Connexion...
                 </>
               ) : (
-                "Sign in"
+                "Se connecter"
               )}
             </button>
           </form>
 
           <p className="text-center text-[13px] text-[#5a7a5a] mt-5">
-            Don't have an account?{" "}
+            Vous n'avez pas de compte ?{" "}
             <Link
               href="/register"
               className="text-[#22c55e] hover:text-[#4ade80] font-medium transition-colors"
             >
-              Sign up
+              S'inscrire
             </Link>
           </p>
         </motion.div>

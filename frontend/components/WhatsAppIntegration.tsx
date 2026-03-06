@@ -49,10 +49,10 @@ export default function WhatsAppIntegration() {
         connected: true,
         verifiedAt: response.data.data?.verifiedAt
       })
-      setSuccess('WhatsApp instance connected successfully!')
+      setSuccess('Instance WhatsApp connectée avec succès !')
     } catch (err: any) {
-      console.error("❌ Connection failed:", err)
-      const errorMessage = err.response?.data?.message || err.message || 'Connection failed'
+      console.error("❌ Échec de la connexion :", err)
+      const errorMessage = err.response?.data?.message || err.message || 'La connexion a échoué'
       setError(errorMessage)
     } finally {
       setLoading(false)
@@ -65,9 +65,9 @@ export default function WhatsAppIntegration() {
     setError(null)
     setSuccess(null)
 
-    console.log("\n📤 Sending test message...")
-    console.log("Number:", testNumber)
-    console.log("Message:", testMessage)
+    console.log("\n📤 Envoi du message de test...")
+    console.log("Numéro :", testNumber)
+    console.log("Message :", testMessage)
 
     try {
       const response = await integrationsApi.testWhatsAppMessage(
@@ -77,13 +77,13 @@ export default function WhatsAppIntegration() {
         testMessage
       )
 
-      console.log("✅ Test message sent:", response.data)
-      setSuccess('Test message sent successfully!')
+      console.log("✅ Message de test envoyé :", response.data)
+      setSuccess('Message de test envoyé avec succès !')
       setTestNumber('')
       setTestMessage('')
     } catch (err: any) {
-      console.error("❌ Test message failed:", err)
-      const errorMessage = err.response?.data?.message || err.message || 'Failed to send test message'
+      console.error("❌ Échec du message de test :", err)
+      const errorMessage = err.response?.data?.message || err.message || 'Échec de l\'envoi du message de test'
       setError(errorMessage)
     } finally {
       setTestLoading(false)
@@ -93,9 +93,9 @@ export default function WhatsAppIntegration() {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-[14px] font-semibold text-white mb-2">WhatsApp Integration</h3>
+        <h3 className="text-[14px] font-semibold text-white mb-2">Intégration WhatsApp</h3>
         <p className="text-[12px] text-[#5a7a5a] mb-6">
-          Connect your existing WhatsApp instance to enable messaging capabilities.
+          Connectez votre instance WhatsApp existante pour activer les fonctionnalités de messagerie.
         </p>
 
         {error && (
@@ -114,7 +114,7 @@ export default function WhatsAppIntegration() {
           <form onSubmit={handleConnect} className="space-y-4">
             <div>
               <label className="block text-[12px] font-medium text-white mb-1.5">
-                Instance Name
+                Nom de l'instance
               </label>
               <input
                 type="text"
@@ -128,13 +128,13 @@ export default function WhatsAppIntegration() {
 
             <div>
               <label className="block text-[12px] font-medium text-white mb-1.5">
-                Instance ID
+                ID de l'instance
               </label>
               <input
                 type="text"
                 value={config.instanceId}
                 onChange={(e) => setConfig({ ...config, instanceId: e.target.value })}
-                placeholder="sssss"
+                placeholder="ID de votre instance"
                 className="w-full px-3 py-2 bg-[#0a0a0a] border border-[#1e1e1e] rounded-lg text-white text-[12px] focus:outline-none focus:ring-2 focus:ring-[#25D366] placeholder:text-[#3a3a3a]"
                 required
               />
@@ -142,18 +142,18 @@ export default function WhatsAppIntegration() {
 
             <div>
               <label className="block text-[12px] font-medium text-white mb-1.5">
-                API Key
+                Clé API
               </label>
               <input
                 type="password"
                 value={config.apiKey}
                 onChange={(e) => setConfig({ ...config, apiKey: e.target.value })}
-                placeholder="ak_live_xxxxxxxxx"
+                placeholder="votre_cle_api"
                 className="w-full px-3 py-2 bg-[#0a0a0a] border border-[#1e1e1e] rounded-lg text-white text-[12px] focus:outline-none focus:ring-2 focus:ring-[#25D366] placeholder:text-[#3a3a3a]"
                 required
               />
               <p className="mt-1.5 text-[11px] text-[#5a7a5a]">
-                Your instance API key from the WhatsApp SaaS service
+                Votre clé API d'instance provenant du service WhatsApp SaaS
               </p>
             </div>
 
@@ -162,18 +162,18 @@ export default function WhatsAppIntegration() {
               disabled={loading}
               className="w-full bg-[#25D366] text-white py-2.5 px-4 rounded-lg text-[12px] font-medium hover:bg-[#20bd5a] disabled:bg-[#2a2a2a] disabled:text-[#5a5a5a] disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? 'Connecting...' : 'Connect WhatsApp Instance'}
+              {loading ? 'Connexion...' : 'Connecter l\'instance WhatsApp'}
             </button>
           </form>
         ) : (
           <div className="space-y-4">
             <div className="p-4 bg-green-900/20 border border-green-800/30 rounded-lg">
-              <h3 className="font-semibold text-green-400 mb-2 text-[13px]">✅ Connected</h3>
+              <h3 className="font-semibold text-green-400 mb-2 text-[13px]">✅ Connecté</h3>
               <div className="text-[12px] text-green-300/80 space-y-1">
-                <p><strong>Instance:</strong> {config.instanceName}</p>
-                <p><strong>Instance ID:</strong> {config.instanceId}</p>
+                <p><strong>Instance :</strong> {config.instanceName}</p>
+                <p><strong>ID :</strong> {config.instanceId}</p>
                 {config.verifiedAt && (
-                  <p><strong>Verified:</strong> {new Date(config.verifiedAt).toLocaleString()}</p>
+                  <p><strong>Vérifié le :</strong> {new Date(config.verifiedAt).toLocaleString('fr-FR')}</p>
                 )}
               </div>
             </div>
@@ -182,7 +182,7 @@ export default function WhatsAppIntegration() {
               onClick={() => setConfig({ instanceName: '', instanceId: '', apiKey: '', connected: false })}
               className="w-full bg-[#2a2a2a] text-white py-2.5 px-4 rounded-lg text-[12px] font-medium hover:bg-[#3a3a3a] transition-colors"
             >
-              Disconnect
+              Déconnecter
             </button>
           </div>
         )}
@@ -190,26 +190,26 @@ export default function WhatsAppIntegration() {
 
       {config.connected && (
         <div className="bg-[#0a0a0a] border border-[#1e1e1e] rounded-lg p-6">
-          <h3 className="text-[14px] font-semibold text-white mb-2">Test Message</h3>
+          <h3 className="text-[14px] font-semibold text-white mb-2">Message de test</h3>
           <p className="text-[12px] text-[#5a7a5a] mb-6">
-            Send a test message to verify the integration is working correctly.
+            Envoyez un message de test pour vérifier que l'intégration fonctionne correctement.
           </p>
 
           <form onSubmit={handleTestMessage} className="space-y-4">
             <div>
               <label className="block text-[12px] font-medium text-white mb-1.5">
-                Phone Number
+                Numéro de téléphone
               </label>
               <input
                 type="text"
                 value={testNumber}
                 onChange={(e) => setTestNumber(e.target.value)}
-                placeholder="+1234567890"
+                placeholder="+33612345678"
                 className="w-full px-3 py-2 bg-[#111] border border-[#1e1e1e] rounded-lg text-white text-[12px] focus:outline-none focus:ring-2 focus:ring-[#25D366] placeholder:text-[#3a3a3a]"
                 required
               />
               <p className="mt-1.5 text-[11px] text-[#5a7a5a]">
-                Include country code (e.g., +1 for US, +33 for France)
+                Inclure l'indicatif pays (ex: +33 pour la France)
               </p>
             </div>
 
@@ -220,7 +220,7 @@ export default function WhatsAppIntegration() {
               <textarea
                 value={testMessage}
                 onChange={(e) => setTestMessage(e.target.value)}
-                placeholder="Hello, this is a test message!"
+                placeholder="Bonjour, ceci est un message de test !"
                 rows={4}
                 className="w-full px-3 py-2 bg-[#111] border border-[#1e1e1e] rounded-lg text-white text-[12px] focus:outline-none focus:ring-2 focus:ring-[#25D366] placeholder:text-[#3a3a3a]"
                 required
@@ -232,19 +232,19 @@ export default function WhatsAppIntegration() {
               disabled={testLoading}
               className="w-full bg-[#25D366] text-white py-2.5 px-4 rounded-lg text-[12px] font-medium hover:bg-[#20bd5a] disabled:bg-[#2a2a2a] disabled:text-[#5a5a5a] disabled:cursor-not-allowed transition-colors"
             >
-              {testLoading ? 'Sending...' : 'Send Test Message'}
+              {testLoading ? 'Envoi...' : 'Envoyer le message de test'}
             </button>
           </form>
         </div>
       )}
 
       <div className="bg-blue-900/10 border border-blue-800/20 rounded-lg p-4">
-        <h3 className="font-semibold text-blue-400 mb-2 text-[12px]">📋 How it works</h3>
+        <h3 className="font-semibold text-blue-400 mb-2 text-[12px]">📋 Comment ça marche</h3>
         <ul className="text-[11px] text-blue-300/70 space-y-1 list-disc list-inside">
-          <li>Your instance must already exist in the WhatsApp SaaS service</li>
-          <li>The API key identifies and authenticates your specific instance</li>
-          <li>Messages are sent through the SaaS service to Evolution API</li>
-          <li>All logs are available in the SaaS service dashboard</li>
+          <li>Votre instance doit déjà exister dans le service WhatsApp SaaS</li>
+          <li>La clé API identifie et authentifie votre instance spécifique</li>
+          <li>Les messages sont envoyés via le service SaaS vers l'API Evolution</li>
+          <li>Tous les journaux sont disponibles dans le tableau de bord du service SaaS</li>
         </ul>
       </div>
     </div>

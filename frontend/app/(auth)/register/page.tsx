@@ -14,25 +14,25 @@ import { setCookie } from "@/lib/utils";
 import type { User } from "@/lib/types";
 
 const schema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
+  name: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
+  email: z.string().email("Adresse email invalide"),
   password: z
     .string()
-    .min(6, "Password must be at least 6 characters")
+    .min(6, "Le mot de passe doit contenir au moins 6 caractères")
     .max(100),
   confirm: z.string(),
 }).refine((d) => d.password === d.confirm, {
-  message: "Passwords do not match",
+  message: "Les mots de passe ne correspondent pas",
   path: ["confirm"],
 });
 
 type FormData = z.infer<typeof schema>;
 
 const FEATURES = [
-  "Up to 1 WhatsApp instance for free",
-  "API access with webhooks",
-  "Real-time message monitoring",
-  "Upgrade anytime for more instances",
+  "Jusqu'à 1 instance WhatsApp gratuite",
+  "Accès API avec webhooks",
+  "Suivi des messages en temps réel",
+  "Évoluez à tout moment vers plus d'instances",
 ];
 
 export default function RegisterPage() {
@@ -62,7 +62,7 @@ export default function RegisterPage() {
     } catch (err: unknown) {
       const msg =
         (err as any)?.response?.data?.error ??
-        "Registration failed. Please try again.";
+        "Échec de l'inscription. Veuillez réessayer.";
       setServerError(msg);
     }
   }
@@ -79,19 +79,19 @@ export default function RegisterPage() {
               boxShadow: "0 0 20px rgba(34,197,94,0.3)",
             }}
           >
-            W
+            E
           </div>
           <span className="text-white font-semibold text-[15px]">
-            WhatsApp SaaS
+            EcomCookpit
           </span>
         </div>
 
         <div>
           <h2 className="text-2xl font-bold text-white mb-2">
-            Start free today
+            Commencez gratuitement dès aujourd'hui
           </h2>
           <p className="text-[13px] text-[#5a7a5a] mb-6">
-            Everything you need to build powerful WhatsApp automation.
+            Tout ce dont vous avez besoin pour construire une automatisation WhatsApp puissante.
           </p>
           <ul className="space-y-3">
             {FEATURES.map((f, i) => (
@@ -108,10 +108,10 @@ export default function RegisterPage() {
           style={{ background: "#0d2510", border: "1px solid #1a3a1a" }}
         >
           <p className="text-[12px] text-[#22c55e] font-semibold mb-1">
-            Free plan includes
+            Le plan gratuit inclut
           </p>
           <p className="text-[12px] text-[#5a7a5a]">
-            1 instance · 1,000 messages/month · Full API access
+            1 instance · 1 000 messages/mois · Accès complet à l'API
           </p>
         </div>
       </div>
@@ -129,16 +129,16 @@ export default function RegisterPage() {
               className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-black text-sm"
               style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}
             >
-              W
+              E
             </div>
-            <span className="text-white font-semibold">WhatsApp SaaS</span>
+            <span className="text-white font-semibold">EcomCookpit</span>
           </div>
 
           <h1 className="text-2xl font-bold text-white mb-1">
-            Create your account
+            Créer votre compte
           </h1>
           <p className="text-[13px] text-[#5a7a5a] mb-7">
-            Free forever · No credit card required
+            Gratuit pour toujours · Aucune carte bancaire requise
           </p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -151,12 +151,12 @@ export default function RegisterPage() {
 
             <div>
               <label className="block text-xs font-medium text-[#8a9a8a] mb-1.5">
-                Full name
+                Nom complet
               </label>
               <input
                 {...register("name")}
                 type="text"
-                placeholder="John Doe"
+                placeholder="Koumen Morgan"
                 autoComplete="name"
                 autoFocus
                 className="input-dark w-full"
@@ -170,12 +170,12 @@ export default function RegisterPage() {
 
             <div>
               <label className="block text-xs font-medium text-[#8a9a8a] mb-1.5">
-                Email address
+                Adresse email
               </label>
               <input
                 {...register("email")}
                 type="email"
-                placeholder="you@example.com"
+                placeholder="nom@exemple.com"
                 autoComplete="email"
                 className="input-dark w-full"
               />
@@ -188,13 +188,13 @@ export default function RegisterPage() {
 
             <div>
               <label className="block text-xs font-medium text-[#8a9a8a] mb-1.5">
-                Password
+                Mot de passe
               </label>
               <div className="relative">
                 <input
                   {...register("password")}
                   type={showPass ? "text" : "password"}
-                  placeholder="At least 6 characters"
+                  placeholder="Au moins 6 caractères"
                   autoComplete="new-password"
                   className="input-dark w-full pr-10"
                 />
@@ -215,12 +215,12 @@ export default function RegisterPage() {
 
             <div>
               <label className="block text-xs font-medium text-[#8a9a8a] mb-1.5">
-                Confirm password
+                Confirmer le mot de passe
               </label>
               <input
                 {...register("confirm")}
                 type={showPass ? "text" : "password"}
-                placeholder="Repeat password"
+                placeholder="Répétez le mot de passe"
                 autoComplete="new-password"
                 className="input-dark w-full"
               />
@@ -239,27 +239,27 @@ export default function RegisterPage() {
               {isSubmitting ? (
                 <>
                   <Loader2 size={14} className="animate-spin" />
-                  Creating account…
+                  Création du compte...
                 </>
               ) : (
-                "Create account"
+                "Créer mon compte"
               )}
             </button>
 
             <p className="text-center text-[11px] text-[#3a5a3a]">
-              By signing up you agree to our{" "}
-              <span className="text-[#22c55e]">Terms of Service</span> and{" "}
-              <span className="text-[#22c55e]">Privacy Policy</span>.
+              En vous inscrivant, vous acceptez nos{" "}
+              <span className="text-[#22c55e]">Conditions d'utilisation</span> et notre{" "}
+              <span className="text-[#22c55e]">Politique de confidentialité</span>.
             </p>
           </form>
 
           <p className="text-center text-[13px] text-[#5a7a5a] mt-5">
-            Already have an account?{" "}
+            Vous avez déjà un compte ?{" "}
             <Link
               href="/login"
               className="text-[#22c55e] hover:text-[#4ade80] font-medium transition-colors"
             >
-              Sign in
+              Se connecter
             </Link>
           </p>
         </motion.div>

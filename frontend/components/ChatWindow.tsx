@@ -40,7 +40,7 @@ function MessageBubble({ message }: MessageBubbleProps) {
   const statusColor = MESSAGE_STATUS_COLORS[message.status];
   
   const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleTimeString('en-US', {
+    return new Date(timestamp).toLocaleTimeString('fr-FR', {
       hour: 'numeric',
       minute: '2-digit',
       hour12: false,
@@ -102,25 +102,25 @@ export function ChatWindow({ chat, isOpen, onClose, onSendMessage, instanceName,
       setIsLoading(true);
       try {
         if (!instanceName) { 
-          console.log('[ChatWindow] No instance name, using fallback messages');
+          console.log('[ChatWindow] Aucun nom d\'instance, utilisation des messages de secours');
           setMessages(chat.messages || []); 
           setIsLoading(false);
           return; 
         }
         
-        console.log('[ChatWindow] Loading messages for:', { instanceName, contactId: chat.contactId });
+        console.log('[ChatWindow] Chargement des messages pour :', { instanceName, contactId: chat.contactId });
         const response = await instanceApi.getChatMessages(instanceName, chat.contactId);
         
         if (response.data?.success) {
           const loadedMessages = response.data.data?.messages || [];
-          console.log('[ChatWindow] Loaded messages:', loadedMessages.length);
+          console.log('[ChatWindow] Messages chargés :', loadedMessages.length);
           setMessages(loadedMessages);
         } else {
-          console.warn('[ChatWindow] API returned unsuccessful response, using fallback');
+          console.warn('[ChatWindow] L\'API a renvoyé une réponse infructueuse, utilisation du secours');
           setMessages(chat.messages || []);
         }
       } catch (error: any) {
-        console.error('[ChatWindow] Failed to load messages:', error?.response?.data || error?.message);
+        console.error('[ChatWindow] Échec du chargement des messages :', error?.response?.data || error?.message);
         // Use chat.messages as fallback
         setMessages(chat.messages || []);
       } finally {
@@ -182,7 +182,7 @@ export function ChatWindow({ chat, isOpen, onClose, onSendMessage, instanceName,
           : msg
       ));
     } catch (error) {
-      console.error('Failed to send message:', error);
+      console.error('Échec de l\'envoi du message :', error);
       
       // Mark as failed
       setMessages(prev => prev.map(msg => 
@@ -268,7 +268,7 @@ export function ChatWindow({ chat, isOpen, onClose, onSendMessage, instanceName,
                     </div>
                   </div>
                   <p className="text-white/80 font-medium mb-1">{chat.contactName}</p>
-                  <p className="text-[11px] text-white/50">Start a conversation</p>
+                  <p className="text-[11px] text-white/50">Démarrer une conversation</p>
                 </div>
               </div>
             ) : (
@@ -285,7 +285,7 @@ export function ChatWindow({ chat, isOpen, onClose, onSendMessage, instanceName,
           {!isConnected && (
             <div className="px-4 py-2 bg-red-500/10 border-t border-red-500/20 flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
-              <p className="text-[11px] text-red-400">Instance not connected. Connect WhatsApp to send messages.</p>
+              <p className="text-[11px] text-red-400">Instance non connectée. Connectez WhatsApp pour envoyer des messages.</p>
             </div>
           )}
 
@@ -306,7 +306,7 @@ export function ChatWindow({ chat, isOpen, onClose, onSendMessage, instanceName,
                   type="text"
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
-                  placeholder={isConnected ? "Type a message..." : "Connect WhatsApp to send messages"}
+                  placeholder={isConnected ? "Écrivez un message..." : "Connectez WhatsApp pour envoyer des messages"}
                   disabled={isSending || !isConnected}
                   className="w-full px-4 py-3 pr-12 rounded-full text-sm resize-none bg-[#1a1a1a] border border-[#2a2a2a] text-white placeholder-white/50 focus:border-[#22c55e] focus:ring-0 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                 />
