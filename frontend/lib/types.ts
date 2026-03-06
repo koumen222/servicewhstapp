@@ -49,6 +49,7 @@ export interface Instance {
   id: string;
   name: string;
   instanceName: string;
+  instanceToken?: string | null;
   status: InstanceStatus;
   connectionStatus: InstanceStatus;
   realTimeStatus?: ConnectionStatus; // For real-time updates

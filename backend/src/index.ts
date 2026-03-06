@@ -5,6 +5,8 @@ import rateLimit from 'express-rate-limit'
 import { env } from './config/env.js'
 import authRoutes from './routes/auth.js'
 import instanceRoutes from './routes/instances.js'
+import instancesNewRoutes from './routes/instances-new.js'
+import externalApiRoutes from './routes/external-api.js'
 import messageRoutes from './routes/messages.js'
 import healthRoutes from './routes/health.js'
 import publicRoutes from './routes/public.js'
@@ -148,9 +150,14 @@ console.log('✅ Registered webhook endpoint: /webhooks/evolution')
 // =============== ROUTES PUBLIQUES (avec clés API) ===============
 app.use('/api/v1', publicRoutes)
 
+// =============== API EXTERNE (avec tokens d'instance) ===============
+app.use('/api/v1', externalApiRoutes)
+
 // =============== ROUTES AUTHENTIFIÉES (JWT) ===============
 app.use('/api/health', healthRoutes)
 app.use('/api/auth', authRoutes)
+
+app.use('/instances', authMiddleware, userRateLimit, multiTenantIsolation, instancesNewRoutes)
 
 // Routes protégées par JWT avec isolation multi-tenant
 app.use('/api/instances', authMiddleware, userRateLimit, multiTenantIsolation, instanceManagementRoutes)

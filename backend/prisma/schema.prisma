@@ -2,6 +2,37 @@ generator client {
   provider = "prisma-client-js"
 }
 
+model ApiKey {
+  id                String   @id @default(uuid())
+  userId            String
+  instanceId        String
+  keyHash           String   @unique
+  keyPrefix         String
+  name              String?
+  permissions       String[]
+  isActive          Boolean  @default(true)
+  revoked           Boolean  @default(false)
+  revokedAt         DateTime?
+  revokedReason     String?
+  lastUsed          DateTime?
+  lastUsedIp        String?
+  usageCount        Int      @default(0)
+  rateLimitPerMin   Int      @default(60)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  expiresAt         DateTime?
+
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  instance          Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  messagesSent      MessageLog[]
+
+  @@index([keyHash])
+  @@index([userId])
+  @@index([instanceId])
+  @@index([isActive])
+  @@index([revoked])
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_CONNECTION_URI")
@@ -66,57 +97,49 @@ model Payment {
 model Instance {
   id                    String   @id @default(uuid())
   userId                String
-  instanceName          String   @unique // Format: user_{userId}_{customName}
-  customName            String   // Nom choisi par l'utilisateur
-  status                String   @default("close")
+  instanceName          String   @unique
+  customName            String?
+  instanceToken         String?  @unique
+  status                String   @default("pending")
+  whatsappNumber        String?
   profileName           String?
   profilePictureUrl     String?
   ownerJid              String?
-  instanceUrl           String?  // URL Evolution API pour cette instance
-  evolutionApiKey       String?  // Clé API Evolution (privée, côté backend)
+  instanceUrl           String?
+  evolutionApiKey       String?
   isActive              Boolean  @default(true)
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
   lastUsed              DateTime?
+  lastActivity          DateTime?
 
   user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   apiKeys               ApiKey[]
   quotaUsage            QuotaUsage[]
   messagesSent          MessageLog[]
+  activityLogs          ActivityLog[]
 
   @@index([userId])
   @@index([instanceName])
+  @@index([instanceToken])
+  @@index([status])
 }
 
-model ApiKey {
+model ActivityLog {
   id                String   @id @default(uuid())
-  userId            String
   instanceId        String
-  keyHash           String   @unique // Hash bcrypt de la clé pour sécurité maximale
-  keyPrefix         String   // Premiers caractères pour identification (ex: "ak_live_abc123...")
-  name              String?  // Nom optionnel donné par l'utilisateur
-  permissions       String[] // Liste des permissions accordées
-  isActive          Boolean  @default(true)
-  revoked           Boolean  @default(false) // Révocation explicite
-  revokedAt         DateTime? // Date de révocation
-  revokedReason     String?  // Raison de la révocation
-  lastUsed          DateTime?
-  lastUsedIp        String?  // Dernière IP utilisée
-  usageCount        Int      @default(0)
-  rateLimitPerMin   Int      @default(60) // Limite de requêtes par minute
+  actionType        String
+  actionResult      String
+  details           String?
+  ipAddress         String?
+  userAgent         String?
   createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  expiresAt         DateTime? // Optionnel: expiration de la clé
 
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   instance          Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
-  messagesSent      MessageLog[]
 
-  @@index([keyHash])
-  @@index([userId])
   @@index([instanceId])
-  @@index([isActive])
-  @@index([revoked])
+  @@index([actionType])
+  @@index([createdAt])
 }
 
 model QuotaUsage {
@@ -136,26 +159,27 @@ model QuotaUsage {
 }
 
 model MessageLog {
-  id            String   @id @default(uuid())
-  instanceId    String
-  apiKeyId      String
-  recipientNumber String
-  messageType   String   // "text", "image", "document", etc.
-  messageContent String? // Contenu du message (tronqué si trop long)
-  status        String   // "sent", "delivered", "failed", etc.
-  evolutionMessageId String? // ID du message Evolution API
-  errorMessage  String?
-  ipAddress     String?
-  userAgent     String?
-  createdAt     DateTime @default(now())
+  id                  String   @id @default(uuid())
+  instanceId          String
+  apiKeyId            String
+  recipientNumber     String
+  messageType         String
+  messageContent      String?
+  status              String
+  evolutionMessageId  String?
+  errorMessage        String?
+  ipAddress           String?
+  userAgent           String?
+  createdAt           DateTime @default(now())
 
-  instance      Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
-  apiKey        ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  instance            Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  apiKey              ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
 
   @@index([instanceId])
   @@index([apiKeyId])
   @@index([createdAt])
 }
+
 
 model SystemConfig {
   id            String   @id @default(uuid())

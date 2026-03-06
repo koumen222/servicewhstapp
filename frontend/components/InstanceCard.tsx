@@ -20,6 +20,7 @@ import {
 import { apiKeysApi } from "@/lib/api";
 import { cn, getAvatarColor, timeAgo, formatNumber, formatInstanceIdForDisplay } from "@/lib/utils";
 import { StatusBadge } from "./StatusBadge";
+import { InstanceTokenDisplay } from "./InstanceTokenDisplay";
 import { useInstanceStatus } from "@/hooks/useInstanceStatus";
 import type { Instance } from "@/lib/types";
 
@@ -245,28 +246,13 @@ export function InstanceCard({
         );
       })()}
 
-      {/* ── API Key display ────────────────────── */}
-      {apiKeys.length > 0 && (
-        <div className="mt-3 px-3 py-2 rounded-lg" style={{ background: '#0a0a0a', border: '1px solid #1a1a1a' }}>
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <Key size={11} className="text-[#22c55e] shrink-0" />
-              <span className="text-[10px] font-mono text-[#5a7a5a] truncate">
-                {apiKeys[0].keyPrefix}
-              </span>
-            </div>
-            <button
-              onClick={() => copyKey(apiKeys[0].keyPrefix)}
-              className="text-[#3a7a3a] hover:text-[#22c55e] transition-colors shrink-0"
-              title="Copier la clé API"
-            >
-              {copied ? (
-                <CheckCircle2 size={11} className="text-[#22c55e]" />
-              ) : (
-                <Copy size={11} />
-              )}
-            </button>
-          </div>
+      {/* ── Instance token display ────────────────────── */}
+      {instance.instanceToken && (
+        <div className="mt-3">
+          <InstanceTokenDisplay
+            token={instance.instanceToken}
+            instanceName={instance.instanceName}
+          />
         </div>
       )}
 

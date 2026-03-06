@@ -377,11 +377,11 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
                 </div>
               </div>
 
-              {/* API Key */}
+              {/* Instance Token */}
               {apiKey && (
                 <div>
                   <p className="text-[11px] font-medium text-[#8a9a8a] mb-1.5">
-                    Clé API <span className="text-yellow-500">(affichée une seule fois — sauvegardez-la !)</span>
+                    Token d'instance <span className="text-yellow-500">(conservez-le pour vos appels API externes)</span>
                   </p>
                   <div className="flex items-center gap-2 p-2.5 rounded-lg bg-[#0a0a0a] border border-[#1e1e1e]">
                     <code className="flex-1 text-[11px] font-mono text-[#22c55e] truncate">
@@ -394,6 +394,9 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
                       {keyCopied ? <CheckCircle2 size={13} className="text-[#22c55e]" /> : <Copy size={13} />}
                     </button>
                   </div>
+                  <p className="mt-1 text-[10px] text-[#4a6a4a]">
+                    Header attendu: <code className="text-[#6a9a6a]">Authorization: Instance-Token &#123;token&#125;</code>
+                  </p>
                 </div>
               )}
 

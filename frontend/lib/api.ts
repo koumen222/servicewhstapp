@@ -69,15 +69,74 @@ export const authApi = {
 // ─── Instance Management  /api/instances/* ──────────────────────────────────
 //  Uses instanceManagement.ts routes (by DB id)
 export const instancesApi = {
-  /** GET /api/instances — list all user instances */
-  getAll: () => api.get("/api/instances"),
+  /** GET /instances — list all user instances (new architecture) */
+  getAll: async () => {
+    const res = await api.get("/instances");
+    const rawInstances = Array.isArray(res.data?.instances) ? res.data.instances : [];
 
-  /** POST /api/instances/create-instance — { customName, integration? } */
-  create: (customName: string, integration = "WHATSAPP-BAILEYS") =>
-    api.post("/api/instances/create-instance", { customName, integration }),
+    const instances = rawInstances.map((item: any) => {
+      const normalizedStatus = item.status === "active" ? "open" : item.status === "connecting" ? "connecting" : "close";
+      return {
+        id: item.id,
+        name: item.customName || item.instanceName,
+        instanceName: item.instanceName,
+        instanceToken: item.instanceToken ?? null,
+        status: normalizedStatus,
+        connectionStatus: normalizedStatus,
+        profileName: item.profileName ?? null,
+        profilePictureUrl: item.profilePictureUrl ?? null,
+        createdAt: item.createdAt,
+        lastUsed: item.lastActivity ?? null,
+        apiKeys: [],
+        quotas: [],
+        stats: { messagesLast30Days: 0, totalApiKeys: 0 },
+      };
+    });
 
-  /** DELETE /api/instances/:id */
-  delete: (id: string) => api.delete(`/api/instances/${id}`),
+    return {
+      ...res,
+      data: {
+        success: true,
+        data: {
+          instances,
+          summary: {
+            totalInstances: instances.length,
+            activeInstances: instances.filter((i: any) => i.status === "open").length,
+            maxAllowed: 0,
+          },
+        },
+      },
+    };
+  },
+
+  /** POST /instances — create an instance and get token */
+  create: async (customName: string, integration = "WHATSAPP-BAILEYS") => {
+    const res = await api.post("/instances", { customName, integration });
+    const d = res.data ?? {};
+
+    return {
+      ...res,
+      data: {
+        success: true,
+        data: {
+          instance: {
+            id: d.id,
+            name: d.customName || d.instanceName,
+            instanceName: d.instanceName,
+            createdAt: d.createdAt,
+            instanceToken: d.instanceToken,
+          },
+          apiKey: {
+            key: d.instanceToken,
+          },
+        },
+        message: d.message,
+      },
+    };
+  },
+
+  /** DELETE /instances/:id */
+  delete: (id: string) => api.delete(`/instances/${id}`),
 
   /** POST /api/instances/:id/restart */
   restart: (id: string) => api.post(`/api/instances/${id}/restart`),
