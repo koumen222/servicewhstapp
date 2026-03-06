@@ -3,13 +3,13 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | Sanyen",
-    default: "Sanyen — Gestionnaire d'instances WhatsApp en Afrique",
+    template: "%s | ZeChat",
+    default: "ZeChat — Gestionnaire d'instances WhatsApp en Afrique",
   },
   description:
-    "Plateforme professionnelle de gestion d'instances WhatsApp multi-comptes pour les entreprises africaines.",
+    "Plateforme professionnelle ZeChat de gestion d'instances WhatsApp multi-comptes.",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/favicon.png",
   },
 };
 

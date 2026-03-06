@@ -7,11 +7,15 @@ export default function LandingPage() {
       {/* Header / Navbar */}
       <header className="px-6 h-20 flex items-center justify-between border-b border-white/5 bg-black/50 backdrop-blur-md sticky top-0 z-50">
         <Link className="flex items-center justify-center gap-2 group" href="/">
-          <div className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center group-hover:bg-green-500 transition-colors shadow-lg shadow-green-900/20">
-            <MessageSquare className="h-6 w-6 text-white" />
+          <div className="w-10 h-10 relative flex items-center justify-center transition-transform group-hover:scale-105">
+            <img 
+              src="/logo.png" 
+              alt="ZeChat Logo" 
+              className="w-full h-full object-contain"
+            />
           </div>
           <span className="text-xl font-bold tracking-tight text-white">
-            Sanyen<span className="text-green-500 text-2xl tracking-tighter">.com</span>
+            ZeChat<span className="text-green-500 text-2xl tracking-tighter">.com</span>
           </span>
         </Link>
         <nav className="hidden md:flex gap-8 text-sm font-medium text-zinc-400">
@@ -195,13 +199,17 @@ export default function LandingPage() {
       <footer className="py-12 px-6 border-t border-white/5 bg-black">
         <div className="container mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
-              <MessageSquare className="h-5 w-5 text-white" />
+            <div className="w-8 h-8 relative flex items-center justify-center">
+              <img 
+                src="/logo.png" 
+                alt="ZeChat Logo" 
+                className="w-full h-full object-contain"
+              />
             </div>
-            <span className="text-lg font-bold text-white tracking-tighter italic">Sanyen.com</span>
+            <span className="text-lg font-bold text-white tracking-tighter italic">ZeChat.com</span>
           </div>
           <div className="text-zinc-500 text-sm">
-            © 2026 Sanyen — Expert en automatisation WhatsApp.
+            © 2026 ZeChat — Expert en automatisation WhatsApp.
           </div>
           <div className="flex gap-6">
             <Link className="text-zinc-500 hover:text-white transition-colors" href="#">CGU</Link>
