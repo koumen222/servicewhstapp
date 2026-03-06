@@ -15,7 +15,7 @@ const getBaseURL = () => {
     return "http://localhost:3001";
   } else {
     // Environnement de production
-    return "https://api.ecomcookpit.site";
+    return "https://api.zechat.site";
   }
 };
 

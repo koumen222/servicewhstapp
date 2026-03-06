@@ -128,7 +128,7 @@ export default function DocsPage() {
                   <h3 className="text-xl font-bold text-white mb-4">Base URL</h3>
                   <CodeBlock
                     id="base-url"
-                    code="https://api.ecomcookpit.site"
+                    code="https://api.zechat.site"
                     language="text"
                   />
                 </div>
@@ -265,7 +265,7 @@ Content-Type: application/json
       "status": "close",
       "createdAt": "2026-03-05T02:00:00.000Z"
     },
-    "webhook": "https://api.ecomcookpit.site/webhooks/evolution"
+    "webhook": "https://api.zechat.site/webhooks/evolution"
   }
 }`}
                         />
@@ -488,7 +488,7 @@ Authorization: Bearer {token}`}
                         Les webhooks sont configurés automatiquement lors de la création d'une instance.
                       </p>
                       <p className="text-sm font-semibold text-white mb-2">URL du webhook:</p>
-                      <code className="text-[#00ff87]">https://api.ecomcookpit.site/webhooks/evolution</code>
+                      <code className="text-[#00ff87]">https://api.zechat.site/webhooks/evolution</code>
                     </div>
 
                     <div>
@@ -573,7 +573,7 @@ Authorization: Bearer {token}`}
                       <CodeBlock
                         id="example-create"
                         code={`// 1. Créer l'instance
-const createResponse = await fetch('https://api.ecomcookpit.site/api/instance/create', {
+const createResponse = await fetch('https://api.zechat.site/api/instance/create', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -590,7 +590,7 @@ console.log('Instance créée:', data.instance.customName);
 
 // 2. Obtenir le QR code
 const qrResponse = await fetch(
-  'https://api.ecomcookpit.site/api/instance/qrcode/Support%20Bot',
+  'https://api.zechat.site/api/instance/qrcode/Support%20Bot',
   { headers: { 'Authorization': 'Bearer YOUR_TOKEN' } }
 );
 
@@ -602,7 +602,7 @@ if (qrData.qrCode) {
 
 // 3. Vérifier le statut
 const statusResponse = await fetch(
-  'https://api.ecomcookpit.site/api/instance/status/Support%20Bot',
+  'https://api.zechat.site/api/instance/status/Support%20Bot',
   { headers: { 'Authorization': 'Bearer YOUR_TOKEN' } }
 );
 
@@ -616,7 +616,7 @@ console.log('Statut:', statusData.status); // "connected" si OK`}
                       <CodeBlock
                         id="example-send"
                         code={`// Envoyer un message
-const sendResponse = await fetch('https://api.ecomcookpit.site/api/instance/send-message', {
+const sendResponse = await fetch('https://api.zechat.site/api/instance/send-message', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer YOUR_TOKEN',
@@ -640,7 +640,7 @@ console.log('Message envoyé:', data.messageId);`}
                         id="example-chats"
                         code={`// Récupérer les chats
 const chatsResponse = await fetch(
-  'https://api.ecomcookpit.site/api/instance/chats/Support%20Bot',
+  'https://api.zechat.site/api/instance/chats/Support%20Bot',
   { headers: { 'Authorization': 'Bearer YOUR_TOKEN' } }
 );
 
@@ -650,7 +650,7 @@ console.log(\`\${chatsData.total} conversations trouvées\`);
 // Pour chaque chat, récupérer les messages
 for (const chat of chatsData.chats) {
   const messagesResponse = await fetch(
-    \`https://api.ecomcookpit.site/api/instance/chats/Support%20Bot/\${encodeURIComponent(chat.contactId)}/messages?limit=50\`,
+    \`https://api.zechat.site/api/instance/chats/Support%20Bot/\${encodeURIComponent(chat.contactId)}/messages?limit=50\`,
     { headers: { 'Authorization': 'Bearer YOUR_TOKEN' } }
   );
   

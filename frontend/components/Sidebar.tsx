@@ -104,7 +104,7 @@ export function Sidebar({ mobile = false, onClose }: SidebarProps) {
                 transition={{ duration: 0.15 }}
                 className="font-semibold text-sm tracking-wide text-white whitespace-nowrap overflow-hidden"
               >
-                EcomCookpit
+                ZeChat.site
               </motion.span>
             )}
           </AnimatePresence>

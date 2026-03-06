@@ -3,13 +3,17 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | ZeChat",
-    default: "ZeChat — Gestionnaire d'instances WhatsApp en Afrique",
+    template: "%s | ZeChat.site",
+    default: "ZeChat.site — Gestionnaire d'instances WhatsApp en Afrique",
   },
   description:
     "Plateforme professionnelle ZeChat de gestion d'instances WhatsApp multi-comptes.",
   icons: {
-    icon: "/favicon.png",
+    icon: [
+      { url: "/favicon.png", sizes: "32x32", type: "image/png" },
+    ],
+    shortcut: "/favicon.png",
+    apple: "/favicon.png",
   },
 };
 

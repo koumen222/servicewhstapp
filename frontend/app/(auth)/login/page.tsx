@@ -56,17 +56,11 @@ export default function LoginPage() {
       {/* Left panel */}
       <div className="hidden lg:flex flex-col justify-between w-[420px] shrink-0 p-10 border-r border-[#141414]">
         <div className="flex items-center gap-2.5">
-          <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-black text-sm"
-            style={{
-              background: "linear-gradient(135deg, #22c55e, #16a34a)",
-              boxShadow: "0 0 20px rgba(34,197,94,0.3)",
-            }}
-          >
-            E
+          <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+            Z
           </div>
           <span className="text-white font-semibold text-[15px]">
-            EcomCookpit
+            ZeChat.site
           </span>
         </div>
 
@@ -114,12 +108,11 @@ export default function LoginPage() {
           {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-8 lg:hidden">
             <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-black text-sm"
-              style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}
+              className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center text-white font-bold text-xl mb-4"
             >
-              E
+              Z
             </div>
-            <span className="text-white font-semibold">EcomCookpit</span>
+            <span className="text-white font-semibold text-xl">ZeChat.site</span>
           </div>
 
           <h1 className="text-2xl font-bold text-white mb-1">Bon retour parmi nous</h1>
