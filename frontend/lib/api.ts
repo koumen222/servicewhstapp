@@ -16,8 +16,8 @@ const getBaseURL = () => {
   const hostname = window.location.hostname;
   
   // Si on est sur un domaine de production connu
-  if (hostname === "zechat.site" || hostname === "www.zechat.site") {
-    return "https://api.zechat.site";
+  if (hostname === "ecomcookpit.site" || hostname === "www.ecomcookpit.site") {
+    return "https://api.ecomcookpit.site";
   }
 
   // Par défaut pour tout le reste (localhost, IP locale, domaines de test), utiliser le backend local
