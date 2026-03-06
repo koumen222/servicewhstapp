@@ -16,7 +16,7 @@ const getBaseURL = () => {
   const hostname = window.location.hostname;
   
   // Si on est sur un domaine de production connu
-  if (hostname === "ecomcookpit.site" || hostname === "www.ecomcookpit.site") {
+  if (hostname === "ecomcookpit.site" || hostname === "www.ecomcookpit.site" || hostname === "zechat.site" || hostname === "www.zechat.site") {
     return "https://api.ecomcookpit.site";
   }
 
