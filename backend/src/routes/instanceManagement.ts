@@ -122,6 +122,8 @@ router.post('/create-instance', async (req, res) => {
       data: {
         userId,
         instanceName,
+        internalName: customName.trim(),
+        evolutionInstanceName: instanceName,
         customName: customName.trim(),
         status: 'close',
         evolutionApiKey,

@@ -28,41 +28,52 @@ const getPublicApiBaseUrl = (req: AuthRequest): string => {
 }
 
 const createInstanceSchema = z.object({
-  instanceName: z.string().min(1),
+  // Backward-compatible: frontend may still send `instanceName` as the human-friendly name
+  instanceName: z.string().min(1).optional(),
+  internalName: z.string().min(1).optional(),
+  evolutionInstanceName: z.string().min(1).optional(),
   integration: z.string().optional().default('WHATSAPP-BAILEYS'),
   qrcode: z.boolean().optional().default(false), // Do NOT auto-connect on creation
 })
 
 router.post('/create', checkInstanceQuota, async (req: AuthRequest, res) => {
   try {
-    const { instanceName: customName, integration, qrcode } = createInstanceSchema.parse(req.body)
+    const { instanceName, internalName, evolutionInstanceName, integration, qrcode } = createInstanceSchema.parse(req.body)
+    const displayName = internalName || instanceName
+    if (!displayName) {
+      return res.status(400).json({ success: false, message: 'Nom d\'instance requis' })
+    }
     
     if (!req.user || !req.user.id) {
       return res.status(401).json({ success: false, message: 'Utilisateur non authentifié' })
     }
 
     const userId = req.user.id
-    console.log('[CREATE] userId:', userId, 'customName:', customName)
+    console.log('[CREATE] userId:', userId, 'internalName:', displayName, 'evolutionInstanceName:', evolutionInstanceName)
 
     const userExists = await prisma.user.findUnique({ where: { id: userId } })
     if (!userExists) {
       return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' })
     }
 
-    const fullInstanceName = buildInstanceName(userId, customName)
+    // Internal stable identifier used by our SaaS URLs/DB
+    const internalInstanceId = buildInstanceName(userId, displayName)
 
-    const existing = await prisma.instance.findUnique({ where: { instanceName: fullInstanceName } })
+    const existing = await prisma.instance.findUnique({ where: { instanceName: internalInstanceId } })
     if (existing) {
       return res.status(400).json({ success: false, message: 'Instance already exists' })
     }
 
-    console.log('[CREATE] Creating Evolution API instance:', fullInstanceName)
-    const evolutionResponse = await evolutionAPI.createInstance(fullInstanceName, integration, false) // qrcode:false — no auto-connect
+    // Name used when calling Evolution API must match Evolution's instanceName exactly
+    const evolutionName = evolutionInstanceName || internalInstanceId
+
+    console.log('[CREATE] Creating Evolution API instance:', evolutionName)
+    const evolutionResponse = await evolutionAPI.createInstance(evolutionName, integration, false) // qrcode:false — no auto-connect
 
     // Configurer le webhook pour recevoir les mises à jour de statut
     const webhookUrl = `${getPublicApiBaseUrl(req) || env.BACKEND_PUBLIC_URL}/webhooks/evolution`
     try {
-      await evolutionAPI.setWebhook(fullInstanceName, webhookUrl)
+      await evolutionAPI.setWebhook(evolutionName, webhookUrl)
       console.log('[CREATE] Webhook configured:', webhookUrl)
     } catch (webhookError: any) {
       console.warn('[CREATE] Failed to configure webhook (non-critical):', webhookError.message)
@@ -73,8 +84,10 @@ router.post('/create', checkInstanceQuota, async (req: AuthRequest, res) => {
     const instance = await prisma.instance.create({
       data: {
         userId,
-        instanceName: fullInstanceName,
-        customName,
+        instanceName: internalInstanceId,
+        internalName: displayName,
+        evolutionInstanceName: evolutionName,
+        customName: displayName,
         status: 'close',
         instanceUrl: getPublicApiBaseUrl(req) || env.EVOLUTION_API_URL,
         evolutionApiKey: apiKey,
@@ -88,8 +101,9 @@ router.post('/create', checkInstanceQuota, async (req: AuthRequest, res) => {
       data: {
         instance: {
           id: instance.id,
-          name: instance.customName,
+          name: instance.internalName || instance.customName,
           instanceName: instance.instanceName,
+          evolutionInstanceName: (instance as any).evolutionInstanceName || null,
           status: instance.status,
           createdAt: instance.createdAt,
         },
@@ -127,8 +141,9 @@ router.get('/fetchInstances', async (req: AuthRequest, res) => {
     }
 
     const enriched = userInstances.map((dbInstance: any) => {
+      const evolutionName = dbInstance.evolutionInstanceName || dbInstance.instanceName
       const evolutionData = allEvolutionInstances.find(
-        (e: any) => e.instance?.instanceName === dbInstance.instanceName
+        (e: any) => e.instance?.instanceName === evolutionName
       )
 
       return {
@@ -160,8 +175,10 @@ router.get('/connectionState/:instanceName', async (req: AuthRequest, res) => {
       return res.status(404).json({ success: false, message: 'Instance not found' })
     }
 
+    const evolutionName = (dbInstance as any).evolutionInstanceName || dbInstance.instanceName
+
     try {
-      const state = await evolutionAPI.getConnectionState(dbInstance.instanceName)
+      const state = await evolutionAPI.getConnectionState(evolutionName)
       const rawState = state.instance?.state || state.state || 'close'
 
       await prisma.instance.update({
@@ -171,13 +188,13 @@ router.get('/connectionState/:instanceName', async (req: AuthRequest, res) => {
 
       return res.json({
         success: true,
-        data: { state: rawState, instanceName: dbInstance.instanceName }
+        data: { state: rawState, instanceName: evolutionName }
       })
     } catch (evolutionError: any) {
       console.warn('[STATE] Evolution API error, using DB fallback:', evolutionError?.message)
       return res.json({
         success: true,
-        data: { state: dbInstance.status, instanceName: dbInstance.instanceName }
+        data: { state: dbInstance.status, instanceName: evolutionName }
       })
     }
   } catch (error: any) {
@@ -202,9 +219,11 @@ router.get('/status/:instanceName', async (req: AuthRequest, res) => {
       return res.status(404).json({ success: false, message: 'Instance not found' })
     }
 
+    const evolutionName = (dbInstance as any).evolutionInstanceName || dbInstance.instanceName
+
     let rawState = dbInstance.status
     try {
-      const state = await evolutionAPI.getConnectionState(instanceName)
+      const state = await evolutionAPI.getConnectionState(evolutionName)
       rawState = state.instance?.state || state.state || dbInstance.status
 
       // Persist the latest status
@@ -254,7 +273,8 @@ router.get('/connect/:instanceName', async (req: AuthRequest, res) => {
       return res.status(404).json({ success: false, message: 'Instance not found' })
     }
 
-    const result = await evolutionAPI.connectInstance(dbInstance.instanceName)
+    const evolutionName = (dbInstance as any).evolutionInstanceName || dbInstance.instanceName
+    const result = await evolutionAPI.connectInstance(evolutionName)
     return res.json({ success: true, data: result })
   } catch (error: any) {
     const msg = error?.response?.data?.message || error?.message || 'Unknown error'
@@ -274,7 +294,8 @@ router.get('/qrcode/:instanceName', async (req: AuthRequest, res) => {
       return res.status(404).json({ success: false, message: 'Instance not found' })
     }
 
-    const qrData = await evolutionAPI.fetchQRCode(instanceName)
+    const evolutionName = (dbInstance as any).evolutionInstanceName || dbInstance.instanceName
+    const qrData = await evolutionAPI.fetchQRCode(evolutionName)
     const qrBase64 = qrData?.qrcode?.base64 || qrData?.base64 || null
 
     return res.json({

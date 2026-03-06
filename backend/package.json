@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "set NODE_ENV=development&& tsx watch src/index.ts",
     "build": "tsc",
+    "prestart": "npx prisma db push --accept-data-loss && npx prisma generate",
     "start": "node dist/index.js",
     "postinstall": "npm run build && npx prisma generate",
     "db:health": "curl -s http://localhost:3001/api/health | jq .",

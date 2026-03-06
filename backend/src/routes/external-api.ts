@@ -29,9 +29,11 @@ router.post('/send-message', instanceTokenAuth, async (req: Request, res: Respon
       })
     }
 
+    const evolutionName = (instance as any).evolutionInstanceName || instance.instanceName
+
     try {
       const response = await axios.post(
-        `${env.EVOLUTION_API_URL}/message/sendText/${instance.instanceName}`,
+        `${env.EVOLUTION_API_URL}/message/sendText/${evolutionName}`,
         {
           number: recipient,
           text: message
@@ -99,11 +101,13 @@ router.get('/instance-status', instanceTokenAuth, async (req: Request, res: Resp
   try {
     const instance = req.instanceAuth!.instance
 
+    const evolutionName = (instance as any).evolutionInstanceName || instance.instanceName
+
     let connected = false
     if (instance.status === 'active' || instance.status === 'connected') {
       try {
         const response = await axios.get(
-          `${env.EVOLUTION_API_URL}/instance/connectionState/${instance.instanceName}`,
+          `${env.EVOLUTION_API_URL}/instance/connectionState/${evolutionName}`,
           {
             headers: {
               'apikey': instance.evolutionApiKey || env.EVOLUTION_API_KEY
