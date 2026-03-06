@@ -173,8 +173,8 @@ export default function DocsPage() {
 Content-Type: application/json
 
 {
-  "name": "John Doe",
-  "email": "john@example.com",
+  "name": "Moussa Traoré",
+  "email": "moussa.traore@exemple.com",
   "password": "SecurePassword123!"
 }`}
                       />
@@ -189,8 +189,8 @@ Content-Type: application/json
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     "user": {
       "id": "d992fe3f",
-      "email": "john@example.com",
-      "name": "John Doe",
+      "email": "moussa.traore@exemple.com",
+      "name": "Moussa Traoré",
       "plan": "free",
       "maxInstances": 1
     }
@@ -435,7 +435,7 @@ Authorization: Bearer {token}`}
       {
         "id": "33612345678@s.whatsapp.net",
         "contactId": "33612345678@s.whatsapp.net",
-        "contactName": "Jean Dupont",
+        "contactName": "Moussa Traoré",
         "unreadCount": 3,
         "lastMessage": {
           "content": "Merci !",
