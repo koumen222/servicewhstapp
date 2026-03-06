@@ -115,24 +115,41 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
       }
 
       const d = result.data;
+      const evolutionName = d?.instance?.instanceName;
+      const evolutionInstanceId = d?.instance?.instanceId || '';
+      const evolutionStatus = d?.instance?.status || "pending";
       const newInstance: Instance = {
-        id: d.instance.id,
-        name: d.instance.name,
-        instanceName: d.instance.instanceName,
-        status: "close",
-        connectionStatus: "close",
-        createdAt: d.instance.createdAt,
+        id: d.dbId,
+        name: evolutionName,
+        instanceName: evolutionName,
+        evolutionInstanceId,
+        status: evolutionStatus,
+        connectionStatus: evolutionStatus,
+        createdAt: new Date().toISOString(),
         apiKeys: [],
         quotas: [],
         stats: { messagesLast30Days: 0, totalApiKeys: 1 },
       };
 
       setInstance(newInstance);
-      setApiKey(d.apiKey?.key ?? "");
+      setApiKey(evolutionInstanceId);
       setStep("choose");
       onCreated(newInstance);
     } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.response?.data?.error || "Failed to create instance";
+      const status = err?.response?.status;
+      const errorData = err?.response?.data;
+      const providerMessage = errorData?.providerData?.response?.message?.[0];
+
+      let msg = errorData?.message || errorData?.error || "Failed to create instance";
+
+      if (status === 409 || errorData?.code === "INSTANCE_NAME_ALREADY_EXISTS") {
+        msg = "Ce nom d'instance est déjà utilisé sur Evolution. Choisissez un autre nom.";
+      } else if (!err?.response) {
+        msg = "Erreur réseau: backend indisponible. Vérifiez que le serveur API est lancé sur http://localhost:3001.";
+      } else if (status === 502 && providerMessage) {
+        msg = `Evolution API: ${providerMessage}`;
+      }
+
       console.error("Frontend error:", err);
       setError("customName", { message: msg });
     }
@@ -205,14 +222,15 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
     setQrLoading(true);
     setQrError(null);
     try {
-      const res = await instanceApi.getQRCode(instance.instanceName);
+      // Use new MongoDB refresh-qr endpoint
+      const res = await instancesApi.refreshQR(instance.instanceName);
       if (!res.data?.success) {
         const errorMsg = res.data?.message || "Échec du rafraîchissement";
         console.error("❌ Refresh QR error:", errorMsg);
         setQrError(errorMsg);
         return;
       }
-      const qr = res.data.data?.qrCode;
+      const qr = res.data?.qrcode?.base64;
       if (qr) {
         setQrCode(qr.startsWith("data:") ? qr : `data:image/png;base64,${qr}`);
       } else {
@@ -284,8 +302,9 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
   };
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       <motion.div
+        key="create-instance-modal"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -321,7 +340,14 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
 
           {/* ── STEP: form ── */}
           {step === "form" && (
-            <form onSubmit={handleSubmit(onSubmit)} className="px-5 py-5">
+            <motion.div
+              key="form-step"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              <form onSubmit={handleSubmit(onSubmit)} className="px-5 py-5">
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-[#8a9a8a] mb-1.5">
@@ -352,12 +378,20 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
                   {isSubmitting ? <><Loader2 size={13} className="animate-spin" />Création…</> : <><Plus size={13} />Créer l'instance</>}
                 </button>
               </div>
-            </form>
+              </form>
+            </motion.div>
           )}
 
           {/* ── STEP: choose connection method ── */}
           {step === "choose" && instance && (
-            <div className="px-5 py-5 space-y-4">
+            <motion.div
+              key="choose-step"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+              className="px-5 py-5 space-y-4"
+            >
               <div className="flex flex-col items-center gap-2 py-2 text-center">
                 <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: "#0d2510" }}>
                   <CheckCircle2 size={24} className="text-[#22c55e]" />
@@ -431,12 +465,19 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
               </div>
 
               <button onClick={onClose} className="btn-ghost w-full text-[12px]">Passer pour le moment</button>
-            </div>
+            </motion.div>
           )}
 
           {/* ── STEP: QR code ── */}
           {step === "qr" && (
-            <div className="px-5 py-5 space-y-4">
+            <motion.div
+              key="qr-step"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+              className="px-5 py-5 space-y-4"
+            >
               <div className="flex items-start gap-3 p-3 rounded-lg bg-[#0d1f0d] border border-[#1a2e1a]">
                 <Smartphone size={14} className="text-[#22c55e] mt-0.5 shrink-0" />
                 <p className="text-[11px] text-[#6a9a6a] leading-relaxed">
@@ -483,12 +524,19 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
                 <button onClick={onClose} className="btn-green flex-1">Terminé</button>
               </div>
               <p className="text-center text-[10px] text-[#3a5a3a]">Vérification automatique du statut toutes les 5 secondes</p>
-            </div>
+            </motion.div>
           )}
 
           {/* ── STEP: phone number ── */}
           {step === "phone" && (
-            <div className="px-5 py-5 space-y-4">
+            <motion.div
+              key="phone-step"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+              className="px-5 py-5 space-y-4"
+            >
               <div className="flex items-start gap-3 p-3 rounded-lg bg-[#0d1f0d] border border-[#1a2e1a]">
                 <Phone size={14} className="text-[#22c55e] mt-0.5 shrink-0" />
                 <p className="text-[11px] text-[#6a9a6a] leading-relaxed">
@@ -551,12 +599,19 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
                   <p className="text-center text-[10px] text-[#3a5a3a]">Vérification automatique du statut toutes les 5 secondes</p>
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
 
           {/* ── STEP: connected ── */}
           {step === "connected" && (
-            <div className="px-5 py-5 space-y-4">
+            <motion.div
+              key="connected-step"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+              className="px-5 py-5 space-y-4"
+            >
               <div className="flex flex-col items-center gap-3 py-4 text-center">
                 <motion.div
                   initial={{ scale: 0 }}
@@ -582,7 +637,7 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
               </div>
 
               <button onClick={onClose} className="btn-green w-full">Aller au tableau de bord</button>
-            </div>
+            </motion.div>
           )}
         </motion.div>
       </motion.div>

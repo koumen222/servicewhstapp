@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, RefreshCw, CheckCircle2, Smartphone, Loader2, AlertCircle } from "lucide-react";
-import { instanceApi } from "@/lib/api";
+import { X, RefreshCw, CheckCircle2, Smartphone, Loader2, AlertCircle, QrCode } from "lucide-react";
+import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import type { Instance } from "@/lib/types";
 
@@ -13,149 +13,100 @@ interface QRScannerModalProps {
 }
 
 export function QRScannerModal({ instance, onClose }: QRScannerModalProps) {
-  const [qrData, setQrData] = useState<string | null>(null);
+  const [qrSrc, setQrSrc] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
-  const [connectionState, setConnectionState] = useState<"disconnected" | "connecting" | "connected">("disconnected");
-
-  const statusPollingRef = useRef<NodeJS.Timeout | null>(null);
-  const qrRefreshRef = useRef<NodeJS.Timeout | null>(null);
+  const fetchIdRef = useRef(0);
+  const statusPollRef = useRef<NodeJS.Timeout | null>(null);
   const mountedRef = useRef(true);
+  const connectedRef = useRef(false);
 
   useEffect(() => {
+    connectedRef.current = connected;
+  }, [connected]);
+
+  function stopStatusPolling() {
+    if (statusPollRef.current) {
+      clearInterval(statusPollRef.current);
+      statusPollRef.current = null;
+    }
+  }
+
+  async function checkConnectionStatus(instanceName: string) {
+    if (!mountedRef.current || connectedRef.current) return;
+
+    try {
+      const res = await api.post(`/api/check-connection/${encodeURIComponent(instanceName)}`);
+      const isConnected = Boolean(res.data?.connected) || res.data?.status === "open";
+
+      if (isConnected) {
+        if (!mountedRef.current) return;
+        setConnected(true);
+        setError(null);
+        stopStatusPolling();
+      }
+    } catch {
+      // Silent: keep polling while user is on modal
+    }
+  }
+
+  function startStatusPolling(instanceName: string) {
+    stopStatusPolling();
+    void checkConnectionStatus(instanceName);
+    statusPollRef.current = setInterval(() => {
+      void checkConnectionStatus(instanceName);
+    }, 5000);
+  }
+
+  useEffect(() => {
+    mountedRef.current = true;
     return () => {
       mountedRef.current = false;
-      if (statusPollingRef.current) clearInterval(statusPollingRef.current);
-      if (qrRefreshRef.current) clearInterval(qrRefreshRef.current);
+      stopStatusPolling();
     };
   }, []);
 
-  const fetchQR = useCallback(async () => {
-    if (!instance) {
-      console.error("❌ Instance manquante pour QR code");
-      return;
-    }
-    if (!instance.instanceName) {
-      console.error("❌ Instance name manquant:", instance);
-      setError("Instance ID invalide. Impossible de générer le QR code.");
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await instanceApi.getQRCode(instance.instanceName);
-      if (!mountedRef.current) return;
-
-      if (!res.data?.success) {
-        const errorMsg = res.data?.message || "Failed to get QR code";
-        console.error("❌ QR code error:", errorMsg);
-        setError(errorMsg);
-        return;
-      }
-      const qr = res.data.data?.qrCode;
-      if (qr) {
-        setQrData(qr.startsWith("data:") ? qr : `data:image/png;base64,${qr}`);
-      } else {
-        console.error("❌ QR code vide dans la réponse");
-        setError("QR code non disponible. L'instance est peut-être déjà connectée.");
-      }
-    } catch (err: any) {
-      if (!mountedRef.current) return;
-      
-      const status = err?.response?.status;
-      const errorData = err?.response?.data;
-      let detailedMsg = "Erreur lors du chargement du QR code";
-      
-      if (status === 404) {
-        detailedMsg = `Instance introuvable (404). Vérifiez que l'instance existe sur le serveur.`;
-        console.error("❌ 404 - Instance non trouvée:", instance.instanceName);
-      } else if (status === 500) {
-        detailedMsg = `Erreur serveur (500). ${errorData?.message || 'Le serveur a rencontré une erreur.'}` ;
-        console.error("❌ 500 - Erreur serveur:", errorData);
-      } else if (status === 401 || status === 403) {
-        detailedMsg = `Non autorisé (${status}). Vérifiez vos permissions.`;
-        console.error(`❌ ${status} - Non autorisé`);
-      } else if (err?.code === 'ECONNREFUSED' || err?.code === 'ERR_NETWORK') {
-        detailedMsg = "Impossible de contacter le serveur. Vérifiez votre connexion.";
-        console.error("❌ Erreur réseau:", err?.code);
-      } else {
-        detailedMsg = errorData?.message || err?.message || "L'instance n'est peut-être pas démarrée.";
-        console.error("❌ QR code error:", { status, error: err, instanceName: instance.instanceName });
-      }
-      
-      setError(detailedMsg);
-    } finally {
-      if (mountedRef.current) setLoading(false);
-    }
-  }, [instance]);
-
-  // Poll status every 5 seconds — only check state=open
-  const startStatusPolling = useCallback(() => {
-    if (!instance || statusPollingRef.current) return;
-
-    const pollStatus = async () => {
-      if (!mountedRef.current || connected) return;
-      try {
-        const res = await instanceApi.getStatus(instance.instanceName);
-        if (!mountedRef.current) return;
-
-        if (!res.data?.success) return;
-        const status = res.data.data?.status;
-
-        if (status === "connected") {
-          setConnectionState("connected");
-          setConnected(true);
-          if (statusPollingRef.current) clearInterval(statusPollingRef.current);
-          if (qrRefreshRef.current) clearInterval(qrRefreshRef.current);
-        } else if (status === "connecting") {
-          setConnectionState("connecting");
-        } else {
-          setConnectionState("disconnected");
-        }
-      } catch {
-        // Silent — keep polling
-      }
-    };
-
-    statusPollingRef.current = setInterval(pollStatus, 5000);
-  }, [instance, connected]);
-
   useEffect(() => {
     if (!instance) return;
-
-    setQrData(null);
+    setQrSrc(null);
     setError(null);
+    setLoading(false);
     setConnected(false);
-    setConnectionState("disconnected");
-
-    fetchQR();
-    startStatusPolling();
-
-    // Also refresh QR every 30s while waiting
-    qrRefreshRef.current = setInterval(() => {
-      if (!connected && mountedRef.current) fetchQR();
-    }, 30_000);
-
-    return () => {
-      if (statusPollingRef.current) { clearInterval(statusPollingRef.current); statusPollingRef.current = null; }
-      if (qrRefreshRef.current) { clearInterval(qrRefreshRef.current); qrRefreshRef.current = null; }
-    };
+    connectedRef.current = false;
+    stopStatusPolling();
   }, [instance?.id]);
 
   if (!instance) return null;
 
-  const statusDot = {
-    connected: "bg-[#22c55e]",
-    connecting: "bg-[#f59e0b] animate-pulse",
-    disconnected: "bg-[#6b7280]",
-  }[connectionState];
+  async function handleFetchQR() {
+    if (!instance?.instanceName) return;
 
-  const statusText = {
-    connected: "🟢 Connected!",
-    connecting: "🟡 Waiting for scan…",
-    disconnected: "Scan the QR code to connect",
-  }[connectionState];
+    const id = ++fetchIdRef.current;
+    setLoading(true);
+    setError(null);
+    setConnected(false);
+    connectedRef.current = false;
+
+    try {
+      const res = await api.get(`/api/instances/${encodeURIComponent(instance.instanceName)}/qr-code`, { timeout: 20000 });
+      if (id !== fetchIdRef.current) return; // stale
+
+      const qr = res.data?.data?.qrCode;
+      if (qr) {
+        setQrSrc(qr.startsWith("data:") ? qr : `data:image/png;base64,${qr}`);
+        startStatusPolling(instance.instanceName);
+      } else {
+        setError("QR code non disponible. L'instance est peut-être déjà connectée.");
+      }
+    } catch (err: any) {
+      if (id !== fetchIdRef.current) return; // stale
+      const msg = err?.response?.data?.message || err?.message || "Erreur lors du chargement du QR code";
+      setError(msg);
+    } finally {
+      if (id === fetchIdRef.current) setLoading(false);
+    }
+  }
 
   return (
     <AnimatePresence>
@@ -199,78 +150,84 @@ export function QRScannerModal({ instance, onClose }: QRScannerModalProps) {
               </p>
             </div>
 
-            {/* Status pill */}
-            <div className="flex items-center gap-2 mb-3">
-              <div className={cn("w-2 h-2 rounded-full shrink-0", statusDot)} />
-              <span className="text-[11px] text-[#5a7a5a]">{statusText}</span>
-            </div>
-
             {/* QR area */}
             <div
               className="relative flex items-center justify-center rounded-xl overflow-hidden"
               style={{ background: "#0a0a0a", border: "1px solid #1e1e1e", minHeight: 240 }}
             >
+              {/* Loading */}
               {loading && (
                 <div className="flex flex-col items-center gap-2">
                   <Loader2 size={28} className="text-[#22c55e] animate-spin" />
-                  <p className="text-xs text-[#5a7a5a]">Loading QR…</p>
+                  <p className="text-xs text-[#5a7a5a]">Génération du QR…</p>
                 </div>
               )}
 
-              {!loading && error && !connected && (
+              {/* Connected */}
+              {!loading && connected && (
+                <div className="flex flex-col items-center gap-3 px-6 text-center">
+                  <CheckCircle2 size={40} className="text-[#22c55e]" />
+                  <p className="text-sm font-semibold text-[#22c55e]">Connexion réussie</p>
+                  <p className="text-xs text-[#5a7a5a]">WhatsApp est connecté. Vous pouvez fermer cette fenêtre.</p>
+                </div>
+              )}
+
+              {/* Error */}
+              {!loading && !connected && error && (
                 <div className="flex flex-col items-center gap-2 px-6 text-center">
                   <AlertCircle size={24} className="text-red-400" />
                   <p className="text-xs text-red-400">{error}</p>
                   <button
-                    onClick={fetchQR}
+                    onClick={handleFetchQR}
                     className="mt-1 text-[11px] text-[#22c55e] hover:text-[#4ade80] flex items-center gap-1"
                   >
-                    <RefreshCw size={10} /> Try again
+                    <RefreshCw size={10} /> Réessayer
                   </button>
                 </div>
               )}
 
-              {!loading && connected && (
-                <motion.div
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className="flex flex-col items-center gap-3"
-                >
-                  <CheckCircle2 size={48} className="text-[#22c55e]" />
-                  <p className="text-sm font-bold text-[#22c55e]">Connected!</p>
-                  <p className="text-xs text-[#5a7a5a]">WhatsApp linked successfully.</p>
-                </motion.div>
+              {/* Initial state — no QR yet */}
+              {!loading && !connected && !error && !qrSrc && (
+                <div className="flex flex-col items-center gap-3 px-6 text-center py-4">
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "#0d1f0d", border: "1px solid #1a2e1a" }}>
+                    <QrCode size={32} className="text-[#22c55e]" />
+                  </div>
+                  <p className="text-sm font-medium text-white">Prêt à scanner</p>
+                  <button
+                    onClick={handleFetchQR}
+                    className="btn-green mt-2 flex items-center gap-2"
+                  >
+                    <QrCode size={14} />
+                    Générer QR Code
+                  </button>
+                </div>
               )}
 
-              {!loading && !error && !connected && qrData && (
+              {/* QR code displayed */}
+              {!loading && !connected && !error && qrSrc && (
                 <img
-                  src={qrData}
+                  src={qrSrc}
                   alt="QR Code"
                   className="w-52 h-52 object-contain p-2"
                   style={{ imageRendering: "pixelated" }}
                 />
               )}
             </div>
-
-            <p className="mt-2 text-center text-[10px] text-[#3a5a3a]">
-              {connected ? "Connected! You can close this window." : "Status checks every 5s · QR refreshes every 30s"}
-            </p>
           </div>
 
           {/* Footer */}
           <div className="px-5 pb-4 flex gap-2">
-            {!connected && (
+            {qrSrc && !loading && !connected && (
               <button
-                onClick={fetchQR}
-                disabled={loading}
+                onClick={handleFetchQR}
                 className="btn-ghost flex-1 flex items-center justify-center gap-1.5"
               >
-                <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+                <RefreshCw size={13} />
                 Refresh QR
               </button>
             )}
-            <button onClick={onClose} className={cn("btn-green", connected ? "w-full" : "flex-1")}>
-              {connected ? "Done ✓" : "Done"}
+            <button onClick={onClose} className={cn("btn-green", connected || !qrSrc || loading ? "w-full" : "flex-1")}>
+              Done
             </button>
           </div>
         </motion.div>

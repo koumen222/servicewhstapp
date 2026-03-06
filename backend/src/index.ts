@@ -3,29 +3,13 @@ import cors from 'cors'
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
 import { env } from './config/env.js'
+import { connectMongo } from './lib/mongo.js'
 import authRoutes from './routes/auth.js'
-import instanceRoutes from './routes/instances.js'
 import instancesNewRoutes from './routes/instances-new.js'
-import externalApiRoutes from './routes/external-api.js'
-import messageRoutes from './routes/messages.js'
-import healthRoutes from './routes/health.js'
-import publicRoutes from './routes/public.js'
 import instanceManagementRoutes from './routes/instanceManagement.js'
-import notificationRoutes from './routes/notifications.js'
-import subscriptionRoutes from './routes/subscriptions.js'
-import webhookRoutes from './routes/webhooks.js'
-import apiKeysRoutes from './routes/apiKeys.js'
-import integrationsRoutes from './routes/integrations.js'
-import { 
-  multiTenantIsolation, 
-  userRateLimit, 
-  sanitizeInput, 
-  suspiciousActivityDetector, 
-  securityLogger, 
-  securityHeaders 
-} from './middleware/securityChecks.js'
+import whatsappInstanceRoutes from './routes/whatsapp/instances.js'
+import publicWhatsAppRoutes from './routes/whatsapp/public.js'
 import { authMiddleware } from './middleware/auth.js'
-import { prisma } from './lib/prisma.js'
 
 declare global {
   namespace Express {
@@ -53,7 +37,6 @@ app.set('etag', false)
 app.set('trust proxy', 1)
 
 // =============== SÉCURITÉ GLOBALE ===============
-app.use(securityHeaders)
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -63,11 +46,6 @@ app.use(helmet({
     }
   }
 }))
-
-// Logging de sécurité
-app.use(securityLogger)
-app.use(suspiciousActivityDetector)
-app.use(sanitizeInput)
 
 const allowedOrigins = env.FRONTEND_URL.split(',').map(o => o.trim().replace(/\/$/, ''))
 console.log('🔧 CORS allowedOrigins:', allowedOrigins)
@@ -143,35 +121,46 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 
+// =============== INITIALISATION BASES DE DONNÉES ===============
+// Initialiser MongoDB (instances WhatsApp)
+connectMongo().catch(err => {
+  console.error('❌ Failed to connect to MongoDB:', err)
+  process.exit(1)
+})
+
 // =============== WEBHOOKS (sans authentification - Evolution API) ===============
-app.use('/webhooks', webhookRoutes)
-console.log('✅ Registered webhook endpoint: /webhooks/evolution')
+// app.use('/webhooks', webhookRoutes)
+// console.log('✅ Registered webhook endpoint: /webhooks/evolution')
 
 // =============== ROUTES PUBLIQUES (avec clés API) ===============
-app.use('/api/v1', publicRoutes)
+// app.use('/api/v1', publicRoutes)
 
 // =============== API EXTERNE (avec tokens d'instance) ===============
-app.use('/api/v1', externalApiRoutes)
+app.use('/api/v1/external', publicWhatsAppRoutes)
+console.log('✅ Registered External WhatsApp routes: /api/v1/external/whatsapp/send-direct')
 
 // =============== ROUTES AUTHENTIFIÉES (JWT) ===============
-app.use('/api/health', healthRoutes)
+// Health check simple (sans authentification)
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    version: process.env.npm_package_version || '1.0.0',
+    environment: process.env.NODE_ENV || 'development'
+  })
+})
+
 app.use('/api/auth', authRoutes)
 
-app.use('/instances', authMiddleware, userRateLimit, multiTenantIsolation, instancesNewRoutes)
+app.use('/api/instances', authMiddleware, instancesNewRoutes)
 
-// Routes protégées par JWT avec isolation multi-tenant
-app.use('/api/instances', authMiddleware, userRateLimit, multiTenantIsolation, instanceManagementRoutes)
-console.log('✅ Registered routes: /api/instance/* (status, qrcode, create, etc.)')
-app.use('/api/instance', authMiddleware, userRateLimit, multiTenantIsolation, instanceRoutes)
-app.use('/api/message', authMiddleware, userRateLimit, multiTenantIsolation, messageRoutes)
-app.use('/api/notifications', authMiddleware, notificationRoutes)
-app.use('/api/subscriptions', authMiddleware, subscriptionRoutes)
+// Routes protégées par JWT
+app.use('/api/instance-management', authMiddleware, instanceManagementRoutes)
+console.log('✅ Registered routes: /api/instance-management/*')
 
-// =============== ROUTES DE GESTION DES CLÉS API ===============
-app.use('/api/api-keys', authMiddleware, userRateLimit, multiTenantIsolation, apiKeysRoutes)
-
-// =============== ROUTES D'INTÉGRATION WHATSAPP ===============
-app.use('/api/integrations', authMiddleware, userRateLimit, integrationsRoutes)
+// =============== ROUTES WHATSAPP INSTANCE (MongoDB) ===============
+app.use('/api', authMiddleware, whatsappInstanceRoutes)
+console.log('✅ Registered WhatsApp instance routes (auth): /api/create-instance, /api/refresh-qr/:id, /api/check-connection/:id, /api/send-message/:id')
 
 // =============== ENDPOINTS DE SANTÉ ===============
 // Health check simple (sans authentification)
@@ -181,24 +170,6 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     version: process.env.npm_package_version || '1.0.0',
     environment: process.env.NODE_ENV || 'development'
-  })
-})
-
-// Health check détaillé (avec authentification)
-app.get('/api/health/detailed', authMiddleware, (req, res) => {
-  res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    services: {
-      database: 'connected', // TODO: vérifier la connexion DB
-      evolutionApi: 'connected', // TODO: vérifier la connexion Evolution API
-      redis: process.env.REDIS_URL ? 'connected' : 'not_configured'
-    },
-    stats: {
-      uptime: process.uptime(),
-      memory: process.memoryUsage(),
-      pid: process.pid
-    }
   })
 })
 
@@ -247,8 +218,6 @@ const PORT = Number(env.PORT) || 3001
 const gracefulShutdown = (signal: string) => {
   console.log(`📴 Received ${signal}, shutting down gracefully...`)
   
-  // TODO: Fermer les connexions DB, Redis, etc.
-  // await prisma.$disconnect()
   
   process.exit(0)
 }

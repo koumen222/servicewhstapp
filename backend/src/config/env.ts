@@ -13,7 +13,7 @@ export const env = {
   EVOLUTION_API_KEY: process.env.EVOLUTION_API_KEY || '',
   EVOLUTION_MASTER_API_KEY: process.env.EVOLUTION_MASTER_API_KEY || process.env.EVOLUTION_API_KEY || '',
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
-  DATABASE_CONNECTION_URI: process.env.DATABASE_CONNECTION_URI || 'file:./dev.db',
+  MONGODB_URI: process.env.MONGODB_URI || '',
 }
 
 // Logs de débogage pour Evolution API

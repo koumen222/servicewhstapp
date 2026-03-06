@@ -7,7 +7,6 @@ import { useAppStore } from "@/store/useStore";
 import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { ChatWindow } from "@/components/ChatWindow";
 import { useRealTimeChats } from "@/hooks/useRealTimeChats";
-import { useInstanceStatus } from "@/hooks/useInstanceStatus";
 import { instanceApi } from "@/lib/api";
 import type { Chat, ConnectionStatus as ConnectionStatusType } from "@/lib/types";
 
@@ -18,22 +17,25 @@ export default function ChatsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   
   // Get active (connected) instance first, then any instance
-  const activeInstance = instances.find(i => i.status === "open" || i.connectionStatus === "open") || instances[0];
+  const activeInstance = instances.find(i => {
+    const s = (i.status || '') as string;
+    const cs = (i.connectionStatus || '') as string;
+    return s === "open" || cs === "connected" || cs === "open";
+  }) || instances[0];
   
-  // Real-time status hook — use instance.instanceName (5-digit real ID), NOT instance.name (customName)
-  // Disable polling when a chat is open to prevent constant refreshing
-  const {
-    status: connectionStatus,
-    connectionInfo,
-  } = useInstanceStatus({
-    instanceName: activeInstance?.instanceName || "",
-    enabled: !!activeInstance?.instanceName && !selectedChat,
-    pollInterval: 5000,
-  });
+  // Statut de connexion basé sur les données synchronisées depuis Evolution (pas de polling)
+  const rawStatus = (activeInstance?.status || 'unknown') as string;
+  const rawConn = (activeInstance?.connectionStatus || '') as string;
+  const isConnected = rawStatus === 'open' || rawConn === 'connected';
+  const connectionStatus = isConnected ? 'connected' : rawStatus === 'connecting' ? 'connecting' : 'disconnected';
 
-  const isConnected = connectionStatus === "connected";
+  console.log('[ChatsPage] instanceName:', activeInstance?.instanceName);
+  console.log('[ChatsPage] status:', activeInstance?.status);
+  console.log('[ChatsPage] connectionStatus:', activeInstance?.connectionStatus);
+  console.log('[ChatsPage] isConnected:', isConnected);
+  console.log('[ChatsPage] hookEnabled:', isConnected && !!activeInstance?.instanceName && !selectedChat);
 
-  // Real-time chats hook — only fetch when connected and no chat is open
+  // Real-time chats hook — only fetch when connected
   const {
     chats: realTimeChats,
     isLoading: chatsLoading,
@@ -42,7 +44,7 @@ export default function ChatsPage() {
   } = useRealTimeChats({
     instanceId: activeInstance?.instanceName,
     enabled: isConnected && !!activeInstance?.instanceName && !selectedChat,
-    pollInterval: 3000,
+    pollInterval: 10000,
   });
   
   // Use only real-time chats from API
@@ -159,7 +161,7 @@ export default function ChatsPage() {
             <ConnectionStatus
               status={connectionStatus as ConnectionStatusType}
               instanceName={activeInstance.instanceName}
-              profileName={connectionInfo?.profileName || activeInstance.profileName || undefined}
+              profileName={activeInstance.profileName || undefined}
               showInstanceName={true}
             />
           </div>

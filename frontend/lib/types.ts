@@ -1,5 +1,5 @@
 export type UserRole = 'user' | 'admin';
-export type InstanceStatus = 'open' | 'close' | 'connecting' | 'expired' | 'unknown';
+export type InstanceStatus = 'open' | 'close' | 'connecting' | 'expired' | 'unknown' | 'connected' | 'disconnected';
 export type ConnectionStatus = 'connected' | 'disconnected' | 'connecting' | 'expired' | 'unknown';
 export type MessageStatus = 'pending' | 'sent' | 'delivered' | 'read' | 'failed';
 export type MessageType = 'text' | 'image' | 'audio' | 'video' | 'document';
@@ -49,6 +49,7 @@ export interface Instance {
   id: string;
   name: string;
   instanceName: string;
+  evolutionInstanceId?: string | null;
   instanceToken?: string | null;
   status: InstanceStatus;
   connectionStatus: InstanceStatus;

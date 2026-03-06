@@ -1,7 +1,6 @@
 import express from 'express'
-import { ApiKeyService } from '../services/apiKeyService.js'
-import { QuotaService } from '../services/quotaService.js'
-import { prisma } from '../lib/prisma.js'
+import { InstanceService } from '../services/instanceService.js'
+import { UserService } from '../services/userService.js'
 import { buildInstanceName } from '../utils/instanceName.js'
 import axios from 'axios'
 import crypto from 'crypto'
@@ -62,14 +61,7 @@ router.post('/create-instance', async (req, res) => {
     }
 
     // Récupérer l'utilisateur avec ses quotas
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: { 
-        instances: {
-          where: { isActive: true }
-        }
-      }
-    })
+    const user = await UserService.findById(userId)
 
     if (!user || !user.isActive) {
       return res.status(403).json({
@@ -79,12 +71,13 @@ router.post('/create-instance', async (req, res) => {
     }
 
     // Vérifier les limites d'instances selon le plan
-    if (user.instances.length >= user.maxInstances) {
+    const userInstances = await InstanceService.countUserInstances(userId, true)
+    if (userInstances >= user.maxInstances) {
       return res.status(400).json({
         error: 'Instance limit reached',
         message: `Your ${user.plan} plan allows maximum ${user.maxInstances} instances`,
         code: 'INSTANCE_LIMIT_REACHED',
-        currentCount: user.instances.length,
+        currentCount: userInstances,
         maxAllowed: user.maxInstances
       })
     }
@@ -96,7 +89,7 @@ router.post('/create-instance', async (req, res) => {
     
     while (attempts < maxAttempts) {
       instanceName = buildInstanceName(userId, customName.trim())
-      const existing = await prisma.instance.findUnique({ where: { instanceName } })
+      const existing = await InstanceService.findByInstanceName(instanceName)
       if (!existing) break
       attempts++
     }
@@ -118,29 +111,27 @@ router.post('/create-instance', async (req, res) => {
       || crypto.randomBytes(32).toString('hex')
 
     // Créer l'instance dans notre base de données
-    const instance = await prisma.instance.create({
-      data: ({
-        userId,
-        instanceName,
-        evolutionInstanceName: instanceName,
-        customName: customName.trim(),
-        status: 'close',
-        evolutionApiKey,
-        instanceUrl: process.env.EVOLUTION_API_URL,
-        isActive: true
-      } as any)
-    })
-
-    // Initialiser les quotas pour cette instance
-    await QuotaService.initializeInstanceQuotas(instance.id, user.plan)
-
-    // Créer une clé API par défaut
-    const { apiKey, keyData } = await ApiKeyService.createApiKey({
+    const instance = await InstanceService.createUserInstance({
       userId,
-      instanceId: instance.id,
-      name: `${customName} - Default Key`,
-      permissions: ['send_message', 'get_instance_status']
+      instanceName,
+      customName: customName.trim(),
+      instanceToken: evolutionApiKey,
+      status: 'disconnected',
+      isActive: true
     })
+
+    // Initialiser les quotas pour cette instance (TODO: implement QuotaService)
+    // await QuotaService.initializeInstanceQuotas(instance._id!.toString(), user.plan)
+
+    // Créer une clé API par défaut (TODO: implement ApiKeyService)
+    // const { apiKey, keyData } = await ApiKeyService.createApiKey({
+    //   userId,
+    //   instanceId: instance._id!.toString(),
+    //   name: `${customName} - Default Key`,
+    //   permissions: ['send_message', 'get_instance_status']
+    // })
+    
+    const apiKey = 'temp-key-' + instance.instanceToken
 
     // Réponse avec toutes les informations nécessaires
     const response = {
@@ -148,7 +139,7 @@ router.post('/create-instance', async (req, res) => {
       message: 'Instance created successfully',
       data: {
         instance: {
-          id: instance.id,
+          id: instance._id?.toString(),
           name: instance.customName,
           instanceName: instance.instanceName,
           status: instance.status,
@@ -156,12 +147,12 @@ router.post('/create-instance', async (req, res) => {
         },
         apiKey: {
           key: apiKey, // Clé en clair (sera affichée une seule fois)
-          id: keyData.id,
-          name: keyData.name,
-          prefix: keyData.keyPrefix,
-          permissions: keyData.permissions
+          id: 'temp-id',
+          name: 'Default Key',
+          prefix: 'temp',
+          permissions: ['send_message', 'get_instance_status']
         },
-        quotas: await QuotaService.getQuotaUsage(instance.id),
+        quotas: [], // TODO: implement QuotaService
         qrCode: evolutionResponse.qrcode || null
       }
     }
@@ -202,39 +193,7 @@ router.get('/', async (req, res) => {
       })
     }
 
-    const instances = await prisma.instance.findMany({
-      where: { 
-        userId,
-        isActive: true
-      },
-      include: {
-        apiKeys: {
-          where: { isActive: true },
-          select: {
-            id: true,
-            name: true,
-            keyPrefix: true,
-            permissions: true,
-            lastUsed: true,
-            usageCount: true,
-            createdAt: true
-          }
-        },
-        quotaUsage: true,
-        _count: {
-          select: {
-            messagesSent: {
-              where: {
-                createdAt: {
-                  gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Derniers 30 jours
-                }
-              }
-            }
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    })
+    const instances = await InstanceService.findUserInstances(userId, true)
 
     // Status mapping: Evolution API raw state → frontend ConnectionStatus
     const statusMap: Record<string, string> = {
@@ -246,17 +205,14 @@ router.get('/', async (req, res) => {
 
     // Enrichir les données avec le statut Evolution API (un appel par instance, pas fetchAll)
     const enrichedInstances = await Promise.all(
-      instances.map(async (instance) => {
+      instances.map(async (instance: any) => {
         let rawState = instance.status // fallback to DB value
         try {
           const stateResp = await getEvolutionConnectionState(instance.instanceName)
           rawState = stateResp.instance?.state || stateResp.state || instance.status
           // Persist updated status to DB if changed
           if (rawState !== instance.status) {
-            await prisma.instance.update({
-              where: { id: instance.id },
-              data: { status: rawState }
-            })
+            await InstanceService.updateUserInstance(instance._id!.toString(), userId, { status: rawState as any })
           }
         } catch (error) {
           console.warn(`[INSTANCES] Could not get live status for ${instance.instanceName}, using DB:`, (error as any)?.message)
@@ -265,7 +221,7 @@ router.get('/', async (req, res) => {
         const connectionStatus = statusMap[rawState] || 'disconnected'
 
         return {
-          id: instance.id,
+          id: instance._id?.toString(),
           name: instance.customName,
           instanceName: instance.instanceName,
           status: rawState,
@@ -273,18 +229,12 @@ router.get('/', async (req, res) => {
           profileName: instance.profileName,
           profilePictureUrl: instance.profilePictureUrl,
           createdAt: instance.createdAt,
-          lastUsed: instance.lastUsed,
-          apiKeys: instance.apiKeys,
-          quotas: instance.quotaUsage.map(quota => ({
-            type: quota.quotaType,
-            used: quota.currentUsage,
-            limit: quota.maxAllowed,
-            remaining: Math.max(0, quota.maxAllowed - quota.currentUsage),
-            resetDate: quota.resetDate
-          })),
+          lastUsed: instance.lastActivity,
+          apiKeys: [], // TODO: Get from ApiKeyService
+          quotas: [], // TODO: Get from QuotaService
           stats: {
-            messagesLast30Days: instance._count.messagesSent,
-            totalApiKeys: instance.apiKeys.length
+            messagesLast30Days: 0, // TODO: Get from MessageLogService
+            totalApiKeys: 0 // TODO: Get from ApiKeyService
           }
         }
       })
@@ -332,13 +282,7 @@ router.delete('/:instanceId', async (req, res) => {
     }
 
     // Vérifier que l'instance appartient bien à l'utilisateur
-    const instance = await prisma.instance.findFirst({
-      where: {
-        id: instanceId,
-        userId, // CRITICAL: isolation multi-tenant
-        isActive: true
-      }
-    })
+    const instance = await InstanceService.findUserInstanceById(instanceId, userId)
 
     if (!instance) {
       return res.status(404).json({
@@ -350,17 +294,14 @@ router.delete('/:instanceId', async (req, res) => {
 
     // Supprimer l'instance de Evolution API
     try {
-      await deleteEvolutionInstance(instance.instanceName, instance.evolutionApiKey!)
+      await deleteEvolutionInstance(instance.instanceName, instance.instanceToken!)
     } catch (evolutionError) {
       console.warn(`Failed to delete instance from Evolution API: ${evolutionError}`)
       // Continuer même si la suppression Evolution échoue
     }
 
-    // Supprimer en cascade : les clés API, quotas, et logs sont supprimés automatiquement
-    // grâce aux contraintes onDelete: Cascade dans le schéma Prisma
-    await prisma.instance.delete({
-      where: { id: instanceId }
-    })
+    // Supprimer l'instance de MongoDB
+    await InstanceService.deactivateUserInstance(instanceId, userId)
 
     const response = {
       success: true,
@@ -401,13 +342,7 @@ router.post('/:instanceId/restart', async (req, res) => {
       })
     }
 
-    const instance = await prisma.instance.findFirst({
-      where: {
-        id: instanceId,
-        userId,
-        isActive: true
-      }
-    })
+    const instance = await InstanceService.findUserInstanceById(instanceId, userId)
 
     if (!instance) {
       return res.status(404).json({
@@ -417,15 +352,12 @@ router.post('/:instanceId/restart', async (req, res) => {
     }
 
     // Redémarrer via Evolution API
-    await restartEvolutionInstance(instance.instanceName, instance.evolutionApiKey!)
+    await restartEvolutionInstance(instance.instanceName, instance.instanceToken!)
 
     // Mettre à jour le statut
-    await prisma.instance.update({
-      where: { id: instanceId },
-      data: {
-        status: 'connecting',
-        updatedAt: new Date()
-      }
+    await InstanceService.updateUserInstance(instanceId, userId, {
+      status: 'connecting',
+      updatedAt: new Date()
     })
 
     const response = {
@@ -466,13 +398,7 @@ router.get('/:instanceId/qr-code', async (req, res) => {
       })
     }
 
-    const instance = await prisma.instance.findFirst({
-      where: {
-        id: instanceId,
-        userId,
-        isActive: true
-      }
-    })
+    const instance = await InstanceService.findUserInstanceById(instanceId, userId)
 
     if (!instance) {
       return res.status(404).json({
@@ -482,7 +408,7 @@ router.get('/:instanceId/qr-code', async (req, res) => {
     }
 
     // Obtenir le QR code depuis Evolution API
-    const qrData = await getEvolutionQRCode(instance.instanceName, instance.evolutionApiKey!)
+    const qrData = await getEvolutionQRCode(instance.instanceName, instance.instanceToken!)
 
     const response = {
       success: true,

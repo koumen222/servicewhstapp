@@ -8,6 +8,14 @@ import { Header } from "@/components/Header";
 import { useAppStore } from "@/store/useStore";
 import { instancesApi } from "@/lib/api";
 
+// NoSSR component to prevent hydration mismatch
+function NoSSR({ children }: { children: React.ReactNode }) {
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => setIsClient(true), []);
+  if (!isClient) return null;
+  return <>{children}</>;
+}
+
 export default function DashboardLayout({
   children,
 }: {
@@ -75,29 +83,34 @@ export default function DashboardLayout({
       </div>
 
       {/* Mobile sidebar overlay */}
-      <AnimatePresence>
-        {mobileSidebarOpen && (
-          <>
+      {mobileSidebarOpen && (
+        <NoSSR>
+          <AnimatePresence>
             <motion.div
+              key="mobile-sidebar"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setMobileSidebarOpen(false)}
               className="fixed inset-0 z-40 lg:hidden"
-              style={{ background: "rgba(0,0,0,0.6)" }}
-            />
-            <motion.div
-              initial={{ x: -260 }}
-              animate={{ x: 0 }}
-              exit={{ x: -260 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed left-0 top-0 bottom-0 z-50 lg:hidden"
             >
-              <Sidebar mobile onClose={() => setMobileSidebarOpen(false)} />
+              <div
+                className="absolute inset-0"
+                style={{ background: "rgba(0,0,0,0.6)" }}
+                onClick={() => setMobileSidebarOpen(false)}
+              />
+              <motion.div
+                initial={{ x: -260 }}
+                animate={{ x: 0 }}
+                exit={{ x: -260 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                className="absolute left-0 top-0 bottom-0"
+              >
+                <Sidebar mobile onClose={() => setMobileSidebarOpen(false)} />
+              </motion.div>
             </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+          </AnimatePresence>
+        </NoSSR>
+      )}
 
       {/* Main content area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">

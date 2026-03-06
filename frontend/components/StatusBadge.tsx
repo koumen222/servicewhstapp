@@ -18,6 +18,12 @@ const STATUS_CONFIG: Record<
     bg: "bg-green-500/10",
     text: "text-green-400",
   },
+  connected: {
+    label: "Connected",
+    dot: "bg-green-500",
+    bg: "bg-green-500/10",
+    text: "text-green-400",
+  },
   connecting: {
     label: "Connecting",
     dot: "bg-yellow-500 animate-pulse",
@@ -25,6 +31,12 @@ const STATUS_CONFIG: Record<
     text: "text-yellow-400",
   },
   close: {
+    label: "Disconnected",
+    dot: "bg-gray-500",
+    bg: "bg-gray-500/10",
+    text: "text-gray-400",
+  },
+  disconnected: {
     label: "Disconnected",
     dot: "bg-gray-500",
     bg: "bg-gray-500/10",

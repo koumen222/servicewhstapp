@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { verifyToken } from '../lib/jwt.js'
-import { prisma } from '../lib/prisma.js'
+import { AuthService } from '../services/authService.mongo.js'
 
 // Types pour l'authentification JWT
 interface JWTPayload {
@@ -35,10 +34,9 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
       })
     }
 
-    let decoded: JWTPayload
-    try {
-      decoded = verifyToken(token) as JWTPayload
-    } catch (jwtError) {
+    // Vérifier le token avec AuthService et récupérer les données fraîches de l'utilisateur
+    const user = await AuthService.verifyToken(token)
+    if (!user) {
       return res.status(401).json({
         error: 'Invalid token',
         message: 'Token is invalid or expired',
@@ -46,28 +44,19 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
       })
     }
 
-    // Vérifier que l'utilisateur est actif
-    if (decoded.isActive === false) {
-      return res.status(403).json({
-        error: 'Account suspended',
-        message: 'Your account has been suspended',
-        code: 'ACCOUNT_SUSPENDED'
-      })
-    }
-
     // Ajouter les informations utilisateur à la requête
     req.user = {
-      id: decoded.id,
-      email: decoded.email,
-      name: decoded.name,
-      plan: decoded.plan || 'free',
-      maxInstances: decoded.maxInstances || 1,
-      isActive: decoded.isActive ?? true
+      id: user._id?.toString() || '',
+      email: user.email,
+      name: user.name,
+      plan: user.plan || 'free',
+      maxInstances: user.maxInstances || 1,
+      isActive: user.isActive ?? true
     }
 
     // Logger l'authentification (en développement uniquement)
     if (process.env.NODE_ENV !== 'production') {
-      console.log(`🔐 Authenticated user: ${decoded.email} (${decoded.plan} plan)`)
+      console.log(`🔐 Authenticated user: ${user.email} (${user.plan} plan)`)
     }
 
     next()
@@ -149,12 +138,8 @@ export const canCreateInstance = async (req: Request, res: Response, next: NextF
   }
 
   try {
-    const instanceCount = await prisma.instance.count({
-      where: {
-        userId: user.id,
-        isActive: true
-      }
-    })
+    const { InstanceService } = await import('../services/instanceService.js')
+    const instanceCount = await InstanceService.countUserInstances(user.id, true)
 
     if (instanceCount >= user.maxInstances) {
       return res.status(400).json({

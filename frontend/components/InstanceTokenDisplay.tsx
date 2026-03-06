@@ -12,8 +12,9 @@ interface InstanceTokenDisplayProps {
 }
 
 export function InstanceTokenDisplay({ token, instanceName, className }: InstanceTokenDisplayProps) {
-  const [showToken, setShowToken] = useState(false);
+  const [showToken, setShowToken] = useState(true);
   const [copied, setCopied] = useState(false);
+  const hasToken = token && token.length > 0;
 
   function copyToken() {
     navigator.clipboard.writeText(token);
@@ -38,21 +39,24 @@ export function InstanceTokenDisplay({ token, instanceName, className }: Instanc
           Token d'authentification
         </label>
         <div className="flex items-center gap-2 p-3 rounded-lg bg-[#0a0a0a] border border-[#1e1e1e]">
-          <Key size={13} className="text-[#22c55e] shrink-0" />
-          <code className="flex-1 text-[11px] font-mono text-[#22c55e] truncate select-all">
-            {showToken ? token : "•".repeat(Math.min(token.length, 48))}
+          <Key size={13} className={cn(hasToken ? "text-[#22c55e]" : "text-[#3a5a3a]", "shrink-0")} />
+          <code className={cn("flex-1 text-[11px] font-mono truncate select-all", hasToken ? "text-[#22c55e]" : "text-[#3a5a3a]")}>
+            {hasToken ? (showToken ? token : "•".repeat(Math.min(token.length, 48))) : "Token non disponible"}
           </code>
-          <button
-            onClick={() => setShowToken(!showToken)}
-            className="text-[#4a6a4a] hover:text-white transition-colors shrink-0"
-            title={showToken ? "Masquer le token" : "Afficher le token"}
-          >
-            {showToken ? <EyeOff size={13} /> : <Eye size={13} />}
-          </button>
+          {hasToken && (
+            <button
+              onClick={() => setShowToken(!showToken)}
+              className="text-[#4a6a4a] hover:text-white transition-colors shrink-0"
+              title={showToken ? "Masquer le token" : "Afficher le token"}
+            >
+              {showToken ? <EyeOff size={13} /> : <Eye size={13} />}
+            </button>
+          )}
           <button
             onClick={copyToken}
-            className="text-[#4a6a4a] hover:text-[#22c55e] transition-colors shrink-0"
-            title="Copier le token"
+            disabled={!hasToken}
+            className={cn("transition-colors shrink-0", hasToken ? "text-[#4a6a4a] hover:text-[#22c55e]" : "text-[#2a3a2a] cursor-not-allowed")}
+            title={hasToken ? "Copier le token" : "Token non disponible"}
           >
             {copied ? (
               <CheckCircle2 size={13} className="text-[#22c55e]" />
@@ -64,19 +68,6 @@ export function InstanceTokenDisplay({ token, instanceName, className }: Instanc
         <p className="mt-1.5 text-[10px] text-[#4a6a4a]">
           Ce token est unique à cette instance. Utilisez-le dans le header: <code className="text-[#6a9a6a]">Authorization: Instance-Token {"{token}"}</code>
         </p>
-      </div>
-
-      <div className="p-3 rounded-lg bg-[#0a0a0a] border border-[#1e1e1e]">
-        <p className="text-[10px] font-medium text-[#8a9a8a] mb-2">Exemple d'utilisation (cURL)</p>
-        <pre className="text-[9px] font-mono text-[#5a7a5a] overflow-x-auto whitespace-pre-wrap break-all">
-{`curl -X POST https://api.example.com/api/v1/send-message \\
-  -H "Authorization: Instance-Token ${token}" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "recipient": "+237XXXXXXXXX",
-    "message": "Hello from WhatsApp!"
-  }'`}
-        </pre>
       </div>
     </div>
   );

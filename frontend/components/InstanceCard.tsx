@@ -18,7 +18,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { apiKeysApi } from "@/lib/api";
-import { cn, getAvatarColor, timeAgo, formatNumber, formatInstanceIdForDisplay } from "@/lib/utils";
+import { cn, getAvatarColor, timeAgo, formatNumber } from "@/lib/utils";
 import { StatusBadge } from "./StatusBadge";
 import { InstanceTokenDisplay } from "./InstanceTokenDisplay";
 import { useInstanceStatus } from "@/hooks/useInstanceStatus";
@@ -39,27 +39,32 @@ export function InstanceCard({
   const [apiKeys, setApiKeys] = useState<any[]>([]);
   const [copied, setCopied] = useState(false);
   
-  // Real-time instance status
-  const {
-    status: realTimeStatus,
-    connectionInfo,
-  } = useInstanceStatus({
-    instanceName: instance.instanceName, // Use real instance ID (5-digit number), not customName
-    enabled: true,
-    pollInterval: 5000,
-  });
+  // Real-time instance status - DISABLED to avoid refresh loops
+  // TODO: Re-enable with proper state management
+  const realTimeStatus = 'unknown';
+  const connectionInfo: any = null;
+  // const {
+  //   status: realTimeStatus,
+  //   connectionInfo,
+  // } = useInstanceStatus({
+  //   instanceName: instance.instanceName,
+  //   enabled: true,
+  //   pollInterval: 5000,
+  // });
 
   // Load API keys for this instance
   useEffect(() => {
-    async function loadKeys() {
-      try {
-        const res = await apiKeysApi.getAll(instance.id);
-        setApiKeys(res.data?.data ?? []);
-      } catch {
-        setApiKeys([]);
-      }
-    }
-    loadKeys();
+    // TODO: Réactiver quand l'endpoint /api/api-keys sera créé
+    // async function loadKeys() {
+    //   try {
+    //     const res = await apiKeysApi.getAll(instance.id);
+    //     setApiKeys(res.data?.data ?? []);
+    //   } catch {
+    //     setApiKeys([]);
+    //   }
+    // }
+    // loadKeys();
+    setApiKeys([]);
   }, [instance.id]);
 
   function copyKey(key: string) {
@@ -87,8 +92,13 @@ export function InstanceCard({
     .toUpperCase()
     .slice(0, 2);
 
-  const displayStatus = (instance.connectionStatus ??
-    instance.status) as Instance["status"];
+  // Utiliser le statut brut pour le StatusBadge (open/close/connecting/expired)
+  const rawStatus = (instance.status || 'unknown') as string;
+  const displayStatus = (['open', 'close', 'connecting', 'expired', 'unknown'].includes(rawStatus)
+    ? rawStatus
+    : rawStatus === 'connected' ? 'open'
+    : rawStatus === 'disconnected' ? 'close'
+    : 'unknown') as Instance["status"];
 
   return (
     <motion.div
@@ -121,8 +131,13 @@ export function InstanceCard({
           </div>
 
           <p className="text-[11px] text-[#4a6a4a] mt-0.5 font-mono truncate">
-            ID: {formatInstanceIdForDisplay(instance.instanceName || instance.id)}
+            {instance.instanceName || instance.id}
           </p>
+          {instance.evolutionInstanceId && (
+            <p className="text-[10px] text-[#3a5a3a] mt-0.5 font-mono truncate">
+              {instance.evolutionInstanceId}
+            </p>
+          )}
 
           {instance.profileName && (
             <p className="text-[11px] text-[#6a8a6a] mt-0.5 truncate">
@@ -247,14 +262,12 @@ export function InstanceCard({
       })()}
 
       {/* ── Instance token display ────────────────────── */}
-      {instance.instanceToken && (
-        <div className="mt-3">
-          <InstanceTokenDisplay
-            token={instance.instanceToken}
-            instanceName={instance.instanceName}
-          />
-        </div>
-      )}
+      <div className="mt-3">
+        <InstanceTokenDisplay
+          token={instance.instanceToken || ''}
+          instanceName={instance.instanceName}
+        />
+      </div>
 
       {/* ── Expired banner ──────────────────────── */}
       {isExpired && (

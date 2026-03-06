@@ -91,43 +91,48 @@ export function Header({ onMenuClick }: HeaderProps) {
               {lang}
               <ChevronDown size={11} />
             </button>
-            <AnimatePresence>
-              {langOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setLangOpen(false)}
-                  />
+            {langOpen && (
+                <AnimatePresence>
                   <motion.div
+                    key="lang-dropdown"
                     initial={{ opacity: 0, y: -4, scale: 0.97 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -4, scale: 0.97 }}
                     transition={{ duration: 0.12 }}
-                    className="absolute right-0 top-full mt-1 z-50 rounded-lg overflow-hidden py-1 min-w-[80px]"
-                    style={{
-                      background: "#111",
-                      border: "1px solid #1e1e1e",
-                      boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
-                    }}
+                    className="fixed inset-0 z-40"
+                    onClick={() => setLangOpen(false)}
                   >
-                    {LANG_OPTIONS.map((l) => (
-                      <button
-                        key={l}
-                        onClick={() => { setLang(l); setLangOpen(false); }}
-                        className={cn(
-                          "w-full px-3 py-1.5 text-xs font-medium text-left transition-colors",
-                          l === lang
-                            ? "text-[#22c55e] bg-[#0d1f0d]"
-                            : "text-[#8a9a8a] hover:bg-[#161616] hover:text-white"
-                        )}
-                      >
-                        {l}
-                      </button>
-                    ))}
+                    <motion.div
+                      initial={{ opacity: 0, y: -4, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -4, scale: 0.97 }}
+                      transition={{ duration: 0.12 }}
+                      className="absolute right-4 top-14 z-50 rounded-lg overflow-hidden py-1 min-w-[80px]"
+                      style={{
+                        background: "#111",
+                        border: "1px solid #1e1e1e",
+                        boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {LANG_OPTIONS.map((l) => (
+                        <button
+                          key={l}
+                          onClick={() => { setLang(l); setLangOpen(false); }}
+                          className={cn(
+                            "w-full px-3 py-1.5 text-xs font-medium text-left transition-colors",
+                            l === lang
+                              ? "text-[#22c55e] bg-[#0d1f0d]"
+                              : "text-[#8a9a8a] hover:bg-[#161616] hover:text-white"
+                          )}
+                        >
+                          {l}
+                        </button>
+                      ))}
+                    </motion.div>
                   </motion.div>
-                </>
+                </AnimatePresence>
               )}
-            </AnimatePresence>
           </div>
 
           {/* Moon */}
@@ -167,65 +172,70 @@ export function Header({ onMenuClick }: HeaderProps) {
               <ChevronDown size={11} />
             </button>
 
-            <AnimatePresence>
-              {userOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setUserOpen(false)}
-                  />
+            {userOpen && (
+                <AnimatePresence>
                   <motion.div
+                    key="user-dropdown"
                     initial={{ opacity: 0, y: -4, scale: 0.97 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -4, scale: 0.97 }}
                     transition={{ duration: 0.12 }}
-                    className="absolute right-0 top-full mt-1 z-50 rounded-xl overflow-hidden w-52"
-                    style={{
-                      background: "#111",
-                      border: "1px solid #1e1e1e",
-                      boxShadow: "0 8px 32px rgba(0,0,0,0.7)",
-                    }}
+                    className="fixed inset-0 z-40"
+                    onClick={() => setUserOpen(false)}
                   >
-                    {/* User info */}
-                    <div className="px-3 py-2.5 border-b border-[#1a1a1a]">
-                      <p className="text-xs font-semibold text-white truncate">
-                        {user?.name ?? "User"}
-                      </p>
-                      <p className="text-[10px] text-[#5a7a5a] truncate">
-                        {user?.email}
-                      </p>
-                      <span className="inline-flex items-center mt-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#0d2510] text-[#22c55e]">
-                        {user?.plan?.toUpperCase() ?? "FREE"}
-                      </span>
-                    </div>
+                    <motion.div
+                      initial={{ opacity: 0, y: -4, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -4, scale: 0.97 }}
+                      transition={{ duration: 0.12 }}
+                      className="absolute right-4 top-14 z-50 rounded-xl overflow-hidden w-52"
+                      style={{
+                        background: "#111",
+                        border: "1px solid #1e1e1e",
+                        boxShadow: "0 8px 32px rgba(0,0,0,0.7)",
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* User info */}
+                      <div className="px-3 py-2.5 border-b border-[#1a1a1a]">
+                        <p className="text-xs font-semibold text-white truncate">
+                          {user?.name ?? "User"}
+                        </p>
+                        <p className="text-[10px] text-[#5a7a5a] truncate">
+                          {user?.email}
+                        </p>
+                        <span className="inline-flex items-center mt-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#0d2510] text-[#22c55e]">
+                          {user?.plan?.toUpperCase() ?? "FREE"}
+                        </span>
+                      </div>
 
-                    <div className="py-1">
-                      <button
-                        onClick={() => { router.push("/dashboard/account"); setUserOpen(false); }}
-                        className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-[#8a9a8a] hover:bg-[#161616] hover:text-white transition-colors"
-                      >
-                        <User size={13} /> Compte
-                      </button>
-                      <button
-                        onClick={() => { router.push("/dashboard/account"); setUserOpen(false); }}
-                        className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-[#8a9a8a] hover:bg-[#161616] hover:text-white transition-colors"
-                      >
-                        <Settings size={13} /> Paramètres
-                      </button>
-                    </div>
+                      <div className="py-1">
+                        <button
+                          onClick={() => { router.push("/dashboard/account"); setUserOpen(false); }}
+                          className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-[#8a9a8a] hover:bg-[#161616] hover:text-white transition-colors"
+                        >
+                          <User size={13} /> Compte
+                        </button>
+                        <button
+                          onClick={() => { router.push("/dashboard/account"); setUserOpen(false); }}
+                          className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-[#8a9a8a] hover:bg-[#161616] hover:text-white transition-colors"
+                        >
+                          <Settings size={13} /> Paramètres
+                        </button>
+                      </div>
 
-                    <div className="border-t border-[#1a1a1a] py-1">
-                      <button
-                        onClick={handleLogout}
-                        className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-red-400 hover:bg-[#1a0a0a] transition-colors"
-                      >
-                        <LogOut size={13} /> Déconnexion
-                      </button>
-                    </div>
+                      <div className="border-t border-[#1a1a1a] py-1">
+                        <button
+                          onClick={handleLogout}
+                          className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-red-400 hover:bg-[#1a0a0a] transition-colors"
+                        >
+                          <LogOut size={13} /> Déconnexion
+                        </button>
+                      </div>
+                    </motion.div>
                   </motion.div>
-                </>
+                </AnimatePresence>
               )}
-            </AnimatePresence>
           </div>
         </div>
       </div>

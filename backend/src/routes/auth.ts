@@ -1,8 +1,6 @@
 import { Router } from 'express'
-import bcrypt from 'bcryptjs'
 import { z } from 'zod'
-import { prisma } from '../lib/prisma.js'
-import { generateToken } from '../lib/jwt.js'
+import { AuthService } from '../services/authService.mongo.js'
 
 const router = Router()
 
@@ -10,6 +8,7 @@ const registerSchema = z.object({
   email: z.string().email(),
   name: z.string().min(2),
   password: z.string().min(6),
+  plan: z.enum(['free', 'starter', 'pro', 'enterprise']).optional(),
 })
 
 const loginSchema = z.object({
@@ -19,41 +18,30 @@ const loginSchema = z.object({
 
 router.post('/register', async (req, res) => {
   try {
-    const { email, name, password } = registerSchema.parse(req.body)
+    const { email, name, password, plan } = registerSchema.parse(req.body)
 
-    const existing = await prisma.user.findUnique({ where: { email } })
-    if (existing) {
+    const result = await AuthService.register({
+      email,
+      name,
+      password,
+      plan: plan || 'free'
+    })
+
+    if (!result) {
       return res.status(400).json({ error: 'Email déjà utilisé' })
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10)
-    const user = await prisma.user.create({
-      data: {
-        email,
-        name,
-        password: hashedPassword,
-        plan: 'free',
-        maxInstances: 1,
-      },
-    })
-
-    const token = generateToken({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      plan: user.plan,
-      maxInstances: user.maxInstances,
-      isActive: user.isActive,
-    })
+    const { user, token } = result
 
     res.json({
       token,
       user: {
-        id: user.id,
+        id: user._id?.toString(),
         email: user.email,
         name: user.name,
         plan: user.plan,
         maxInstances: user.maxInstances,
+        isActive: user.isActive,
       },
     })
   } catch (error) {
@@ -72,37 +60,25 @@ router.post('/login', async (req, res) => {
     console.log('🔐 LOGIN attempt:', { email: req.body?.email, hasPassword: !!req.body?.password })
     const { email, password } = loginSchema.parse(req.body)
 
-    const user = await prisma.user.findUnique({ where: { email } })
-    console.log('👤 User found:', !!user)
-    if (!user) {
-      console.log('❌ LOGIN failed: user not found')
+    const result = await AuthService.login(email, password)
+    console.log('👤 Login result:', !!result)
+    
+    if (!result) {
+      console.log('❌ LOGIN failed: invalid credentials')
       return res.status(401).json({ error: 'Email ou mot de passe incorrect' })
     }
 
-    const valid = await bcrypt.compare(password, user.password)
-    console.log('🔑 Password valid:', valid)
-    if (!valid) {
-      console.log('❌ LOGIN failed: invalid password')
-      return res.status(401).json({ error: 'Email ou mot de passe incorrect' })
-    }
-
-    const token = generateToken({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      plan: user.plan,
-      maxInstances: user.maxInstances,
-      isActive: user.isActive,
-    })
+    const { user, token } = result
 
     res.json({
       token,
       user: {
-        id: user.id,
+        id: user._id?.toString(),
         email: user.email,
         name: user.name,
         plan: user.plan,
         maxInstances: user.maxInstances,
+        isActive: user.isActive,
       },
     })
   } catch (error) {

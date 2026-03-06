@@ -4,15 +4,15 @@ import axios from "axios";
 const getBaseURL = () => {
   // Si on est côté serveur (SSR), utiliser la variable d'environnement
   if (typeof window === "undefined") {
-    return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+    return process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
   }
   
   // Côté client : détecter si on est en local ou en production
   const hostname = window.location.hostname;
   
   if (hostname === "localhost" || hostname === "127.0.0.1") {
-    // Environnement local
-    return "http://localhost:8080";
+    // Environnement local - frontend sur port 3002, backend sur 3001
+    return "http://localhost:3001";
   } else {
     // Environnement de production
     return "https://api.ecomcookpit.site";
@@ -54,6 +54,8 @@ api.interceptors.response.use(
   }
 );
 
+// Removed cache to prevent infinite loops
+
 // ─── Auth  POST /api/auth/* ──────────────────────────────────────────────────
 export const authApi = {
   login: (email: string, password: string) =>
@@ -67,31 +69,34 @@ export const authApi = {
 };
 
 // ─── Instance Management  /api/instances/* ──────────────────────────────────
-//  Uses instanceManagement.ts routes (by DB id)
+//  Uses MongoDB WhatsApp instance routes
 export const instancesApi = {
-  /** GET /instances — list all user instances (new architecture) */
+  /** GET /api/instances — list all WhatsApp instances (MongoDB) */
   getAll: async () => {
-    const res = await api.get("/instances");
-    const rawInstances = Array.isArray(res.data?.instances) ? res.data.instances : [];
+    const res = await api.get("/api/instances");
 
-    const instances = rawInstances.map((item: any) => {
-      const normalizedStatus = item.status === "active" ? "open" : item.status === "connecting" ? "connecting" : "close";
-      return {
-        id: item.id,
-        name: item.customName || item.instanceName,
-        instanceName: item.instanceName,
-        instanceToken: item.instanceToken ?? null,
-        status: normalizedStatus,
-        connectionStatus: normalizedStatus,
-        profileName: item.profileName ?? null,
-        profilePictureUrl: item.profilePictureUrl ?? null,
-        createdAt: item.createdAt,
-        lastUsed: item.lastActivity ?? null,
-        apiKeys: [],
-        quotas: [],
-        stats: { messagesLast30Days: 0, totalApiKeys: 0 },
-      };
-    });
+    // Si backend renvoie déjà le format attendu, on le garde tel quel
+    if (Array.isArray(res.data?.data?.instances)) {
+      return res;
+    }
+
+    // Fallback legacy minimal
+    const rawInstances = Array.isArray(res.data?.instances) ? res.data.instances : [];
+    const instances = rawInstances.map((item: any) => ({
+      id: item.id || item._id || item.instanceId,
+      name: item.name || item.customName || item.instanceName,
+      instanceName: item.instanceName,
+      instanceToken: item.instanceToken || item.apiKey || null,
+      status: item.status,
+      connectionStatus: item.connectionStatus || item.status,
+      profileName: item.profileName ?? null,
+      profilePictureUrl: item.profilePictureUrl ?? null,
+      createdAt: item.createdAt,
+      lastUsed: item.lastUsed ?? item.updatedAt ?? null,
+      apiKeys: item.apiKeys ?? [],
+      quotas: item.quotas ?? [],
+      stats: item.stats ?? { messagesLast30Days: 0, totalApiKeys: 0 },
+    }));
 
     return {
       ...res,
@@ -101,47 +106,37 @@ export const instancesApi = {
           instances,
           summary: {
             totalInstances: instances.length,
-            activeInstances: instances.filter((i: any) => i.status === "open").length,
-            maxAllowed: 0,
+            activeInstances: instances.filter((i: any) => i.connectionStatus === "connected" || i.status === "open").length,
+            maxAllowed: res.data?.data?.summary?.maxAllowed ?? 0,
           },
         },
       },
     };
   },
 
-  /** POST /instances — create an instance and get token */
-  create: async (customName: string, integration = "WHATSAPP-BAILEYS") => {
-    const res = await api.post("/instances", { customName, integration });
-    const d = res.data ?? {};
-
-    return {
-      ...res,
-      data: {
-        success: true,
-        data: {
-          instance: {
-            id: d.id,
-            name: d.customName || d.instanceName,
-            instanceName: d.instanceName,
-            createdAt: d.createdAt,
-            instanceToken: d.instanceToken,
-          },
-          apiKey: {
-            key: d.instanceToken,
-          },
-        },
-        message: d.message,
-      },
-    };
+  /** POST /api/create-instance — create WhatsApp instance via MongoDB */
+  create: async (instanceName: string, integration = "WHATSAPP-BAILEYS") => {
+    // Conserver les données backend/Evolution sans forcer de valeurs artificielles
+    return api.post("/api/create-instance", { instanceName, integration });
   },
 
-  /** DELETE /instances/:id */
-  delete: (id: string) => api.delete(`/instances/${id}`),
+  /** POST /api/refresh-qr/:instanceId */
+  refreshQR: (instanceId: string) => api.post(`/api/refresh-qr/${instanceId}`),
 
-  /** POST /api/instances/:id/restart */
+  /** POST /api/check-connection/:instanceId */
+  checkConnection: (instanceId: string) => api.post(`/api/check-connection/${instanceId}`),
+
+  /** POST /api/send-message/:instanceId */
+  sendMessage: (instanceId: string, to: string, message: string) => 
+    api.post(`/api/send-message/${instanceId}`, { to, message }),
+
+  /** DELETE /api/instances/:instanceName - delete instance via MongoDB */
+  delete: (instanceName: string) => api.delete(`/api/instances/${instanceName}`),
+
+  /** POST /api/instances/:id/restart (legacy - remove if not used) */
   restart: (id: string) => api.post(`/api/instances/${id}/restart`),
 
-  /** GET /api/instances/:id/qr-code */
+  /** GET /api/instances/:id/qr-code (legacy - remove if not used) */
   getQRCode: (id: string) => api.get(`/api/instances/${id}/qr-code`),
 };
 
@@ -159,7 +154,7 @@ export const instanceApi = {
     return api.post("/api/instance/create", { instanceName, integration, qrcode });
   },
 
-  /** GET /api/instance/status/:instanceName — reliable polling endpoint */
+  /** GET /api/instances/:instanceName — get single instance with status */
   getStatus: (instanceName: string) => {
     if (!instanceName?.trim()) {
       console.error('❌ Invalid instanceName for status check:', instanceName);
@@ -169,7 +164,7 @@ export const instanceApi = {
       console.error('❌ Invalid instanceName detected:', instanceName);
       return Promise.reject(new Error(`Invalid instance name: ${instanceName}`));
     }
-    return api.get(`/api/instance/status/${encodeURIComponent(instanceName)}`);
+    return api.get(`/api/instances/${encodeURIComponent(instanceName)}`);
   },
 
   /** GET /api/instance/connectionState/:instanceName */
@@ -197,7 +192,7 @@ export const instanceApi = {
     }
     
     console.log('🔍 Fetching QR code for instance:', instanceName);
-    return api.get(`/api/instance/qrcode/${encodeURIComponent(instanceName)}`)
+    return api.get(`/api/instances/${encodeURIComponent(instanceName)}/qr-code`)
       .catch((error) => {
         const status = error?.response?.status;
         const errorData = error?.response?.data;

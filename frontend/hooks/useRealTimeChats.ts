@@ -44,19 +44,25 @@ export function useRealTimeChats({
 
     try {
       if (!instanceId) {
+        console.log('[useRealTimeChats] No instanceId provided');
         setState(prev => ({ ...prev, isLoading: false }));
         return;
       }
+      console.log('[useRealTimeChats] Fetching chats for:', instanceId);
       const response = await instanceApi.getChats(instanceId);
+      console.log('[useRealTimeChats] Response:', response.data);
+      
       if (!mountedRef.current) return;
 
       if (!response.data?.success) {
+        console.error('[useRealTimeChats] API returned unsuccessful:', response.data);
         if (!isBackground) {
           setState(prev => ({ ...prev, isLoading: false, error: response.data?.message || 'Failed to fetch chats' }));
         }
         return;
       }
       const newChats: Chat[] = response.data?.data?.chats || [];
+      console.log('[useRealTimeChats] Extracted chats:', newChats.length, newChats);
 
       // Check for new messages by comparing with previous chats
       const hasNewMessages = newChats.some(chat => {
@@ -68,6 +74,7 @@ export function useRealTimeChats({
 
       prevChatsRef.current = newChats;
 
+      console.log('[useRealTimeChats] Setting state with', newChats.length, 'chats');
       setState(prev => ({
         ...prev,
         chats: newChats,
@@ -164,20 +171,43 @@ export function useRealTimeChats({
   }, []);
 
   useEffect(() => {
-    if (!enabled) {
-      stopPolling();
+    mountedRef.current = true;
+    console.log('[useRealTimeChats] useEffect triggered - enabled:', enabled, 'instanceId:', instanceId);
+    
+    if (!enabled || !instanceId) {
+      console.log('[useRealTimeChats] Hook disabled or no instanceId, stopping polling');
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
       return;
     }
 
-    startPolling();
+    console.log('[useRealTimeChats] Starting polling...');
+    
+    // Initial fetch
+    if (isFirstFetchRef.current) {
+      isFirstFetchRef.current = false;
+      fetchChats(false);
+    } else {
+      fetchChats(true);
+    }
+
+    // Start interval
+    intervalRef.current = setInterval(() => fetchChats(true), pollInterval);
 
     return () => {
-      stopPolling();
+      console.log('[useRealTimeChats] Cleanup - stopping polling');
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     };
-  }, [enabled, startPolling, stopPolling]);
+  }, [enabled, instanceId, pollInterval, fetchChats]);
 
   useEffect(() => {
     return () => {
+      console.log('[useRealTimeChats] Component unmounting');
       mountedRef.current = false;
       stopPolling();
     };

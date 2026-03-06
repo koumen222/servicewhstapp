@@ -43,7 +43,8 @@ export default function InstancesPage() {
       const res = await instancesApi.getAll();
       const data = res.data?.data?.instances ?? [];
       setInstances(data);
-    } catch {
+    } catch (error) {
+      console.error('Load instances error:', error);
       if (instances.length === 0) setInstances(MOCK_INSTANCES);
     } finally {
       setLoading(false);
@@ -61,7 +62,8 @@ export default function InstancesPage() {
       return;
     }
     try {
-      await instancesApi.delete(instance.id);
+      // Use instanceName for MongoDB API instead of id
+      await instancesApi.delete(instance.instanceName);
       removeInstance(instance.id);
     } catch (err: any) {
       console.error('[DELETE] Failed to delete instance:', err?.response?.data || err?.message);
