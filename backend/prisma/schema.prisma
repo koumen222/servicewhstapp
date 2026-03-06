@@ -98,7 +98,6 @@ model Instance {
   id                    String   @id @default(uuid())
   userId                String
   instanceName          String   @unique
-  internalName          String?
   evolutionInstanceName String?  @unique
   customName            String?
   instanceToken         String?  @unique

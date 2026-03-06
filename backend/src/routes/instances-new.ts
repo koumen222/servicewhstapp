@@ -35,7 +35,6 @@ router.post('/', authMiddleware, async (req: Request, res: Response) => {
       data: {
         userId,
         instanceName,
-        internalName: customName || `Instance ${instanceCount + 1}`,
         customName: customName || `Instance ${instanceCount + 1}`,
         instanceToken,
         status: 'pending',
@@ -45,7 +44,6 @@ router.post('/', authMiddleware, async (req: Request, res: Response) => {
         id: true,
         instanceName: true,
         customName: true,
-        internalName: true,
         instanceToken: true,
         status: true,
         whatsappNumber: true,
@@ -57,7 +55,6 @@ router.post('/', authMiddleware, async (req: Request, res: Response) => {
       id: instance.id,
       instanceName: instance.instanceName,
       customName: instance.customName,
-      internalName: (instance as any).internalName || instance.customName,
       instanceToken: instance.instanceToken,
       status: instance.status,
       whatsappNumber: instance.whatsappNumber,

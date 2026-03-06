@@ -30,7 +30,6 @@ const getPublicApiBaseUrl = (req: AuthRequest): string => {
 const createInstanceSchema = z.object({
   // Backward-compatible: frontend may still send `instanceName` as the human-friendly name
   instanceName: z.string().min(1).optional(),
-  internalName: z.string().min(1).optional(),
   evolutionInstanceName: z.string().min(1).optional(),
   integration: z.string().optional().default('WHATSAPP-BAILEYS'),
   qrcode: z.boolean().optional().default(false), // Do NOT auto-connect on creation
@@ -38,8 +37,8 @@ const createInstanceSchema = z.object({
 
 router.post('/create', checkInstanceQuota, async (req: AuthRequest, res) => {
   try {
-    const { instanceName, internalName, evolutionInstanceName, integration, qrcode } = createInstanceSchema.parse(req.body)
-    const displayName = internalName || instanceName
+    const { instanceName, evolutionInstanceName, integration, qrcode } = createInstanceSchema.parse(req.body)
+    const displayName = instanceName
     if (!displayName) {
       return res.status(400).json({ success: false, message: 'Nom d\'instance requis' })
     }
@@ -82,16 +81,15 @@ router.post('/create', checkInstanceQuota, async (req: AuthRequest, res) => {
     const apiKey = crypto.randomBytes(32).toString('hex')
 
     const instance = await prisma.instance.create({
-      data: {
+      data: ({
         userId,
         instanceName: internalInstanceId,
-        internalName: displayName,
         evolutionInstanceName: evolutionName,
         customName: displayName,
         status: 'close',
         instanceUrl: getPublicApiBaseUrl(req) || env.EVOLUTION_API_URL,
         evolutionApiKey: apiKey,
-      }
+      } as any)
     })
 
     console.log('[CREATE] Instance created successfully:', instance.id)
@@ -101,7 +99,7 @@ router.post('/create', checkInstanceQuota, async (req: AuthRequest, res) => {
       data: {
         instance: {
           id: instance.id,
-          name: instance.internalName || instance.customName,
+          name: instance.customName,
           instanceName: instance.instanceName,
           evolutionInstanceName: (instance as any).evolutionInstanceName || null,
           status: instance.status,
@@ -212,8 +210,8 @@ router.get('/status/:instanceName', async (req: AuthRequest, res) => {
     const { instanceName } = req.params // Now this is the real 5-digit ID or old format
     const userId = req.user!.id
 
-    const dbInstance = await prisma.instance.findUnique({
-      where: { instanceName, userId }
+    const dbInstance = await prisma.instance.findFirst({
+      where: { instanceName, userId, isActive: true }
     })
     if (!dbInstance) {
       return res.status(404).json({ success: false, message: 'Instance not found' })
@@ -289,7 +287,7 @@ router.get('/qrcode/:instanceName', async (req: AuthRequest, res) => {
     const { instanceName } = req.params // Now this is the real 5-digit ID or old format
     const userId = req.user!.id
 
-    const dbInstance = await prisma.instance.findUnique({ where: { instanceName, userId } })
+    const dbInstance = await prisma.instance.findFirst({ where: { instanceName, userId, isActive: true } })
     if (!dbInstance) {
       return res.status(404).json({ success: false, message: 'Instance not found' })
     }
@@ -537,7 +535,7 @@ router.get('/chats/:instanceName', async (req: AuthRequest, res) => {
 
     console.log(`[CHATS] Fetching chats for instanceName="${instanceName}", userId="${userId}"`)
 
-    const dbInstance = await prisma.instance.findUnique({ where: { instanceName, userId } })
+    const dbInstance = await prisma.instance.findFirst({ where: { instanceName, userId, isActive: true } })
     if (!dbInstance) {
       console.warn(`[CHATS] Instance not found in DB: ${instanceName}`)
       return res.status(404).json({ success: false, message: 'Instance not found' })

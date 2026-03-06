@@ -119,17 +119,16 @@ router.post('/create-instance', async (req, res) => {
 
     // Créer l'instance dans notre base de données
     const instance = await prisma.instance.create({
-      data: {
+      data: ({
         userId,
         instanceName,
-        internalName: customName.trim(),
         evolutionInstanceName: instanceName,
         customName: customName.trim(),
         status: 'close',
         evolutionApiKey,
         instanceUrl: process.env.EVOLUTION_API_URL,
         isActive: true
-      }
+      } as any)
     })
 
     // Initialiser les quotas pour cette instance
