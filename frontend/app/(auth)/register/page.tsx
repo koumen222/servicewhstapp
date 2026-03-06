@@ -138,7 +138,7 @@ export default function RegisterPage() {
             Créer votre compte
           </h1>
           <p className="text-[13px] text-[#5a7a5a] mb-7">
-            Gratuit pour toujours · Aucune carte bancaire requise
+            Gratuit pour toujours · Sans carte bancaire
           </p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -156,7 +156,7 @@ export default function RegisterPage() {
               <input
                 {...register("name")}
                 type="text"
-                placeholder="Koumen Morgan"
+                placeholder="Moussa Traoré"
                 autoComplete="name"
                 autoFocus
                 className="input-dark w-full"
@@ -175,7 +175,7 @@ export default function RegisterPage() {
               <input
                 {...register("email")}
                 type="email"
-                placeholder="nom@exemple.com"
+                placeholder="moussa.traore@exemple.com"
                 autoComplete="email"
                 className="input-dark w-full"
               />

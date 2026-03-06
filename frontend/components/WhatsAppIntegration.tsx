@@ -204,12 +204,12 @@ export default function WhatsAppIntegration() {
                 type="text"
                 value={testNumber}
                 onChange={(e) => setTestNumber(e.target.value)}
-                placeholder="+33612345678"
+                placeholder="+2250701020304"
                 className="w-full px-3 py-2 bg-[#111] border border-[#1e1e1e] rounded-lg text-white text-[12px] focus:outline-none focus:ring-2 focus:ring-[#25D366] placeholder:text-[#3a3a3a]"
                 required
               />
               <p className="mt-1.5 text-[11px] text-[#5a7a5a]">
-                Inclure l'indicatif pays (ex: +33 pour la France)
+                Inclure l'indicatif pays (ex: +225 pour la Côte d'Ivoire)
               </p>
             </div>
 

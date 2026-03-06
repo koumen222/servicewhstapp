@@ -545,7 +545,7 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
                     <input
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
-                      placeholder="+33XXXXXXXXX"
+                      placeholder="+225XXXXXXXXXX"
                       className="input-dark w-full"
                       autoFocus
                     />
@@ -554,7 +554,7 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
                         <AlertCircle size={11} />{phoneError}
                       </p>
                     )}
-                    <p className="mt-1 text-[10px] text-[#4a6a4a]">Inclure l'indicatif pays, ex: +33XXXXXXXXX</p>
+                    <p className="mt-1 text-[10px] text-[#4a6a4a]">Inclure l'indicatif pays, ex: +225XXXXXXXXXX</p>
                   </div>
                   <div className="flex gap-2">
                     <button onClick={() => setStep("choose")} className="btn-ghost flex-1">Retour</button>

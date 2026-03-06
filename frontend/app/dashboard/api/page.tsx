@@ -333,7 +333,7 @@ console.log(data.data.messageId);`;
                   <input
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
-                    placeholder="ex: Production Key"
+                    placeholder="ex: Clé de Production"
                     className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl px-3 py-2 text-[12px] text-white placeholder-[#3a5a3a] focus:border-[#22c55e] focus:outline-none"
                   />
                 </div>

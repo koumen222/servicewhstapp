@@ -142,7 +142,7 @@ export default function LoginPage() {
               <input
                 {...register("email")}
                 type="email"
-                placeholder="nom@exemple.com"
+                placeholder="moussa.traore@exemple.com"
                 autoComplete="email"
                 autoFocus
                 className="input-dark w-full"
