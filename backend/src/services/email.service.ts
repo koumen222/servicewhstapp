@@ -20,7 +20,7 @@ export const emailService = {
       const { data, error } = await resend.emails.send({
         from: EMAIL_FROM,
         to,
-        replyTo: EMAIL_REPLY_TO,
+        reply_to: EMAIL_REPLY_TO,
         subject: 'Vérifiez votre adresse email - ZeChat.site',
         html: `
           <!DOCTYPE html>
@@ -127,7 +127,7 @@ export const emailService = {
       const { data, error } = await resend.emails.send({
         from: EMAIL_FROM,
         to,
-        replyTo: EMAIL_REPLY_TO,
+        reply_to: EMAIL_REPLY_TO,
         subject: '🎉 Bienvenue sur ZeChat.site !',
         html: `
           <!DOCTYPE html>
