@@ -119,18 +119,16 @@ app.use((req: any, res, next) => {
   next()
 })
 
-// Log des requêtes importantes (en développement uniquement)
-if (process.env.NODE_ENV !== 'production') {
-  app.use((req, res, next) => {
-    if (!req.path.includes('/health')) {
-      console.log(`📥 ${req.method} ${req.url}`)
-      if (req.headers['x-api-key']) {
-        console.log(`🔑 API Key: ${req.headers['x-api-key'].toString().substring(0, 20)}...`)
-      }
+// Log des requêtes importantes
+app.use((req, res, next) => {
+  if (!req.path.includes('/health')) {
+    console.log(`📥 ${req.method} ${req.url}`)
+    if (req.headers['x-api-key']) {
+      console.log(`🔑 API Key: ${req.headers['x-api-key'].toString().substring(0, 20)}...`)
     }
-    next()
-  })
-}
+  }
+  next()
+})
 
 
 // =============== INITIALISATION BASES DE DONNÉES ===============
@@ -182,6 +180,7 @@ app.get('/api/health', (req, res) => {
 })
 
 app.use('/api/auth', authRoutes)
+console.log('✅ Registered auth routes: /api/auth/login, /api/auth/register, /api/auth/verify-email')
 
 // Admin routes (avec authentification admin)
 app.use('/api/admin', adminRoutes)
