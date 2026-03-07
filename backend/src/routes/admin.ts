@@ -42,7 +42,7 @@ router.post('/login', async (req: Request, res: Response) => {
       success: true,
       data: {
         admin: {
-          id: admin._id,
+          id: (admin as any)._id,
           email: admin.email,
           name: admin.name,
           role: admin.role,

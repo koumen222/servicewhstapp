@@ -86,11 +86,11 @@ export class AdminService {
       activeUsers,
       totalInstances,
       activeInstances,
-      instancesByStatus: instancesByStatus.reduce((acc, item) => {
+      instancesByStatus: instancesByStatus.reduce((acc: Record<string, number>, item: any) => {
         acc[item._id] = item.count
         return acc
       }, {} as Record<string, number>),
-      usersByPlan: usersByPlan.reduce((acc, item) => {
+      usersByPlan: usersByPlan.reduce((acc: Record<string, number>, item: any) => {
         acc[item._id] = item.count
         return acc
       }, {} as Record<string, number>),
@@ -165,8 +165,8 @@ export class AdminService {
       instances,
       stats: {
         totalInstances: instances.length,
-        activeInstances: instances.filter((i) => i.isActive).length,
-        connectedInstances: instances.filter((i) => i.status === 'open').length,
+        activeInstances: instances.filter((i: any) => i.isActive).length,
+        connectedInstances: instances.filter((i: any) => i.status === 'open').length,
       },
     }
   }
