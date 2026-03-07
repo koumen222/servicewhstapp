@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  :root, .dark {
     --background: 0 0% 7%;
     --foreground: 0 0% 94%;
     --card: 0 0% 8%;
@@ -38,6 +38,80 @@
     --card-bg: #111111;
     --card-border: #1c1c1c;
     --header-bg: rgba(11, 11, 11, 0.85);
+
+    --page-bg: #0f0f0f;
+    --text-primary: #f0f0f0;
+    --text-secondary: #8a9a8a;
+    --text-muted: #5a7a5a;
+    --dropdown-bg: #111111;
+    --dropdown-border: #1e1e1e;
+    --dropdown-hover: #161616;
+    --btn-ghost-border: #1e1e1e;
+    --btn-ghost-hover: #161616;
+    --avatar-bg: #0d2510;
+    --avatar-text: #22c55e;
+    --banner-bg-start: #1a0505;
+    --banner-bg-mid: #250808;
+    --scrollbar-track: #0d0d0d;
+    --scrollbar-thumb: #2a2a2a;
+    --table-hover: #131813;
+    --table-border: #141414;
+    --table-header-color: #5a6a5a;
+    --table-cell-color: #c8d8c8;
+  }
+
+  .light {
+    --background: 0 0% 98%;
+    --foreground: 0 0% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 142 71% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 95%;
+    --secondary-foreground: 0 0% 20%;
+    --muted: 0 0% 93%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 142 71% 45%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 88%;
+    --input: 0 0% 92%;
+    --ring: 142 71% 45%;
+
+    --sidebar-bg: #f7faf7;
+    --sidebar-hover: #e8f5e8;
+    --sidebar-active: #dcf0dc;
+    --sidebar-border: #dce8dc;
+    --brand-green: #16a34a;
+    --brand-green-dark: #15803d;
+    --brand-green-light: #22c55e;
+    --brand-green-muted: #bbf7d0;
+    --card-bg: #ffffff;
+    --card-border: #e5e7eb;
+    --header-bg: rgba(255, 255, 255, 0.85);
+
+    --page-bg: #f5f7f5;
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --text-muted: #6b7280;
+    --dropdown-bg: #ffffff;
+    --dropdown-border: #e5e7eb;
+    --dropdown-hover: #f3f4f6;
+    --btn-ghost-border: #e5e7eb;
+    --btn-ghost-hover: #f3f4f6;
+    --avatar-bg: #dcfce7;
+    --avatar-text: #16a34a;
+    --banner-bg-start: #fef2f2;
+    --banner-bg-mid: #fee2e2;
+    --scrollbar-track: #f1f1f1;
+    --scrollbar-thumb: #c4c4c4;
+    --table-hover: #f3f8f3;
+    --table-border: #e5e7eb;
+    --table-header-color: #6b7280;
+    --table-cell-color: #374151;
   }
 }
 
@@ -47,17 +121,21 @@
     box-sizing: border-box;
   }
 
-  html {
+  html.dark {
     color-scheme: dark;
+  }
+  html.light {
+    color-scheme: light;
   }
 
   body {
-    background-color: #0f0f0f;
-    color: #f0f0f0;
+    background-color: var(--page-bg);
+    color: var(--text-primary);
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   ::-webkit-scrollbar {
@@ -65,10 +143,10 @@
     height: 4px;
   }
   ::-webkit-scrollbar-track {
-    background: #0d0d0d;
+    background: var(--scrollbar-track);
   }
   ::-webkit-scrollbar-thumb {
-    background: #2a2a2a;
+    background: var(--scrollbar-thumb);
     border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb:hover {
@@ -109,8 +187,8 @@
 
   /* ── Cards ───────────────────────────────── */
   .instance-card {
-    background-color: #111111;
-    border: 1px solid #1c1c1c;
+    background-color: var(--card-bg);
+    border: 1px solid var(--card-border);
     border-radius: 14px;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
     position: relative;
@@ -206,12 +284,13 @@
   .header-glass {
     backdrop-filter: blur(16px) saturate(180%);
     background: var(--header-bg);
-    border-bottom: 1px solid #181818;
+    border-bottom: 1px solid var(--card-border);
+    transition: background 0.2s ease, border-color 0.2s ease;
   }
 
   /* ── Payment banner ──────────────────────── */
   .payment-banner {
-    background: linear-gradient(90deg, #1a0505 0%, #250808 50%, #1a0505 100%);
+    background: linear-gradient(90deg, var(--banner-bg-start) 0%, var(--banner-bg-mid) 50%, var(--banner-bg-start) 100%);
     border: 1px solid #ef444430;
     border-radius: 8px;
   }
@@ -219,15 +298,16 @@
   /* ── Table ───────────────────────────────── */
   .data-table th {
     @apply text-xs font-semibold uppercase tracking-wider px-4 py-3;
-    color: #5a6a5a;
-    border-bottom: 1px solid #1a1a1a;
+    color: var(--table-header-color);
+    border-bottom: 1px solid var(--table-border);
   }
   .data-table td {
-    @apply px-4 py-3.5 text-sm border-b border-[#141414];
-    color: #c8d8c8;
+    @apply px-4 py-3.5 text-sm;
+    color: var(--table-cell-color);
+    border-bottom: 1px solid var(--table-border);
   }
   .data-table tr:hover td {
-    background-color: #131813;
+    background-color: var(--table-hover);
   }
   .data-table tr:last-child td {
     border-bottom: none;
@@ -243,12 +323,12 @@
   /* ── Input ───────────────────────────────── */
   .input-dark {
     @apply w-full rounded-lg px-3 py-2 text-sm outline-none transition-all duration-200;
-    background: #111111;
-    border: 1px solid #1e1e1e;
-    color: #e8e8e8;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    color: var(--text-primary);
   }
   .input-dark::placeholder {
-    color: #4a5a4a;
+    color: var(--text-muted);
   }
   .input-dark:focus {
     border-color: #22c55e55;

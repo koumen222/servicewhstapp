@@ -66,7 +66,7 @@ export default function DashboardLayout({
 
   if (!hydrated) {
     return (
-      <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--page-bg)' }}>
         <div className="flex flex-col items-center gap-3">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-black text-sm"
@@ -81,7 +81,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#0f0f0f]">
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: 'var(--page-bg)' }}>
       {/* Desktop sidebar */}
       <div className="hidden lg:flex h-full">
         <Sidebar />

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { SupportChatbot } from "@/components/SupportChatbot";
+import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: {
@@ -25,9 +26,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr" className="dark" suppressHydrationWarning>
-      <body className="antialiased bg-[#0f0f0f] text-[#f0f0f0]">
-        {children}
-        <SupportChatbot />
+      <body className="antialiased" suppressHydrationWarning>
+        <Providers>
+          {children}
+          <SupportChatbot />
+        </Providers>
       </body>
     </html>
   );

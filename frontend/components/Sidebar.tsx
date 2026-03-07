@@ -23,25 +23,22 @@ import {
 import { useAppStore } from "@/store/useStore";
 import { cn } from "@/lib/utils";
 import { deleteCookie } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 
 const NAV_ITEMS = [
-  { href: "/dashboard/instances", label: "Instances", icon: LayoutGrid },
-  { href: "/dashboard/chats", label: "Conversations", icon: MessageSquare },
-  { href: "/dashboard/api", label: "API", icon: Code2 },
-  { href: "/dashboard/balance", label: "Solde", icon: CreditCard },
-  { href: "/dashboard/purchases", label: "Achats", icon: ShoppingCart },
-  { href: "/dashboard/integrations", label: "Intégrations", icon: Puzzle },
-  { href: "/dashboard/proxy", label: "Proxy", icon: Globe },
-  { href: "/dashboard/account", label: "Compte", icon: User },
-];
-
-const EXTERNAL_LINKS = [
-  { href: "/docs", label: "Documentation", icon: BookOpen },
+  { href: "/dashboard/instances", labelKey: "sidebar.instances" as const, icon: LayoutGrid },
+  { href: "/dashboard/chats", labelKey: "sidebar.chats" as const, icon: MessageSquare },
+  { href: "/dashboard/api", labelKey: "sidebar.api" as const, icon: Code2 },
+  { href: "/dashboard/balance", labelKey: "sidebar.balance" as const, icon: CreditCard },
+  { href: "/dashboard/purchases", labelKey: "sidebar.purchases" as const, icon: ShoppingCart },
+  { href: "/dashboard/integrations", labelKey: "sidebar.integrations" as const, icon: Puzzle },
+  { href: "/dashboard/proxy", labelKey: "sidebar.proxy" as const, icon: Globe },
+  { href: "/dashboard/account", labelKey: "sidebar.account" as const, icon: User },
 ];
 
 const ADMIN_ITEMS = [
-  { href: "/admin/users", label: "Utilisateurs", icon: ShieldCheck },
-  { href: "/admin/instances", label: "Toutes les Instances", icon: Wifi },
+  { href: "/admin/users", labelKey: "sidebar.admin.users" as const, icon: ShieldCheck },
+  { href: "/admin/instances", labelKey: "sidebar.admin.instances" as const, icon: Wifi },
 ];
 
 interface SidebarProps {
@@ -53,6 +50,7 @@ export function Sidebar({ mobile = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, sidebarOpen, toggleSidebar, logout } = useAppStore();
+  const { t } = useI18n();
   const isAdmin = user?.role === "admin";
 
   const collapsed = !mobile && !sidebarOpen;
@@ -138,13 +136,14 @@ export function Sidebar({ mobile = false, onClose }: SidebarProps) {
       {/* ── Navigation ────────────────────────────────── */}
       <nav className="flex-1 overflow-y-auto no-scrollbar py-3 px-2 space-y-0.5">
         {!collapsed && (
-          <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-[#3a5a3a] mb-1">
-            Principal
-          </p>
-        )}
+              <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-[#3a5a3a] mb-1">
+                {t("sidebar.main")}
+              </p>
+            )}
 
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+        {NAV_ITEMS.map(({ href, labelKey, icon: Icon }) => {
           const active = pathname.startsWith(href);
+          const label = t(labelKey);
           return (
             <Link
               key={href}
@@ -182,11 +181,12 @@ export function Sidebar({ mobile = false, onClose }: SidebarProps) {
             <div className="my-2 border-t border-[#162016]" />
             {!collapsed && (
               <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-[#3a5a3a] mb-1">
-                Admin
+                {t("sidebar.admin")}
               </p>
             )}
-            {ADMIN_ITEMS.map(({ href, label, icon: Icon }) => {
+            {ADMIN_ITEMS.map(({ href, labelKey, icon: Icon }) => {
               const active = pathname.startsWith(href);
+              const label = t(labelKey);
               return (
                 <Link
                   key={href}
@@ -226,7 +226,7 @@ export function Sidebar({ mobile = false, onClose }: SidebarProps) {
           href="/docs"
           target="_blank"
           rel="noopener noreferrer"
-          title={collapsed ? "Documentation" : undefined}
+          title={collapsed ? t("sidebar.docs") : undefined}
           className="sidebar-link"
         >
           <BookOpen size={16} className="shrink-0 text-[#4a6a4a]" />
@@ -238,7 +238,7 @@ export function Sidebar({ mobile = false, onClose }: SidebarProps) {
                 exit={{ opacity: 0 }}
                 className="flex items-center gap-1.5 truncate"
               >
-                Documentation
+                {t("sidebar.docs")}
                 <ExternalLink size={11} className="text-[#3a5a3a]" />
               </motion.span>
             )}
@@ -269,7 +269,7 @@ export function Sidebar({ mobile = false, onClose }: SidebarProps) {
                 className="flex-1 min-w-0"
               >
                 <p className="text-xs font-medium text-[#c8d8c8] truncate">
-                  {user?.name ?? "Utilisateur"}
+                  {user?.name ?? t("sidebar.user.default")}
                 </p>
                 <p className="text-[10px] text-[#4a6a4a] truncate">
                   {user?.email ?? ""}
@@ -284,7 +284,7 @@ export function Sidebar({ mobile = false, onClose }: SidebarProps) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={handleLogout}
-                title="Déconnexion"
+                title={t("sidebar.logout")}
                 className="shrink-0 text-[#3a5a3a] hover:text-red-400 transition-colors duration-150"
               >
                 <LogOut size={14} />
