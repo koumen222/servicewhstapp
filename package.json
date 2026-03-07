@@ -1,0 +1,28 @@
+{
+  "name": "whatsapp-saas",
+  "version": "1.0.0",
+  "description": "WhatsApp SaaS Platform for E-commerce",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/koumen222/servicewhstapp.git"
+  },
+  "keywords": [
+    "whatsapp",
+    "saas",
+    "e-commerce",
+    "messaging",
+    "api"
+  ],
+  "author": "ZeChat.site",
+  "license": "MIT"
+}

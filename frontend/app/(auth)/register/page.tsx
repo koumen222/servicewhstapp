@@ -401,10 +401,10 @@ export default function RegisterPage() {
 
                   <button
                     type="submit"
-                    disabled={step === "submitting"}
+                    disabled={isLoading}
                     className="w-full bg-green-600 hover:bg-green-500 disabled:bg-zinc-800 disabled:cursor-not-allowed text-white text-sm font-semibold px-6 py-3 rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    {step === "submitting" ? (
+                    {isLoading ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
                         Création du compte...
