@@ -216,7 +216,7 @@ export function Header({ onMenuClick }: HeaderProps) {
           >
             <Bell size={15} />
             {hasExpired && (
-              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500 ring-2" style={{ ringColor: "var(--header-bg)" }} />
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500" />
             )}
           </button>
 
