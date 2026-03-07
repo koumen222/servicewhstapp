@@ -1,12 +1,29 @@
 import axios from "axios";
 
-// URL backend codée en dur
+// Détection automatique de l'URL backend
 const getBaseURL = () => {
-  // Pour le développement local
-  return "http://localhost:3001";
+  // 1. Priorité à la variable d'environnement
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
   
-  // Pour la production (décommenter et commenter la ligne ci-dessus)
-  // return "https://api.ecomcookpit.site";
+  // 2. Détection automatique basée sur l'environnement
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    
+    // En production (domaine personnalisé)
+    if (hostname === 'zechat.site' || hostname === 'www.zechat.site' || hostname === 'ecomcookpit.site') {
+      return 'https://whatsapp-saas-production-77b9.up.railway.app';
+    }
+    
+    // En développement local
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:3001';
+    }
+  }
+  
+  // 3. Fallback par défaut
+  return 'http://localhost:3001';
 };
 
 const BASE_URL = getBaseURL();
