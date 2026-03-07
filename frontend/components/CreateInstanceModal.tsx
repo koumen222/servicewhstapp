@@ -118,6 +118,8 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
       const evolutionName = d?.instance?.instanceName;
       const evolutionInstanceId = d?.instance?.instanceId || '';
       const evolutionStatus = d?.instance?.status || "pending";
+      // Récupérer le vrai token depuis la réponse
+      const evolutionToken = d?.instance?.instanceToken || d?.instance?.apiKey || '';
       const newInstance: Instance = {
         id: d.dbId,
         name: evolutionName,
@@ -132,7 +134,8 @@ export function CreateInstanceModal({ onClose, onCreated }: CreateInstanceModalP
       };
 
       setInstance(newInstance);
-      setApiKey(evolutionInstanceId);
+      // Utiliser le vrai token Evolution API au lieu de l'ID court
+      setApiKey(evolutionToken);
       setStep("choose");
       onCreated(newInstance);
     } catch (err: any) {

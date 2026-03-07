@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express'
 import axios from 'axios'
 import { InstanceService } from '../services/instanceService.js'
+import { env } from '../config/env.js'
 
 const router = Router()
 
@@ -102,15 +103,34 @@ router.post('/', async (req: Request, res: Response) => {
       })
     }
 
+    console.log(`\n📊📊📊 DEBUG: Réponse complète de création Evolution 📊📊📊`)
+    console.log(`📊 Réponse complète de création Evolution:`, JSON.stringify(evolutionResponse, null, 2))
+    console.log(`📊📊📊 FIN DEBUG 📊📊📊\n`)
+
     const evolutionInstanceName = evolutionResponse?.instance?.instanceName || evolutionResponse?.instance?.instance || requestedInstanceName
     const evolutionInstanceId = evolutionResponse?.instance?.instanceId || ''
     
-    // IMPORTANT: Récupérer le token COMPLET d'Evolution sans modification
-    const evolutionApiKey = evolutionResponse?.hash?.apikey || evolutionResponse?.apikey || ''
+    // IMPORTANT: Récupérer le token COMPLET d'Evolution depuis plusieurs emplacements possibles
+    let evolutionApiKey = ''
+    
+    // Le token est dans "hash" qui est une CHAÎNE DIRECTE, pas un objet
+    if (evolutionResponse?.hash && typeof evolutionResponse.hash === 'string') {
+      evolutionApiKey = evolutionResponse.hash
+    } else if (evolutionResponse?.hash?.apikey) {
+      evolutionApiKey = evolutionResponse.hash.apikey
+    } else if (evolutionResponse?.apikey) {
+      evolutionApiKey = evolutionResponse.apikey
+    } else if (evolutionResponse?.instance?.hash && typeof evolutionResponse.instance.hash === 'string') {
+      evolutionApiKey = evolutionResponse.instance.hash
+    } else if (evolutionResponse?.token) {
+      evolutionApiKey = evolutionResponse.token
+    }
+    
     const evolutionStatus: string = evolutionResponse?.instance?.state || evolutionResponse?.instance?.status || 'pending'
 
     console.log(`✅ Instance Evolution créée : ${evolutionInstanceName} (id: ${evolutionInstanceId})`)
-    console.log(`🔑 Token Evolution complet : ${evolutionApiKey ? evolutionApiKey.substring(0, 20) + '...' : 'non fourni'}`)
+    console.log(`🔑 Token Evolution extrait : ${evolutionApiKey ? evolutionApiKey.substring(0, 20) + '...' : 'NON TROUVÉ'}`)
+    console.log(`🔑 Token Evolution complet : ${evolutionApiKey}`)
 
     const instance = await InstanceService.createUserInstance({
       userId,
@@ -182,7 +202,7 @@ router.get('/', async (req: Request, res: Response) => {
       }
     }
 
-    const mappedInstances = instances.map(inst => {
+    const mappedInstances = await Promise.all(instances.map(async (inst) => {
       const evoState = evolutionStates[inst.instanceName]
       const realStatus = evoState?.state || inst.status
       const isOpen = realStatus === 'open'
@@ -197,6 +217,68 @@ router.get('/', async (req: Request, res: Response) => {
         }).catch(() => {})
       }
 
+      // Récupérer le vrai token si le token stocké est court (moins de 50 caractères)
+      let realToken = inst.instanceToken
+      const isInstanceConnected = realStatus === 'open' || isOpen
+      const hasShortToken = inst.instanceToken && inst.instanceToken.length < 50
+      
+      // Toujours essayer de récupérer le token si c'est un token court, peu importe le statut
+      if (hasShortToken && evolution) {
+        try {
+          console.log(`🔍 Fetching real token for instance with short token: ${inst.instanceName}`)
+          const fetchRes = await evolution.get('/instance/fetchInstances', {
+            params: {
+              instanceName: inst.instanceName
+            },
+            headers: {
+              'apikey': env.EVOLUTION_MASTER_API_KEY
+            }
+          })
+          
+          console.log(`📊 Response:`, JSON.stringify(fetchRes.data, null, 2))
+          
+          // La réponse peut être un objet ou un tableau
+          let instances = []
+          if (Array.isArray(fetchRes.data)) {
+            instances = fetchRes.data
+          } else if (fetchRes.data?.response && Array.isArray(fetchRes.data.response)) {
+            instances = fetchRes.data.response
+          } else if (fetchRes.data) {
+            instances = [fetchRes.data]
+          }
+          
+          const foundInstance = instances.find((evo: any) => 
+            (evo.name || evo.instanceName) === inst.instanceName
+          )
+          
+          if (foundInstance) {
+            // Le token est dans "hash" qui est une CHAÎNE DIRECTE
+            if (foundInstance.hash && typeof foundInstance.hash === 'string') {
+              realToken = foundInstance.hash
+              console.log(`✅ Token trouvé dans hash (string): ${realToken?.substring(0, 20)}...`)
+            } else if (foundInstance.hash?.apikey) {
+              realToken = foundInstance.hash.apikey
+              console.log(`✅ Token trouvé dans hash.apikey: ${realToken?.substring(0, 20)}...`)
+            } else if (foundInstance.apikey) {
+              realToken = foundInstance.apikey
+              console.log(`✅ Token trouvé dans apikey: ${realToken?.substring(0, 20)}...`)
+            }
+          }
+          
+          // Mettre à jour le token en DB avec le vrai token
+          if (realToken && realToken !== inst.instanceToken) {
+            console.log(`💾 Updating token in DB: ${inst.instanceToken?.substring(0, 10)}... → ${realToken?.substring(0, 20)}...`)
+            InstanceService.updateUserInstance(inst._id!.toString(), userId, {
+              instanceToken: realToken
+            }).catch(() => {})
+          }
+        } catch (err: any) {
+          console.warn(`⚠️ Could not fetch real token for ${inst.instanceName}:`, err?.message || err?.toString())
+        }
+      } else {
+        console.log(`✅ Instance ${inst.instanceName} already has full token (${inst.instanceToken?.length} chars)`)
+      }
+
       return {
         id: inst._id?.toString(),
         _id: inst._id?.toString(),
@@ -207,8 +289,8 @@ router.get('/', async (req: Request, res: Response) => {
         evolutionInstanceId: inst.evolutionInstanceId || '',
         status: realStatus,
         connectionStatus: isOpen ? 'connected' : (statusMap[realStatus] || 'disconnected'),
-        instanceToken: inst.instanceToken,
-        apiKey: inst.instanceToken,
+        instanceToken: realToken,
+        apiKey: realToken,
         whatsappNumber: evoState?.number || inst.whatsappNumber,
         profileName: evoState?.profileName || inst.profileName,
         profilePictureUrl: evoState?.profilePicUrl || inst.profilePictureUrl,
@@ -220,7 +302,7 @@ router.get('/', async (req: Request, res: Response) => {
         quotas: [],
         stats: { messagesLast30Days: 0, totalApiKeys: 0 }
       }
-    })
+    }))
 
     return res.json({
       success: true,
@@ -457,14 +539,21 @@ router.delete('/:instanceId', async (req: Request, res: Response) => {
     const evolution = getEvolutionClient()
     if (evolution) {
       try {
+        console.log(`🗑️ Suppression de l'instance ${instance.instanceName} sur Evolution API...`)
         await evolution.delete(`/instance/delete/${instance.instanceName}`)
+        console.log(`✅ Instance ${instance.instanceName} supprimée avec succès sur Evolution API`)
       } catch (evErr: any) {
-        console.warn(`⚠️ Evolution delete error:`, evErr?.response?.data || evErr.message)
+        console.error(`❌ Échec de suppression sur Evolution API:`, evErr?.response?.data || evErr.message)
+        // Continue quand même avec la suppression en base de données
       }
+    } else {
+      console.warn(`⚠️ Client Evolution API non disponible, impossible de supprimer l'instance sur Evolution`)
     }
 
     // Désactiver dans MongoDB
+    console.log(`🗑️ Désactivation de l'instance ${instance.instanceName} dans MongoDB...`)
     await InstanceService.deactivateUserInstance(instance._id!.toString(), userId)
+    console.log(`✅ Instance ${instance.instanceName} désactivée dans MongoDB`)
 
     return res.json({
       success: true,

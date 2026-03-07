@@ -75,16 +75,42 @@ router.post('/create-instance', async (req: Request, res: Response) => {
       return res.status(502).json({ success: false, code: 'EVOLUTION_CREATE_FAILED', error: 'Impossible de créer l\'instance sur Evolution API' })
     }
 
+    console.log(`\n📊📊📊 DEBUG: Réponse complète de création Evolution 📊📊📊`)
+    console.log(JSON.stringify(evolutionResponse, null, 2))
+    console.log(`📊📊📊 FIN DEBUG 📊📊📊\n`)
+
     const evolutionInstanceName = evolutionResponse?.instance?.instanceName || evolutionResponse?.instance?.instance || instanceName
     const evolutionInstanceId = evolutionResponse?.instance?.instanceId || ''
     
-    // IMPORTANT: Récupérer le token COMPLET d'Evolution sans modification
-    const evolutionApiKey = evolutionResponse?.hash?.apikey || evolutionResponse?.apikey || ''
+    // IMPORTANT: Récupérer le token COMPLET d'Evolution depuis plusieurs emplacements possibles
+    let evolutionApiKey = ''
+    
+    // Le token est dans "hash" qui est une CHAÎNE DIRECTE, pas un objet
+    if (evolutionResponse?.hash && typeof evolutionResponse.hash === 'string') {
+      evolutionApiKey = evolutionResponse.hash
+      console.log(`🔑 Token trouvé dans hash (string)`)
+    } else if (evolutionResponse?.hash?.apikey) {
+      evolutionApiKey = evolutionResponse.hash.apikey
+      console.log(`🔑 Token trouvé dans hash.apikey`)
+    } else if (evolutionResponse?.apikey) {
+      evolutionApiKey = evolutionResponse.apikey
+      console.log(`🔑 Token trouvé dans apikey`)
+    } else if (evolutionResponse?.instance?.hash && typeof evolutionResponse.instance.hash === 'string') {
+      evolutionApiKey = evolutionResponse.instance.hash
+      console.log(`🔑 Token trouvé dans instance.hash (string)`)
+    } else if (evolutionResponse?.token) {
+      evolutionApiKey = evolutionResponse.token
+      console.log(`🔑 Token trouvé dans token`)
+    } else {
+      console.log(`❌ Token NON TROUVÉ dans la réponse de création`)
+    }
+    
     const evolutionStatus = evolutionResponse?.instance?.state || evolutionResponse?.instance?.status || 'pending'
     const qrcodeData: any = evolutionResponse?.qrcode || null
 
     console.log(`✅ Evolution instance créée : ${evolutionInstanceName} (id: ${evolutionInstanceId})`)
-    console.log(`🔑 Token Evolution complet : ${evolutionApiKey ? evolutionApiKey.substring(0, 20) + '...' : 'non fourni'}`)
+    console.log(`🔑 Token Evolution extrait : ${evolutionApiKey ? evolutionApiKey.substring(0, 20) + '...' : 'NON TROUVÉ'}`)
+    console.log(`🔑 Token Evolution COMPLET : ${evolutionApiKey || 'VIDE'}`)
 
     // Sauvegarder dans user_instances (avec userId)
     const savedInstance = await InstanceService.createUserInstance({

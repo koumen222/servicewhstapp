@@ -40,7 +40,7 @@ export function InstanceCard({
   const [menuOpen, setMenuOpen] = useState(false);
   const [apiKeys, setApiKeys] = useState<any[]>([]);
   const [copied, setCopied] = useState(false);
-  const [msgUsage, setMsgUsage] = useState<{ daily: number; monthly: number; limits: { daily: number; monthly: number } } | null>(null);
+  const [msgUsage, setMsgUsage] = useState<{ dailyCount: number; monthlyCount: number; dailyLimit: number; monthlyLimit: number } | null>(null);
   
   // Real-time instance status - DISABLED to avoid refresh loops
   // TODO: Re-enable with proper state management
@@ -73,7 +73,7 @@ export function InstanceCard({
   useEffect(() => {
     if (instance.id) {
       usageApi.getInstance(instance.instanceName || instance.id)
-        .then((r) => setMsgUsage(r.data?.data ?? null))
+        .then((r) => setMsgUsage(r.data?.data?.usage ?? null))
         .catch(() => {});
     }
   }, [instance.id, instance.instanceName]);
@@ -248,14 +248,14 @@ export function InstanceCard({
           <div>
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] text-[#5a7a5a]">{t('acct.dailyUsage')}</span>
-              <span className="text-[10px] font-mono text-[#5a7a5a]">{msgUsage.daily} / {msgUsage.limits.daily}</span>
+              <span className="text-[10px] font-mono text-[#5a7a5a]">{msgUsage.dailyCount} / {msgUsage.dailyLimit}</span>
             </div>
             <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{
-                  width: `${Math.min((msgUsage.daily / msgUsage.limits.daily) * 100, 100)}%`,
-                  background: msgUsage.daily >= msgUsage.limits.daily ? '#ef4444' : msgUsage.daily >= msgUsage.limits.daily * 0.8 ? '#f59e0b' : '#22c55e',
+                  width: `${Math.min((msgUsage.dailyCount / msgUsage.dailyLimit) * 100, 100)}%`,
+                  background: msgUsage.dailyCount >= msgUsage.dailyLimit ? '#ef4444' : msgUsage.dailyCount >= msgUsage.dailyLimit * 0.8 ? '#f59e0b' : '#22c55e',
                 }}
               />
             </div>
@@ -263,14 +263,14 @@ export function InstanceCard({
           <div>
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] text-[#5a7a5a]">{t('acct.monthlyUsage')}</span>
-              <span className="text-[10px] font-mono text-[#5a7a5a]">{msgUsage.monthly} / {msgUsage.limits.monthly}</span>
+              <span className="text-[10px] font-mono text-[#5a7a5a]">{msgUsage.monthlyCount} / {msgUsage.monthlyLimit}</span>
             </div>
             <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{
-                  width: `${Math.min((msgUsage.monthly / msgUsage.limits.monthly) * 100, 100)}%`,
-                  background: msgUsage.monthly >= msgUsage.limits.monthly ? '#ef4444' : msgUsage.monthly >= msgUsage.limits.monthly * 0.8 ? '#f59e0b' : '#3b82f6',
+                  width: `${Math.min((msgUsage.monthlyCount / msgUsage.monthlyLimit) * 100, 100)}%`,
+                  background: msgUsage.monthlyCount >= msgUsage.monthlyLimit ? '#ef4444' : msgUsage.monthlyCount >= msgUsage.monthlyLimit * 0.8 ? '#f59e0b' : '#3b82f6',
                 }}
               />
             </div>

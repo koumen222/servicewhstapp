@@ -1,38 +1,12 @@
 import axios from "axios";
 
-// Détection automatique de l'environnement
+// URL backend codée en dur
 const getBaseURL = () => {
-  // 1. FORCER l'utilisation de l'API de production pour tous les domaines publics
-  if (typeof window !== "undefined") {
-    const hostname = window.location.hostname;
-    
-    // TOUJOURS utiliser l'API de production pour les domaines publics
-    if (hostname === "zechat.site" || hostname === "www.zechat.site" || 
-        hostname === "ecomcookpit.site" || hostname === "www.ecomcookpit.site" ||
-        !hostname.includes('localhost') && !hostname.includes('127.0.0.1')) {
-      console.log(`🌐 Using production API for domain: ${hostname}`);
-      return "https://api.ecomcookpit.site";
-    }
-  }
+  // Pour le développement local
+  return "http://localhost:3001";
   
-  // 2. Priorité ABSOLUE à la variable d'environnement (si définie dans .env.local)
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    console.log(`⚙️ Using environment variable API: ${process.env.NEXT_PUBLIC_API_URL}`);
-    return process.env.NEXT_PUBLIC_API_URL;
-  }
-
-  // 3. Si on est côté serveur (SSR) ou localhost, utiliser localhost
-  if (typeof window === "undefined" || 
-      (typeof window !== "undefined" && 
-       (window.location.hostname.includes('localhost') || 
-        window.location.hostname.includes('127.0.0.1')))) {
-    console.log(`🏠 Using localhost API for development`);
-    return "http://localhost:3001";
-  }
-  
-  // 4. Fallback par défaut pour tout le reste
-  console.log(`🔄 Using fallback production API`);
-  return "https://api.ecomcookpit.site";
+  // Pour la production (décommenter et commenter la ligne ci-dessus)
+  // return "https://api.ecomcookpit.site";
 };
 
 const BASE_URL = getBaseURL();
@@ -43,8 +17,11 @@ console.log(`🚀 API Base URL initialized to: ${BASE_URL}`);
 export const api = axios.create({
   baseURL: BASE_URL,
   withCredentials: false,
-  headers: { "Content-Type": "application/json" },
-  timeout: 15000,
+  headers: { 
+    "Content-Type": "application/json",
+    "Accept": "application/json"
+  },
+  timeout: 30000,
 });
 
 // Fusionner les intercepteurs request (debug + auth)
