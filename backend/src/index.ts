@@ -9,6 +9,7 @@ import instancesNewRoutes from './routes/instances-new.js'
 import instanceManagementRoutes from './routes/instanceManagement.js'
 import whatsappInstanceRoutes from './routes/whatsapp/instances.js'
 import publicWhatsAppRoutes from './routes/whatsapp/public.js'
+import supportRoutes from './routes/support.js'
 import { authMiddleware } from './middleware/auth.js'
 
 declare global {
@@ -170,6 +171,10 @@ app.get('/api/health', (req, res) => {
 })
 
 app.use('/api/auth', authRoutes)
+
+// Support chatbot (public - no auth required)
+app.use('/api/support', supportRoutes)
+console.log('✅ Registered support chatbot route: /api/support/chat')
 
 app.use('/api/instances', authMiddleware, instancesNewRoutes)
 
