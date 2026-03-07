@@ -4,18 +4,9 @@ compatibility_flags = ["nodejs_compat"]
 
 pages_build_output_dir = "frontend/.next"
 
-[build]
-command = "cd frontend && npm install && npm run build"
-cwd = "frontend"
-watch_dir = "frontend/src"
-
-[build.environment]
-NODE_VERSION = "18"
-NPM_VERSION = "9"
-
-# Environment variables
-[env.production.vars]
+# Environment variables for Pages
+[env.production]
 NEXT_PUBLIC_API_URL = "https://api.ecomcookpit.site"
 
-[env.preview.vars]
+[env.preview]
 NEXT_PUBLIC_API_URL = "https://api.ecomcookpit.site"
