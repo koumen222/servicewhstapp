@@ -211,6 +211,10 @@ const translations = {
     "acct.2fa": "Authentification 2FA",
     "acct.2faDesc": "Ajouter une couche de sécurité supplémentaire",
     "acct.configure": "Configurer",
+    "acct.consumption": "Consommation messages",
+    "acct.dailyUsage": "Aujourd'hui",
+    "acct.monthlyUsage": "Ce mois",
+    "acct.totalSent": "Total envoyés",
     // Purchases page
     "purch.title": "Historique des achats",
     "purch.empty": "Aucun achat pour le moment.",
@@ -474,6 +478,10 @@ const translations = {
     "acct.2fa": "2FA Authentication",
     "acct.2faDesc": "Add an extra layer of security",
     "acct.configure": "Configure",
+    "acct.consumption": "Message Consumption",
+    "acct.dailyUsage": "Today",
+    "acct.monthlyUsage": "This month",
+    "acct.totalSent": "Total sent",
     // Purchases page
     "purch.title": "Purchase History",
     "purch.empty": "No purchases yet.",
