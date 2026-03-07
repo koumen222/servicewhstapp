@@ -1,10 +1,21 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 const EMAIL_FROM = process.env.EMAIL_FROM || 'contact@infomania.store';
 const EMAIL_REPLY_TO = process.env.EMAIL_REPLY_TO || 'contact@infomania.store';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://ecomcookpit.site';
+
+let resend: Resend | null = null;
+
+function getResendClient(): Resend {
+  if (!resend) {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      throw new Error('RESEND_API_KEY environment variable is not set');
+    }
+    resend = new Resend(apiKey);
+  }
+  return resend;
+}
 
 export interface SendVerificationEmailParams {
   to: string;
@@ -17,7 +28,7 @@ export const emailService = {
     const verificationUrl = `${FRONTEND_URL}/verify-email?token=${verificationToken}`;
 
     try {
-      const { data, error } = await resend.emails.send({
+      const { data, error } = await getResendClient().emails.send({
         from: EMAIL_FROM,
         to,
         reply_to: EMAIL_REPLY_TO,
@@ -124,7 +135,7 @@ export const emailService = {
 
   async sendWelcomeEmail({ to, name }: { to: string; name: string }) {
     try {
-      const { data, error } = await resend.emails.send({
+      const { data, error } = await getResendClient().emails.send({
         from: EMAIL_FROM,
         to,
         reply_to: EMAIL_REPLY_TO,
