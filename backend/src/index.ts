@@ -10,6 +10,7 @@ import instanceManagementRoutes from './routes/instanceManagement.js'
 import whatsappInstanceRoutes from './routes/whatsapp/instances.js'
 import publicWhatsAppRoutes from './routes/whatsapp/public.js'
 import supportRoutes from './routes/support.js'
+import adminRoutes from './routes/admin.js'
 import { authMiddleware } from './middleware/auth.js'
 
 declare global {
@@ -51,7 +52,7 @@ app.use(helmet({
 const allowedOrigins = env.FRONTEND_URL.split(',').map(o => o.trim().replace(/\/$/, ''))
 console.log('🔧 CORS allowedOrigins:', allowedOrigins)
 
-// CORS sécurisé
+// CORS configuration
 app.use(cors({
   origin: (origin, callback) => {
     // En développement, autoriser toutes les origines
@@ -60,18 +61,28 @@ app.use(cors({
       return callback(null, true)
     }
     
-    // En production, vérifier la liste des origines autorisées
-    console.log(`🔍 CORS check - Origin: ${origin}, Allowed: ${allowedOrigins}`)
-    if (!origin || allowedOrigins.includes(origin)) {
-      console.log('✅ CORS: Origin allowed')
+    // En production, autoriser les origines configurées + requêtes sans origin (Postman, curl, etc.)
+    console.log(`🔍 CORS check (PROD) - Origin: ${origin}`)
+    
+    // Autoriser les requêtes sans origin (serveur à serveur, Postman, etc.)
+    if (!origin) {
+      console.log('✅ CORS: No origin header - Allowed')
       return callback(null, true)
     }
-    console.log('❌ CORS: Origin blocked')
+    
+    // Vérifier si l'origin est dans la liste autorisée
+    if (allowedOrigins.includes(origin)) {
+      console.log(`✅ CORS: Origin ${origin} is in allowed list`)
+      return callback(null, true)
+    }
+    
+    console.log(`❌ CORS: Origin ${origin} blocked. Allowed origins:`, allowedOrigins)
     callback(new Error(`CORS: origin ${origin} not allowed`))
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'X-Requested-With'],
+  exposedHeaders: ['Content-Length', 'X-Request-Id'],
   maxAge: 86400 // Cache preflight requests for 24 hours
 }))
 
@@ -171,6 +182,10 @@ app.get('/api/health', (req, res) => {
 })
 
 app.use('/api/auth', authRoutes)
+
+// Admin routes (avec authentification admin)
+app.use('/api/admin', adminRoutes)
+console.log('✅ Registered admin routes: /api/admin/*')
 
 // Support chatbot (public - no auth required)
 app.use('/api/support', supportRoutes)
