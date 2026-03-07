@@ -37,44 +37,29 @@ export function useRealTimeChats({
   const fetchChats = useCallback(async (isBackground = false) => {
     if (!enabled || !mountedRef.current) return;
 
-    // Only show loading spinner on the very first fetch
     if (!isBackground) {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
     }
 
     try {
       if (!instanceId) {
-        console.log('[useRealTimeChats] No instanceId provided');
         setState(prev => ({ ...prev, isLoading: false }));
         return;
       }
-      console.log('[useRealTimeChats] Fetching chats for:', instanceId);
       const response = await instanceApi.getChats(instanceId);
-      console.log('[useRealTimeChats] Response:', response.data);
       
       if (!mountedRef.current) return;
 
       if (!response.data?.success) {
-        console.error('[useRealTimeChats] API returned unsuccessful:', response.data);
         if (!isBackground) {
           setState(prev => ({ ...prev, isLoading: false, error: response.data?.message || 'Failed to fetch chats' }));
         }
         return;
       }
       const newChats: Chat[] = response.data?.data?.chats || [];
-      console.log('[useRealTimeChats] Extracted chats:', newChats.length, newChats);
-
-      // Check for new messages by comparing with previous chats
-      const hasNewMessages = newChats.some(chat => {
-        const prevChat = prevChatsRef.current.find(p => p.id === chat.id);
-        return !prevChat ||
-               chat.lastMessage?.id !== prevChat.lastMessage?.id ||
-               chat.unreadCount !== prevChat.unreadCount;
-      });
 
       prevChatsRef.current = newChats;
 
-      console.log('[useRealTimeChats] Setting state with', newChats.length, 'chats');
       setState(prev => ({
         ...prev,
         chats: newChats,
@@ -85,7 +70,6 @@ export function useRealTimeChats({
 
     } catch (error: any) {
       if (!mountedRef.current) return;
-      // Background polls: silent failure — keep last known chats
       if (!isBackground) {
         setState(prev => ({
           ...prev,
@@ -96,6 +80,13 @@ export function useRealTimeChats({
     }
   }, [instanceId, enabled]);
 
+  // Use a ref to always hold the latest fetchChats — prevents stale closure in interval
+  // AND removes fetchChats from the polling useEffect deps (breaking the re-run loop)
+  const fetchChatsRef = useRef(fetchChats);
+  useEffect(() => {
+    fetchChatsRef.current = fetchChats;
+  }, [fetchChats]);
+
   const stopPolling = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -103,22 +94,9 @@ export function useRealTimeChats({
     }
   }, []);
 
-  const startPolling = useCallback(() => {
-    stopPolling();
-
-    if (isFirstFetchRef.current) {
-      isFirstFetchRef.current = false;
-      fetchChats(false); // initial fetch shows spinner
-    } else {
-      fetchChats(true); // subsequent re-enables are background
-    }
-
-    intervalRef.current = setInterval(() => fetchChats(true), pollInterval);
-  }, [fetchChats, pollInterval, stopPolling]);
-
   const refresh = useCallback(() => {
-    fetchChats();
-  }, [fetchChats]);
+    fetchChatsRef.current(false);
+  }, []);
 
   // Add a new message optimistically
   const addMessageOptimistically = useCallback((chatId: string, message: Partial<ChatMessage>) => {
@@ -154,9 +132,6 @@ export function useRealTimeChats({
   // Mark messages as read
   const markAsRead = useCallback(async (chatId: string, messageIds: string[]) => {
     try {
-      // Mark as read — no backend endpoint yet, update locally only
-      
-      // Update local state
       setState(prev => ({
         ...prev,
         chats: prev.chats.map(chat => 
@@ -170,53 +145,42 @@ export function useRealTimeChats({
     }
   }, []);
 
+  // Polling effect — fetchChats intentionally excluded from deps (we use fetchChatsRef instead)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    mountedRef.current = true;
-    console.log('[useRealTimeChats] useEffect triggered - enabled:', enabled, 'instanceId:', instanceId);
-    
     if (!enabled || !instanceId) {
-      console.log('[useRealTimeChats] Hook disabled or no instanceId, stopping polling');
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
+      stopPolling();
       return;
     }
 
-    console.log('[useRealTimeChats] Starting polling...');
-    
     // Initial fetch
     if (isFirstFetchRef.current) {
       isFirstFetchRef.current = false;
-      fetchChats(false);
+      fetchChatsRef.current(false);
     } else {
-      fetchChats(true);
+      fetchChatsRef.current(true);
     }
 
-    // Start interval
-    intervalRef.current = setInterval(() => fetchChats(true), pollInterval);
+    // Start interval — always reads latest fetchChats via ref
+    intervalRef.current = setInterval(() => fetchChatsRef.current(true), pollInterval);
 
     return () => {
-      console.log('[useRealTimeChats] Cleanup - stopping polling');
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
+      stopPolling();
     };
-  }, [enabled, instanceId, pollInterval, fetchChats]);
+  }, [enabled, instanceId, pollInterval]); // fetchChats excluded on purpose
 
+  // Cleanup on unmount
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
-      console.log('[useRealTimeChats] Component unmounting');
       mountedRef.current = false;
       stopPolling();
     };
-  }, [stopPolling]);
+  }, []);
 
   return {
     ...state,
     refresh,
-    startPolling,
     stopPolling,
     addMessageOptimistically,
     markAsRead,

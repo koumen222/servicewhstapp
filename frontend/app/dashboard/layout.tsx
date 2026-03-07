@@ -22,7 +22,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { user, setUser, setInstances } = useAppStore();
+  const { user, setUser, setInstances, isLoadingInstances, setLoadingInstances, instancesLoaded, setInstancesLoaded } = useAppStore();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
@@ -47,16 +47,21 @@ export default function DashboardLayout({
       }
     }
 
-    // Charger les instances en arrière-plan (non-bloquant)
+    // Guard: ne charger les instances qu'une seule fois (évite les doubles appels API)
+    if (instancesLoaded || isLoadingInstances) return;
+
+    setLoadingInstances(true);
     instancesApi.getAll()
       .then(res => {
         const data = res.data?.data?.instances ?? [];
         setInstances(data);
+        setInstancesLoaded(true);
       })
-      .catch(error => {
-        console.error('Failed to load instances:', error);
+      .catch(() => {
         setInstances([]);
-      });
+        setInstancesLoaded(true);
+      })
+      .finally(() => setLoadingInstances(false));
   }, []);
 
   if (!hydrated) {

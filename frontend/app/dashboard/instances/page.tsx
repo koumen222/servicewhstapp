@@ -24,7 +24,7 @@ const MOCK_INSTANCES: Instance[] = [];
 type FilterStatus = "all" | InstanceStatus;
 
 export default function InstancesPage() {
-  const { user, instances, setInstances, addInstance, removeInstance } =
+  const { user, instances, setInstances, addInstance, removeInstance, instancesLoaded, setInstancesLoaded, isLoadingInstances } =
     useAppStore();
 
   const [loading, setLoading] = useState(false);
@@ -43,9 +43,9 @@ export default function InstancesPage() {
       const res = await instancesApi.getAll();
       const data = res.data?.data?.instances ?? [];
       setInstances(data);
+      setInstancesLoaded(true);
     } catch (error) {
       console.error('Load instances error:', error);
-      if (instances.length === 0) setInstances(MOCK_INSTANCES);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -53,7 +53,10 @@ export default function InstancesPage() {
   }
 
   useEffect(() => {
-    loadInstances();
+    // Ne recharger que si pas encore chargé (le layout charge en premier)
+    if (!instancesLoaded && !isLoadingInstances) {
+      loadInstances();
+    }
   }, []);
 
   async function handleDelete(instance: Instance) {

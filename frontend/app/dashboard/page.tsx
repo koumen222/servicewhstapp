@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Wifi,
@@ -15,49 +14,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useAppStore } from "@/store/useStore";
-import { instancesApi } from "@/lib/api";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatNumber, timeAgo } from "@/lib/utils";
 import type { Instance } from "@/lib/types";
-
-const MOCK_INSTANCES: Instance[] = [
-  {
-    id: "mock-1",
-    name: "Production Bot",
-    instanceName: "user_demo_Production-Bot_1706789012",
-    status: "open",
-    connectionStatus: "open",
-    profileName: "Acme Support",
-    createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-    apiKeys: [],
-    quotas: [{ type: "messages", used: 1250, limit: 5000, remaining: 3750 }],
-    stats: { messagesLast30Days: 1250, totalApiKeys: 2 },
-  },
-  {
-    id: "mock-2",
-    name: "Support Chat",
-    instanceName: "user_demo_Support-Chat_1706789013",
-    status: "expired",
-    connectionStatus: "expired",
-    profileName: null,
-    createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
-    apiKeys: [],
-    quotas: [{ type: "messages", used: 890, limit: 1000, remaining: 110 }],
-    stats: { messagesLast30Days: 0, totalApiKeys: 1 },
-  },
-  {
-    id: "mock-3",
-    name: "Marketing Bot",
-    instanceName: "user_demo_Marketing-Bot_1706789014",
-    status: "close",
-    connectionStatus: "close",
-    profileName: null,
-    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    apiKeys: [],
-    quotas: [{ type: "messages", used: 0, limit: 1000, remaining: 1000 }],
-    stats: { messagesLast30Days: 0, totalApiKeys: 1 },
-  },
-];
 
 const stagger = {
   hidden: {},
@@ -69,25 +28,7 @@ const fadeUp = {
 };
 
 export default function DashboardPage() {
-  const { user, instances, setInstances, isLoadingInstances, setLoadingInstances } =
-    useAppStore();
-
-  useEffect(() => {
-    async function load() {
-      setLoadingInstances(true);
-      try {
-        const res = await instancesApi.getAll();
-        const data = res.data?.data?.instances ?? [];
-        setInstances(data);
-      } catch {
-        // Use mock data when backend isn't available
-        setInstances(MOCK_INSTANCES);
-      } finally {
-        setLoadingInstances(false);
-      }
-    }
-    load();
-  }, []);
+  const { user, instances, isLoadingInstances } = useAppStore();
 
   const active = instances.filter(
     (i) => i.connectionStatus === "open" || i.status === "open"

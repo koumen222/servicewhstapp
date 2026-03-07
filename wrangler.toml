@@ -2,7 +2,7 @@ name = "whatsapp-saas-frontend"
 compatibility_date = "2024-03-07"
 compatibility_flags = ["nodejs_compat"]
 
-pages_build_output_dir = "frontend/.vercel/output/static"
+pages_build_output_dir = "frontend/.open-next"
 
 [vars]
 NEXT_PUBLIC_API_URL = "https://api.ecomcookpit.site"
