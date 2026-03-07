@@ -65,7 +65,7 @@ export default function AdminInstancesPage() {
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex items-start sm:items-center justify-between gap-3 flex-wrap"
       >
         <div>
           <h2 className="text-[15px] font-semibold text-white flex items-center gap-2">
@@ -79,7 +79,7 @@ export default function AdminInstancesPage() {
             Monitor all WhatsApp instances across all users.
           </p>
         </div>
-        <button className="btn-ghost flex items-center gap-1.5">
+        <button className="btn-ghost flex items-center gap-1.5 shrink-0">
           <RefreshCw size={13} />
           Refresh
         </button>
@@ -104,7 +104,7 @@ export default function AdminInstancesPage() {
       </div>
 
       {/* Search */}
-      <div className="relative max-w-xs">
+      <div className="relative w-full sm:max-w-xs">
         <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4a6a4a]" />
         <input
           value={search}
@@ -122,7 +122,8 @@ export default function AdminInstancesPage() {
         className="rounded-2xl overflow-hidden"
         style={{ background: "#111", border: "1px solid #1e1e1e" }}
       >
-        <table className="w-full data-table">
+        <div className="overflow-x-auto">
+        <table className="w-full data-table min-w-[520px]">
           <thead>
             <tr>
               <th className="text-left">Instance</th>
@@ -167,6 +168,7 @@ export default function AdminInstancesPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </motion.div>
     </div>
   );

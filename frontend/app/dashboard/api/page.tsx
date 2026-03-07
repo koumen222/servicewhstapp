@@ -146,7 +146,7 @@ const data = await response.json();
 console.log(data.data.messageId);`;
 
   return (
-    <div className="max-w-4xl space-y-5">
+    <div className="w-full max-w-4xl space-y-5">
 
       {/* Intro */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
@@ -193,7 +193,7 @@ console.log(data.data.messageId);`;
       {/* API Keys table */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
         className="rounded-2xl overflow-hidden" style={{ background: "#111", border: "1px solid #1e1e1e" }}>
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#1a1a1a]">
+        <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-[#1a1a1a] flex-wrap">
           <h3 className="text-[13px] font-semibold text-white flex items-center gap-2">
             <Key size={14} className="text-[#22c55e]" />
             Clés API
@@ -214,7 +214,8 @@ console.log(data.data.messageId);`;
             <p className="text-[13px] text-[#5a7a5a]">Aucune clé API. Créez une instance puis générez une clé.</p>
           </div>
         ) : (
-          <table className="w-full data-table">
+          <div className="overflow-x-auto">
+          <table className="w-full data-table min-w-[600px]">
             <thead>
               <tr>
                 <th className="text-left">Nom</th>
@@ -285,6 +286,7 @@ console.log(data.data.messageId);`;
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </motion.div>
 
@@ -297,7 +299,7 @@ console.log(data.data.messageId);`;
             {copied === "code" ? <><CheckCircle2 size={12} className="text-[#22c55e]" /> Copié</> : <><Copy size={12} /> Copier</>}
           </button>
         </div>
-        <pre className="px-5 py-4 text-[11px] font-mono overflow-x-auto text-[#8adc8a] leading-relaxed" style={{ background: "#080808" }}>
+        <pre className="px-4 sm:px-5 py-4 text-[11px] font-mono overflow-x-auto text-[#8adc8a] leading-relaxed whitespace-pre" style={{ background: "#080808" }}>
           {codeExample}
         </pre>
       </motion.div>

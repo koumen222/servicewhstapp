@@ -57,7 +57,8 @@ export default function PurchasesPage() {
             <p className="text-[13px] text-[#5a7a5a]">Aucun achat pour le moment.</p>
           </div>
         ) : (
-          <table className="w-full data-table">
+          <div className="overflow-x-auto">
+          <table className="w-full data-table min-w-[480px]">
             <thead>
               <tr>
                 <th className="text-left">INVOICE</th>
@@ -107,6 +108,7 @@ export default function PurchasesPage() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </motion.div>
     </div>

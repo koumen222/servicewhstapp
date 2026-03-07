@@ -249,15 +249,18 @@ export function Header({ onMenuClick }: HeaderProps) {
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="payment-banner mx-3 mb-2 px-3 py-2 flex items-center gap-2">
-              <AlertTriangle size={13} className="text-red-400 shrink-0" />
-              <p className="text-xs text-red-400">
-                <span className="font-semibold">Paiement requis.</span>{" "}
-                Une ou plusieurs instances ont expiré. Veuillez renouveler pour restaurer l'accès.
-              </p>
+            <div className="payment-banner mx-3 mb-2 px-3 py-2 flex flex-col sm:flex-row items-start sm:items-center gap-2">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <AlertTriangle size={13} className="text-red-400 shrink-0" />
+                <p className="text-xs text-red-400">
+                  <span className="font-semibold">Paiement requis.</span>{" "}
+                  <span className="hidden sm:inline">Une ou plusieurs instances ont expiré.</span>
+                  <span className="sm:hidden">Instance(s) expirée(s).</span>
+                </p>
+              </div>
               <button
                 onClick={() => router.push("/dashboard/balance")}
-                className="ml-auto shrink-0 text-[10px] font-semibold text-red-300 hover:text-white bg-red-500/15 hover:bg-red-500/25 px-2 py-1 rounded transition-colors"
+                className="shrink-0 text-[10px] font-semibold text-red-300 hover:text-white bg-red-500/15 hover:bg-red-500/25 px-2 py-1 rounded transition-colors self-end sm:self-auto"
               >
                 Payer maintenant →
               </button>

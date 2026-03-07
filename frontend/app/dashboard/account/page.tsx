@@ -47,21 +47,21 @@ export default function AccountPage() {
         <h2 className="text-[13px] font-semibold text-[#8a9a8a] uppercase tracking-wider mb-4">
           Profil
         </h2>
-        <div className="flex items-center gap-4">
+        <div className="flex items-start sm:items-center gap-4 flex-wrap">
           <div
             className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold shrink-0"
             style={{ background: "#0d2510", color: "#22c55e" }}
           >
             {user?.name?.charAt(0)?.toUpperCase() ?? "U"}
           </div>
-          <div className="flex-1">
-            <p className="text-[16px] font-bold text-white">{user?.name ?? "User"}</p>
-            <p className="text-[12px] text-[#5a7a5a] flex items-center gap-1.5 mt-0.5">
-              <Mail size={11} />{user?.email ?? "—"}
+          <div className="flex-1 min-w-0">
+            <p className="text-[16px] font-bold text-white truncate">{user?.name ?? "User"}</p>
+            <p className="text-[12px] text-[#5a7a5a] flex items-center gap-1.5 mt-0.5 truncate">
+              <Mail size={11} className="shrink-0" />{user?.email ?? "—"}
             </p>
           </div>
           <span
-            className="px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize"
+            className="px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize shrink-0"
             style={{ background: "#0d2510", color: "#22c55e" }}
           >
             {plan}
@@ -134,7 +134,7 @@ export default function AccountPage() {
         className="rounded-2xl p-5"
         style={{ background: "#111", border: "1px solid #1e1e1e" }}
       >
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
           <h2 className="text-[13px] font-semibold text-[#8a9a8a] uppercase tracking-wider">
             Abonnement
           </h2>
@@ -144,9 +144,9 @@ export default function AccountPage() {
           <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#0d2510" }}>
             <CreditCard size={18} className="text-[#22c55e]" />
           </div>
-          <div>
+          <div className="min-w-0">
             <p className="text-[14px] font-semibold text-white capitalize">{plan} Plan</p>
-            <p className="text-[12px] text-[#5a7a5a] mt-0.5">
+            <p className="text-[12px] text-[#5a7a5a] mt-0.5 break-words">
               {planData.maxInstances} instance{planData.maxInstances !== 1 ? "s" : ""} ·{" "}
               {planData.price === 0 ? "Gratuit" : `${planData.price.toLocaleString("fr-FR")} XAF/mois`}
             </p>
@@ -172,7 +172,7 @@ export default function AccountPage() {
           ].map(({ label, desc }) => (
             <div
               key={label}
-              className="flex items-center justify-between p-3 rounded-xl"
+              className="flex items-start sm:items-center justify-between p-3 rounded-xl gap-3"
               style={{ background: "#0a0a0a", border: "1px solid #1a1a1a" }}
             >
               <div className="flex items-center gap-3">
@@ -182,7 +182,7 @@ export default function AccountPage() {
                   <p className="text-[10px] text-[#4a6a4a]">{desc}</p>
                 </div>
               </div>
-              <button className="btn-ghost text-xs">Configurer</button>
+              <button className="btn-ghost text-xs shrink-0">Configurer</button>
             </div>
           ))}
         </div>

@@ -43,29 +43,29 @@ export default function LandingPage() {
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-green-500/15 rounded-full blur-[120px]" />
           </div>
 
-          <div className="max-w-6xl mx-auto px-8 text-center">
+          <div className="max-w-6xl mx-auto px-4 sm:px-8 text-center">
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/20 mb-7">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
               <span className="text-xs font-medium text-green-400 tracking-wide">Outil de vente WhatsApp pour e-commerçants</span>
             </div>
 
-            <h1 className="text-4xl md:text-5xl lg:text-[60px] font-bold text-white mb-5 leading-[1.1] tracking-tight max-w-4xl mx-auto">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[60px] font-bold text-white mb-5 leading-[1.15] tracking-tight max-w-4xl mx-auto">
               Vendez plus via WhatsApp,<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500">
                 automatiquement et en masse
               </span>
             </h1>
-            <p className="text-base text-zinc-400 mb-8 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-sm sm:text-base text-zinc-400 mb-8 max-w-2xl mx-auto leading-relaxed">
               Envoyez vos promotions à des centaines de clients ciblés par ville ou produit, laissez votre agent IA gérer les réponses, et boostez vos ventes sans effort supplémentaire.
             </p>
 
-            <div className="flex items-center justify-center gap-3 mb-14">
-              <Link href="/register" className="bg-green-600 hover:bg-green-500 text-white px-6 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-14">
+              <Link href="/register" className="w-full sm:w-auto bg-green-600 hover:bg-green-500 text-white px-6 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2">
                 Démarrer gratuitement
                 <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link href="/pricing" className="bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-white px-6 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
+              <Link href="/pricing" className="w-full sm:w-auto bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-white px-6 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2">
                 Voir les tarifs
               </Link>
             </div>
@@ -85,31 +85,31 @@ export default function LandingPage() {
                   </div>
                 </div>
                 {/* Mockup content */}
-                <div className="flex" style={{ height: 340 }}>
-                  {/* Sidebar */}
-                  <div className="w-14 bg-zinc-900 border-r border-zinc-800 flex flex-col items-center py-4 gap-4 shrink-0">
-                    <div className="w-8 h-8 bg-green-600/20 rounded-lg flex items-center justify-center">
-                      <MessageSquare className="h-4 w-4 text-green-500" />
+                <div className="flex overflow-hidden" style={{ height: 300 }}>
+                  {/* Sidebar — hidden on very small */}
+                  <div className="hidden xs:flex w-12 sm:w-14 bg-zinc-900 border-r border-zinc-800 flex-col items-center py-4 gap-4 shrink-0">
+                    <div className="w-7 h-7 bg-green-600/20 rounded-lg flex items-center justify-center">
+                      <MessageSquare className="h-3.5 w-3.5 text-green-500" />
                     </div>
                     {[Wifi, BarChart3, Code2, Users, Shield].map((Icon, i) => (
-                      <div key={i} className={`w-7 h-7 rounded-lg flex items-center justify-center ${i === 0 ? 'bg-zinc-800' : ''}`}>
-                        <Icon className="h-3.5 w-3.5 text-zinc-600" />
+                      <div key={i} className={`w-6 h-6 rounded-lg flex items-center justify-center ${i === 0 ? 'bg-zinc-800' : ''}`}>
+                        <Icon className="h-3 w-3 text-zinc-600" />
                       </div>
                     ))}
                   </div>
                   {/* Main area */}
-                  <div className="flex-1 p-5 overflow-hidden">
-                    <div className="flex items-center justify-between mb-5">
+                  <div className="flex-1 p-3 sm:p-5 overflow-hidden min-w-0">
+                    <div className="flex items-center justify-between mb-3 sm:mb-5">
                       <div>
-                        <div className="text-white text-sm font-semibold mb-0.5">Bonjour, bienvenue</div>
-                        <div className="text-zinc-500 text-xs">Votre tableau de bord e-commerce</div>
+                        <div className="text-white text-xs sm:text-sm font-semibold mb-0.5">Bonjour, bienvenue</div>
+                        <div className="text-zinc-500 text-[10px] sm:text-xs">Votre tableau de bord e-commerce</div>
                       </div>
-                      <div className="bg-green-600 hover:bg-green-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 cursor-pointer transition-all duration-200 hover:shadow-lg hover:shadow-green-600/30 hover:scale-105">
-                        <Plus className="h-3 w-3" /> Nouvelle diffusion
+                      <div className="bg-green-600 text-white text-[10px] sm:text-xs px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg font-medium flex items-center gap-1 cursor-pointer shrink-0">
+                        <Plus className="h-2.5 w-2.5" /> <span className="hidden sm:inline">Nouvelle diffusion</span><span className="sm:hidden">Nouveau</span>
                       </div>
                     </div>
                     {/* Stats row */}
-                    <div className="grid grid-cols-4 gap-3 mb-5">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-3 sm:mb-5">
                       {[
                         { label: "Clients contactés", val: "1,842", color: "text-green-400" },
                         { label: "Messages envoyés", val: "12,490", color: "text-white" },
@@ -123,13 +123,13 @@ export default function LandingPage() {
                       ))}
                     </div>
                     {/* Instance list */}
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       {[
                         { name: "Promo Chaussures Yaoundé", num: "342 clients · photos produit", status: "Envoyé", dot: "bg-green-500" },
                         { name: "Soldes Douala Nord", num: "215 clients · vidéo + prix", status: "En cours", dot: "bg-blue-500" },
                         { name: "Relance paniers abandonnés", num: "98 clients · message IA", status: "Planifié", dot: "bg-yellow-500" },
                       ].map((inst, i) => (
-                        <div key={i} className="flex items-center gap-3 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 cursor-pointer transition-all duration-200 hover:border-zinc-700 hover:bg-zinc-850 hover:scale-[1.02] group">
+                        <div key={i} className="flex items-center gap-2 sm:gap-3 bg-zinc-900 border border-zinc-800 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 cursor-pointer group">
                           <div className={`w-2 h-2 rounded-full ${inst.dot} shrink-0 ${inst.dot === 'bg-blue-500' ? 'animate-pulse' : ''}`} />
                           <div className="flex-1 min-w-0">
                             <div className="text-xs font-medium text-white group-hover:text-green-400 transition-colors">{inst.name}</div>
@@ -141,7 +141,7 @@ export default function LandingPage() {
                     </div>
                   </div>
                   {/* Right panel */}
-                  <div className="w-56 border-l border-zinc-800 p-4 shrink-0 hidden xl:block">
+                  <div className="w-44 xl:w-56 border-l border-zinc-800 p-3 xl:p-4 shrink-0 hidden lg:block">
                     <div className="text-xs font-semibold text-zinc-400 mb-3">Activité récente</div>
                     <div className="space-y-2.5">
                       {[
@@ -171,9 +171,9 @@ export default function LandingPage() {
         </section>
 
         {/* ─── 2. PAIN POINTS ────────────────────────── */}
-        <section id="problems" className="pt-28 pb-20 bg-black">
-          <div className="max-w-6xl mx-auto px-8">
-            <div className="flex items-end justify-between mb-12">
+        <section id="problems" className="pt-20 sm:pt-28 pb-20 bg-black">
+          <div className="max-w-6xl mx-auto px-4 sm:px-8">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 sm:mb-12 gap-4">
               <div className="max-w-xl">
                 <p className="text-xs font-semibold text-green-500 uppercase tracking-widest mb-3">Le défi</p>
                 <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">
@@ -277,8 +277,8 @@ export default function LandingPage() {
         </section>
 
         {/* ─── 3. FEATURE CARDS WITH MOCKUPS ───────────────────────── */}
-        <section id="features" className="py-20 bg-zinc-950/50">
-          <div className="max-w-6xl mx-auto px-8">
+        <section id="features" className="py-16 sm:py-20 bg-zinc-950/50">
+          <div className="max-w-6xl mx-auto px-4 sm:px-8">
             <div className="text-center mb-14">
               <p className="text-xs font-semibold text-green-500 uppercase tracking-widest mb-3">Fonctionnalités</p>
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
@@ -409,15 +409,15 @@ export default function LandingPage() {
         </section>
 
         {/* ─── 4. INTEGRATIONS ─────────────────────────────────────── */}
-        <section id="integration" className="py-20 bg-black">
-          <div className="max-w-6xl mx-auto px-8 text-center">
+        <section id="integration" className="py-16 sm:py-20 bg-black">
+          <div className="max-w-6xl mx-auto px-4 sm:px-8 text-center">
             <p className="text-xs font-semibold text-green-500 uppercase tracking-widest mb-3">Intégrations</p>
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Connecte-toi à tes outils e-commerce</h2>
             <p className="text-sm text-zinc-400 max-w-lg mx-auto mb-12">
               Synchronise ta boutique, importe ta liste clients et automatise tes envois directement depuis tes outils existants.
             </p>
 
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-4 max-w-3xl mx-auto mb-10">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 sm:gap-4 max-w-3xl mx-auto mb-10">
               {[
                 { label: "Shopify", Icon: TrendingUp, color: "text-green-400" },
                 { label: "WooCommerce", Icon: Globe, color: "text-blue-400" },
@@ -446,8 +446,8 @@ export default function LandingPage() {
         </section>
 
         {/* ─── 5. FAQ ──────────────────────────────────────────────── */}
-        <section className="py-20 bg-zinc-950/50">
-          <div className="max-w-6xl mx-auto px-8">
+        <section className="py-16 sm:py-20 bg-zinc-950/50">
+          <div className="max-w-6xl mx-auto px-4 sm:px-8">
             <div className="grid lg:grid-cols-2 gap-16 items-start">
               {/* Left */}
               <div>
@@ -510,20 +510,20 @@ export default function LandingPage() {
         </section>
 
         {/* ─── 6. FINAL CTA ────────────────────────────────────────── */}
-        <section className="py-20 bg-black">
-          <div className="max-w-6xl mx-auto px-8">
-            <div className="rounded-2xl bg-gradient-to-br from-green-600/20 via-zinc-900 to-zinc-900 border border-green-500/20 p-12 text-center">
-              <h2 className="text-3xl font-bold text-white mb-4">
+        <section className="py-16 sm:py-20 bg-black">
+          <div className="max-w-6xl mx-auto px-4 sm:px-8">
+            <div className="rounded-2xl bg-gradient-to-br from-green-600/20 via-zinc-900 to-zinc-900 border border-green-500/20 p-6 sm:p-10 md:p-12 text-center">
+              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
                 Prêt à booster vos ventes via WhatsApp ?
               </h2>
               <p className="text-sm text-zinc-400 mb-8 max-w-md mx-auto">
                 Rejoignez des centaines d'e-commerçants qui utilisent ZeChat.site pour vendre plus, plus vite. Démarrez gratuitement.
               </p>
-              <div className="flex items-center justify-center gap-3">
-                <Link href="/register" className="bg-green-600 hover:bg-green-500 text-white px-7 py-3 rounded-lg text-sm font-semibold transition-colors">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                <Link href="/register" className="w-full sm:w-auto bg-green-600 hover:bg-green-500 text-white px-7 py-3 rounded-lg text-sm font-semibold transition-colors text-center">
                   Créer un compte gratuit
                 </Link>
-                <Link href="/pricing" className="border border-zinc-700 hover:border-zinc-600 text-white px-7 py-3 rounded-lg text-sm font-semibold transition-colors">
+                <Link href="/pricing" className="w-full sm:w-auto border border-zinc-700 hover:border-zinc-600 text-white px-7 py-3 rounded-lg text-sm font-semibold transition-colors text-center">
                   Voir les tarifs
                 </Link>
               </div>
@@ -535,8 +535,8 @@ export default function LandingPage() {
       </main>
 
       <footer className="bg-zinc-950 border-t border-white/5">
-        <div className="max-w-6xl mx-auto px-8 py-16">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+        <div className="max-w-6xl mx-auto px-4 sm:px-8 py-12 sm:py-16">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12 mb-10 sm:mb-12">
             {/* Brand */}
             <div>
               <Link href="/" className="flex items-center gap-2.5 mb-4">

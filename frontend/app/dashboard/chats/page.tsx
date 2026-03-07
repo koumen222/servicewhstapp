@@ -124,7 +124,7 @@ export default function ChatsPage() {
     <>
       <div className="max-w-4xl">
         {/* Header with stats */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-start sm:items-center justify-between mb-6 gap-3 flex-wrap">
           <div>
             <h2 className="text-[15px] font-semibold text-white flex items-center gap-2">
               <MessageSquare size={16} />
@@ -140,8 +140,8 @@ export default function ChatsPage() {
             </p>
           </div>
           
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 text-[11px]">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="hidden sm:flex items-center gap-2 text-[11px]">
               <Users size={12} className="text-[#4a6a4a]" />
               <span className="text-[#5a7a5a]">{hasChats ? `${chats.length} contacts` : "0 contacts"}</span>
             </div>
@@ -149,7 +149,7 @@ export default function ChatsPage() {
             {activeInstance && (
               <div className="flex items-center gap-2 text-[11px]">
                 <Wifi size={12} className="text-[#4a6a4a]" />
-                <span className="text-[#5a7a5a]">{activeInstance.name}</span>
+                <span className="text-[#5a7a5a] truncate max-w-[100px]">{activeInstance.name}</span>
               </div>
             )}
           </div>

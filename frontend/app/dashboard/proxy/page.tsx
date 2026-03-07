@@ -45,7 +45,7 @@ export default function ProxyPage() {
         className="rounded-2xl overflow-hidden"
         style={{ background: "#111", border: "1px solid #1e1e1e" }}
       >
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#1a1a1a]">
+        <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-[#1a1a1a] flex-wrap">
           <h3 className="text-[13px] font-semibold text-white">
             Configured Proxies
           </h3>
@@ -59,7 +59,8 @@ export default function ProxyPage() {
             <p className="text-[12px] text-[#5a7a5a]">No proxies configured.</p>
           </div>
         ) : (
-          <table className="w-full data-table">
+          <div className="overflow-x-auto">
+          <table className="w-full data-table min-w-[320px]">
             <thead>
               <tr>
                 <th className="text-left">Host</th>
@@ -101,6 +102,7 @@ export default function ProxyPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </motion.div>
     </div>

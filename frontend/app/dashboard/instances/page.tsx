@@ -131,61 +131,66 @@ export default function InstancesPage() {
       </div>
 
       {/* Filters bar */}
-      <div className="flex items-center gap-3 mb-5 flex-wrap">
-        {/* Search */}
-        <div className="relative flex-1 min-w-[180px] max-w-xs">
-          <Search
-            size={13}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4a6a4a]"
-          />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher des instances…"
-            className="input-dark w-full pl-8 text-xs h-8"
-          />
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-5">
+        {/* Row 1: Search + View mode */}
+        <div className="flex items-center gap-2 flex-1">
+          {/* Search */}
+          <div className="relative flex-1 min-w-0">
+            <Search
+              size={13}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4a6a4a]"
+            />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher des instances…"
+              className="input-dark w-full pl-8 text-xs h-8"
+            />
+          </div>
+
+          {/* View mode */}
+          <div className="flex items-center gap-1 p-1 rounded-lg shrink-0" style={{ background: "#111", border: "1px solid #1e1e1e" }}>
+            <button
+              onClick={() => setViewMode("grid")}
+              className={cn(
+                "p-1.5 rounded-md transition-colors",
+                viewMode === "grid" ? "bg-[#0d2510] text-[#22c55e]" : "text-[#4a6a4a] hover:text-white"
+              )}
+            >
+              <LayoutGrid size={13} />
+            </button>
+            <button
+              onClick={() => setViewMode("list")}
+              className={cn(
+                "p-1.5 rounded-md transition-colors",
+                viewMode === "list" ? "bg-[#0d2510] text-[#22c55e]" : "text-[#4a6a4a] hover:text-white"
+              )}
+            >
+              <List size={13} />
+            </button>
+          </div>
         </div>
 
-        {/* Status filter */}
-        <div className="flex items-center gap-1 p-1 rounded-lg" style={{ background: "#111", border: "1px solid #1e1e1e" }}>
-          {(["all", "open", "close", "expired", "connecting"] as FilterStatus[]).map(
-            (s) => (
-              <button
-                key={s}
-                onClick={() => setFilterStatus(s)}
-                className={cn(
-                  "px-2.5 py-1 rounded-md text-[11px] font-medium transition-all duration-150 capitalize",
-                  filterStatus === s
-                    ? "bg-[#0d2510] text-[#22c55e]"
-                    : "text-[#5a7a5a] hover:text-white"
-                )}
-              >
-                {s === "open" ? "Connecté" : s === "close" ? "Déconnecté" : s === "all" ? "Tous" : s === "expired" ? "Expiré" : s === "connecting" ? "Connexion" : s}
-              </button>
-            )
-          )}
-        </div>
-
-        {/* View mode */}
-        <div className="flex items-center gap-1 p-1 rounded-lg ml-auto" style={{ background: "#111", border: "1px solid #1e1e1e" }}>
-          <button
-            onClick={() => setViewMode("grid")}
-            className={cn(
-              "p-1.5 rounded-md transition-colors",
-              viewMode === "grid" ? "bg-[#0d2510] text-[#22c55e]" : "text-[#4a6a4a] hover:text-white"
+        {/* Status filter — scrollable on mobile */}
+        <div className="overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-1 p-1 rounded-lg w-max" style={{ background: "#111", border: "1px solid #1e1e1e" }}>
+            {(["all", "open", "close", "expired", "connecting"] as FilterStatus[]).map(
+              (s) => (
+                <button
+                  key={s}
+                  onClick={() => setFilterStatus(s)}
+                  className={cn(
+                    "px-2.5 py-1 rounded-md text-[11px] font-medium transition-all duration-150 whitespace-nowrap",
+                    filterStatus === s
+                      ? "bg-[#0d2510] text-[#22c55e]"
+                      : "text-[#5a7a5a] hover:text-white"
+                  )}
+                >
+                  {s === "open" ? "Connecté" : s === "close" ? "Déconnecté" : s === "all" ? "Tous" : s === "expired" ? "Expiré" : "Connexion"}
+                </button>
+              )
             )}
-          >
-            <LayoutGrid size={13} />
-          </button>
-          <button
-            onClick={() => setViewMode("list")}
-            className={cn(
-              "p-1.5 rounded-md transition-colors",
-              viewMode === "list" ? "bg-[#0d2510] text-[#22c55e]" : "text-[#4a6a4a] hover:text-white"
-            )}
-          >
-            <List size={13} />
-          </button>
+          </div>
         </div>
       </div>
 

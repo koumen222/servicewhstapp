@@ -65,16 +65,16 @@ export default function BalancePage() {
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl p-4 flex items-center gap-4"
+          className="rounded-2xl p-4 flex items-start sm:items-center gap-3"
           style={{ background: "#0d2010", border: "1px solid #22c55e30" }}
         >
-          <CheckCircle2 size={18} className="text-[#22c55e] shrink-0" />
-          <div>
+          <CheckCircle2 size={18} className="text-[#22c55e] shrink-0 mt-0.5 sm:mt-0" />
+          <div className="min-w-0">
             <p className="text-[12px] font-semibold text-white">
               Plan actuel : <span className="text-[#22c55e] capitalize">{info.plan}</span>
             </p>
-            <p className="text-[11px] text-[#5a7a5a]">
-              {info.usage.activeInstances} instance(s) active(s) · {info.usage.messages30d} messages (30j) · {info.usage.totalMessages} au total
+            <p className="text-[11px] text-[#5a7a5a] mt-0.5 break-words">
+              {info.usage.activeInstances} instance(s) · {info.usage.messages30d} msgs (30j) · {info.usage.totalMessages} total
             </p>
           </div>
         </motion.div>
@@ -203,7 +203,8 @@ export default function BalancePage() {
               Historique des paiements
             </h3>
           </div>
-          <table className="w-full data-table">
+          <div className="overflow-x-auto">
+          <table className="w-full data-table min-w-[360px]">
             <thead>
               <tr>
                 <th className="text-left">Plan</th>
@@ -229,6 +230,7 @@ export default function BalancePage() {
               ))}
             </tbody>
           </table>
+          </div>
         </motion.div>
       )}
     </div>
