@@ -92,7 +92,7 @@ router.post('/create-instance', async (req: Request, res: Response) => {
       instanceName: evolutionInstanceName,
       evolutionInstanceId,
       customName: displayName.trim(),
-      instanceToken: evolutionInstanceId || evolutionApiKey,
+      instanceToken: evolutionApiKey,
       status: evolutionStatus as any,
       isActive: true
     })

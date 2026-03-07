@@ -117,7 +117,7 @@ router.post('/', async (req: Request, res: Response) => {
       instanceName: evolutionInstanceName,
       evolutionInstanceId,
       customName: customName.trim(),
-      instanceToken: evolutionInstanceId || evolutionApiKey,
+      instanceToken: evolutionApiKey,
       status: evolutionStatus as any,
       isActive: true
     })

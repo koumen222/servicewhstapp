@@ -17,7 +17,7 @@ import {
   Copy,
   CheckCircle2,
 } from "lucide-react";
-import { apiKeysApi } from "@/lib/api";
+import { apiKeysApi, usageApi } from "@/lib/api";
 import { cn, getAvatarColor, timeAgo, formatNumber } from "@/lib/utils";
 import { StatusBadge } from "./StatusBadge";
 import { InstanceTokenDisplay } from "./InstanceTokenDisplay";
@@ -40,6 +40,7 @@ export function InstanceCard({
   const [menuOpen, setMenuOpen] = useState(false);
   const [apiKeys, setApiKeys] = useState<any[]>([]);
   const [copied, setCopied] = useState(false);
+  const [msgUsage, setMsgUsage] = useState<{ daily: number; monthly: number; limits: { daily: number; monthly: number } } | null>(null);
   
   // Real-time instance status - DISABLED to avoid refresh loops
   // TODO: Re-enable with proper state management
@@ -69,6 +70,14 @@ export function InstanceCard({
     setApiKeys([]);
   }, [instance.id]);
 
+  useEffect(() => {
+    if (instance.id) {
+      usageApi.getInstance(instance.instanceName || instance.id)
+        .then((r) => setMsgUsage(r.data?.data ?? null))
+        .catch(() => {});
+    }
+  }, [instance.id, instance.instanceName]);
+
   function copyKey(key: string) {
     navigator.clipboard.writeText(key);
     setCopied(true);
@@ -77,7 +86,7 @@ export function InstanceCard({
   
   // Normalize: real-time takes priority, fallback to DB status
   const currentStatus = realTimeStatus !== 'unknown' ? realTimeStatus :
-    ({ open: 'connected', connecting: 'connecting', close: 'disconnected', closed: 'disconnected', expired: 'expired' } as Record<string, string>)[instance.connectionStatus ?? instance.status] || 'unknown';
+    ({ open: 'connected', connected: 'connected', connecting: 'connecting', close: 'disconnected', closed: 'disconnected', disconnected: 'disconnected', expired: 'expired' } as Record<string, string>)[instance.connectionStatus ?? instance.status] || 'unknown';
 
   const isExpired = currentStatus === 'expired';
   const isConnected = currentStatus === 'connected';
@@ -232,6 +241,42 @@ export function InstanceCard({
           <span>{timeAgo(instance.createdAt)}</span>
         </div>
       </div>
+
+      {/* ── Usage bars (daily / monthly) ────────── */}
+      {msgUsage && (
+        <div className="mt-3 space-y-2">
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] text-[#5a7a5a]">{t('acct.dailyUsage')}</span>
+              <span className="text-[10px] font-mono text-[#5a7a5a]">{msgUsage.daily} / {msgUsage.limits.daily}</span>
+            </div>
+            <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${Math.min((msgUsage.daily / msgUsage.limits.daily) * 100, 100)}%`,
+                  background: msgUsage.daily >= msgUsage.limits.daily ? '#ef4444' : msgUsage.daily >= msgUsage.limits.daily * 0.8 ? '#f59e0b' : '#22c55e',
+                }}
+              />
+            </div>
+          </div>
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] text-[#5a7a5a]">{t('acct.monthlyUsage')}</span>
+              <span className="text-[10px] font-mono text-[#5a7a5a]">{msgUsage.monthly} / {msgUsage.limits.monthly}</span>
+            </div>
+            <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${Math.min((msgUsage.monthly / msgUsage.limits.monthly) * 100, 100)}%`,
+                  background: msgUsage.monthly >= msgUsage.limits.monthly ? '#ef4444' : msgUsage.monthly >= msgUsage.limits.monthly * 0.8 ? '#f59e0b' : '#3b82f6',
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Quota bar ───────────────────────────── */}
       {instance.quotas && instance.quotas.length > 0 && (() => {
