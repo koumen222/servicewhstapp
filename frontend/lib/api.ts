@@ -61,6 +61,9 @@ api.interceptors.request.use(
   }
 );
 
+// Auth error codes that require logout
+const AUTH_ERROR_CODES = ['MISSING_AUTH_TOKEN', 'EMPTY_TOKEN', 'INVALID_TOKEN', 'TOKEN_EXPIRED', 'AUTH_ERROR'];
+
 api.interceptors.response.use(
   (response) => {
     console.log(`✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
@@ -73,10 +76,16 @@ api.interceptors.response.use(
     }
     
     if (error.response?.status === 401) {
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("auth_token");
-        localStorage.removeItem("auth_user");
-        window.location.href = "/login";
+      const errorCode = error.response?.data?.code;
+      // Only logout if it's a genuine auth token error (not a business-logic 401)
+      if (!errorCode || AUTH_ERROR_CODES.includes(errorCode)) {
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("auth_token");
+          localStorage.removeItem("auth_user");
+          // Also clear the auth cookie to prevent redirect loops
+          document.cookie = "auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax";
+          window.location.href = "/login";
+        }
       }
     }
     return Promise.reject(error);

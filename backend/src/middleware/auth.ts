@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
-import { AuthService } from '../services/authService.mongo.js'
+import jwt from 'jsonwebtoken'
+
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-change-in-production'
 
 // Types pour l'authentification JWT
 interface JWTPayload {
@@ -12,7 +14,8 @@ interface JWTPayload {
 }
 
 // Middleware d'authentification JWT pour le système multi-tenant
-export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+// Uses JWT claims directly — no MongoDB lookup on every request (faster + more resilient)
+export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   try {
     // Vérifier la présence du header Authorization
     const authHeader = req.headers.authorization
@@ -34,39 +37,44 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
       })
     }
 
-    // Vérifier le token avec AuthService et récupérer les données fraîches de l'utilisateur
-    const user = await AuthService.verifyToken(token)
-    if (!user) {
+    // Vérifier le token JWT directement (pas de requête MongoDB)
+    let decoded: JWTPayload
+    try {
+      decoded = jwt.verify(token, JWT_SECRET) as JWTPayload
+    } catch (jwtError: any) {
+      const isExpired = jwtError?.name === 'TokenExpiredError'
       return res.status(401).json({
         error: 'Invalid token',
-        message: 'Token is invalid or expired',
+        message: isExpired ? 'Token has expired' : 'Token is invalid',
+        code: isExpired ? 'TOKEN_EXPIRED' : 'INVALID_TOKEN'
+      })
+    }
+
+    if (!decoded?.id || !decoded?.email) {
+      return res.status(401).json({
+        error: 'Invalid token',
+        message: 'Token payload is malformed',
         code: 'INVALID_TOKEN'
       })
     }
 
-    // Ajouter les informations utilisateur à la requête
+    // Ajouter les informations utilisateur à la requête depuis les claims JWT
     req.user = {
-      id: user._id?.toString() || '',
-      email: user.email,
-      name: user.name,
-      plan: user.plan || 'free',
-      maxInstances: user.maxInstances || 1,
-      isActive: user.isActive ?? true
-    }
-
-    // Logger l'authentification (en développement uniquement)
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`🔐 Authenticated user: ${user.email} (${user.plan} plan)`)
+      id: decoded.id,
+      email: decoded.email,
+      name: decoded.name || '',
+      plan: decoded.plan || 'free',
+      maxInstances: decoded.maxInstances || 1,
+      isActive: decoded.isActive ?? true
     }
 
     next()
   } catch (error) {
     console.error('Authentication middleware error:', error)
-    
-    return res.status(500).json({
-      error: 'Authentication error',
-      message: 'An error occurred during authentication',
-      code: 'AUTH_ERROR'
+    return res.status(401).json({
+      error: 'Invalid token',
+      message: 'Token verification failed',
+      code: 'INVALID_TOKEN'
     })
   }
 }
