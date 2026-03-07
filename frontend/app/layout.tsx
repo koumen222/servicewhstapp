@@ -3,11 +3,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | EcomCookpit",
-    default: "EcomCookpit — Gestionnaire d'instances WhatsApp en Afrique",
+    template: "%s | ZeChat.site",
+    default: "ZeChat.site — Vendez plus via WhatsApp, automatiquement et en masse",
   },
   description:
-    "Plateforme professionnelle EcomCookpit de gestion d'instances WhatsApp multi-comptes.",
+    "ZeChat.site : l'outil WhatsApp des e-commerçants. Diffusion ciblée, agent IA, médias riches. Boost vos ventes en Afrique.",
   icons: {
     icon: [
       { url: "/logo.png", sizes: "32x32", type: "image/png" },

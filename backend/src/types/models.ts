@@ -12,9 +12,12 @@ export interface User extends BaseDocument {
   email: string
   name: string
   password: string
+  phone?: string
   plan: 'free' | 'starter' | 'pro' | 'enterprise'
   maxInstances: number
   isActive: boolean
+  emailVerified?: boolean
+  emailVerificationToken?: string
 }
 
 // ApiKey document

@@ -2,10 +2,12 @@ import jwt from 'jsonwebtoken'
 import { ObjectId } from 'mongodb'
 import { UserService } from './userService.js'
 import { UserDocument } from '../types/models.js'
+import crypto from 'crypto'
 
 export class AuthService {
   private static readonly JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-change-in-production'
   private static readonly JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d'
+  private static readonly EMAIL_VERIFICATION_SECRET = process.env.EMAIL_VERIFICATION_SECRET || 'email-verification-secret-change-in-production'
 
   static async generateToken(user: UserDocument): Promise<string> {
     const payload = {
@@ -36,6 +38,42 @@ export class AuthService {
     } catch (error) {
       console.error('Token verification failed:', error)
       return null
+    }
+  }
+
+  static generateEmailVerificationToken(email: string): string {
+    const payload = {
+      email,
+      type: 'email_verification',
+      timestamp: Date.now()
+    }
+    return jwt.sign(payload, this.EMAIL_VERIFICATION_SECRET, { expiresIn: '24h' })
+  }
+
+  static async verifyEmailToken(token: string): Promise<string | null> {
+    try {
+      const decoded = jwt.verify(token, this.EMAIL_VERIFICATION_SECRET) as any
+      if (decoded.type !== 'email_verification') {
+        return null
+      }
+      return decoded.email
+    } catch (error) {
+      console.error('Email verification token invalid:', error)
+      return null
+    }
+  }
+
+  static async activateUserEmail(email: string): Promise<boolean> {
+    try {
+      const user = await UserService.findByEmail(email)
+      if (!user) {
+        return false
+      }
+      await UserService.updateById(user._id!, { isActive: true, emailVerified: true })
+      return true
+    } catch (error) {
+      console.error('Email activation error:', error)
+      return false
     }
   }
 
@@ -75,8 +113,9 @@ export class AuthService {
     email: string
     name: string
     password: string
+    phone?: string
     plan?: string
-  }): Promise<{ user: UserDocument; token: string } | null> {
+  }): Promise<{ user: UserDocument; token: string; verificationToken: string } | null> {
     try {
       // Check if user already exists
       const existingUser = await UserService.findByEmail(userData.email)
@@ -84,20 +123,26 @@ export class AuthService {
         return null
       }
 
-      // Create new user
+      // Generate email verification token
+      const verificationToken = this.generateEmailVerificationToken(userData.email)
+
+      // Create new user (active immediately - email verification is optional)
       const user = await UserService.create({
         email: userData.email,
         name: userData.name,
         password: userData.password,
+        phone: userData.phone,
         plan: (userData.plan as any) || 'free',
         maxInstances: this.getMaxInstancesForPlan(userData.plan || 'free'),
-        isActive: true
+        isActive: true,
+        emailVerified: false,
+        emailVerificationToken: verificationToken
       })
 
-      // Generate token
+      // Generate token (but user won't be able to login until email verified)
       const token = await this.generateToken(user)
 
-      return { user, token }
+      return { user, token, verificationToken }
     } catch (error) {
       console.error('Registration error:', error)
       return null

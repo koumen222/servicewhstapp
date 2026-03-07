@@ -56,11 +56,9 @@ export default function LoginPage() {
       {/* Left panel */}
       <div className="hidden lg:flex flex-col justify-between w-[420px] shrink-0 p-10 border-r border-[#141414]">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
-            <MessageSquare className="h-5 w-5 text-white" />
-          </div>
-          <span className="text-white font-semibold text-[15px]">
-            ZeChat.site
+          <img src="/logo.png" alt="ZeChat.site" className="w-8 h-8 object-contain" />
+          <span className="text-[17px] font-bold text-white tracking-tight">
+            ZeChat<span className="text-green-500">.site</span>
           </span>
         </div>
 
@@ -107,12 +105,10 @@ export default function LoginPage() {
         >
           {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-8 lg:hidden">
-            <div
-              className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center text-white font-bold text-xl mb-4"
-            >
-              Z
-            </div>
-            <span className="text-white font-semibold text-xl">ZeChat.site</span>
+            <img src="/logo.png" alt="ZeChat.site" className="w-8 h-8 object-contain" />
+            <span className="text-[17px] font-bold text-white tracking-tight">
+              ZeChat<span className="text-green-500">.site</span>
+            </span>
           </div>
 
           <h1 className="text-2xl font-bold text-white mb-1">Bon retour parmi nous</h1>

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { CheckCircle2, MessageSquare, ArrowRight, Zap, Star, CreditCard, Building2 } from "lucide-react";
+import { CheckCircle2, ArrowRight, Zap, Star, CreditCard, Building2 } from "lucide-react";
+import { PublicHeader } from "@/components/PublicHeader";
 
 export default function PricingPage() {
   const tiers = [
@@ -76,53 +77,26 @@ export default function PricingPage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0f0f0f]">
-      {/* Header */}
-      <header className="px-6 h-20 flex items-center justify-between border-b border-white/5 bg-black/50 backdrop-blur-md sticky top-0 z-50">
-        <Link className="flex items-center justify-center gap-2 group" href="/">
-          <div className="w-8 h-8 relative flex items-center justify-center transition-transform group-hover:scale-105">
-            <img 
-              src="/logo.png" 
-              alt="ZeChat Logo" 
-              className="w-full h-full object-contain"
-            />
-          </div>
-          <span className="text-lg font-bold tracking-tight text-white">
-            ZeChat<span className="text-green-500 text-xl tracking-tighter">.site</span>
-          </span>
-        </Link>
-        <nav className="hidden md:flex gap-8 text-sm font-medium text-zinc-400">
-          <Link className="hover:text-white transition-colors" href="/#features">Fonctionnalités</Link>
-          <Link className="hover:text-white transition-colors" href="/#solutions">Solutions</Link>
-          <Link className="text-white transition-colors" href="/pricing">Tarifs</Link>
-        </nav>
-        <div className="flex items-center gap-4">
-          <Link href="/login" className="text-sm font-medium text-zinc-400 hover:text-white transition-colors">
-            Connexion
-          </Link>
-          <Link href="/register" className="bg-green-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-green-500 transition-all shadow-lg shadow-green-900/20">
-            Essai Gratuit
-          </Link>
-        </div>
-      </header>
+    <div className="flex flex-col min-h-screen bg-black">
+      <PublicHeader />
 
-      <main className="flex-1 py-20 px-6">
-        <div className="container mx-auto">
-          <div className="text-center mb-16">
-            <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6">Des tarifs simples et transparents</h1>
-            <p className="text-zinc-400 text-xl max-w-2xl mx-auto">
-              Choisissez le forfait qui correspond le mieux à vos besoins. Pas de frais cachés.
+      <main className="flex-1 pt-16">
+        <div className="max-w-6xl mx-auto px-8 py-20">
+          <div className="text-center mb-14">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">Des tarifs simples et transparents</h1>
+            <p className="text-zinc-400 text-base max-w-xl mx-auto">
+              Choisissez le forfait qui correspond à vos besoins. Aucun frais caché.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
             {tiers.map((tier, i) => (
               <div 
                 key={i} 
-                className={`p-6 rounded-3xl border transition-all duration-300 flex flex-col ${
+                className={`p-6 rounded-2xl border transition-all duration-200 flex flex-col ${
                   tier.highlighted 
-                    ? "bg-[#0d2010] border-[#22c55e50] shadow-2xl shadow-green-500/10 scale-105 relative z-10" 
-                    : "bg-white/5 border-white/10 hover:border-white/20"
+                    ? "bg-zinc-900 border-green-500/40 shadow-lg shadow-green-500/10 relative" 
+                    : "bg-zinc-900/50 border-zinc-800 hover:border-zinc-700"
                 }`}
               >
                 {tier.highlighted && (
@@ -138,7 +112,7 @@ export default function PricingPage() {
                   >
                     <tier.icon size={18} style={{ color: tier.color }} />
                   </div>
-                  <h3 className="text-lg font-bold text-white mb-1">{tier.name}</h3>
+                  <h3 className="text-base font-semibold text-white mb-1">{tier.name}</h3>
                   
                   <div className="flex flex-col gap-0.5">
                     {tier.originalPrice && (
@@ -148,7 +122,7 @@ export default function PricingPage() {
                       </div>
                     )}
                     <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-extrabold text-white" style={{ color: tier.highlighted ? '#22c55e' : 'white' }}>
+                      <span className="text-xl font-bold" style={{ color: tier.highlighted ? '#22c55e' : 'white' }}>
                         {tier.price}
                       </span>
                       {tier.id !== 'free' && <span className="text-zinc-500 text-xs">/mois</span>}
@@ -168,12 +142,13 @@ export default function PricingPage() {
 
                 <Link 
                   href="/register"
-                  className={`w-full py-3 rounded-xl text-center text-sm font-bold transition-all ${
-                    tier.highlighted || tier.id === 'free'
-                      ? "bg-green-600 text-white hover:bg-green-500 shadow-lg shadow-green-900/20"
-                      : "bg-white/10 text-white hover:bg-white/20"
+                  className={`w-full py-2.5 rounded-lg text-center text-sm font-semibold transition-all ${
+                    tier.highlighted
+                      ? "bg-green-600 text-white hover:bg-green-500"
+                      : tier.id === 'free'
+                      ? "bg-zinc-700 text-zinc-300 hover:bg-zinc-600"
+                      : "bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-700"
                   }`}
-                  style={tier.highlighted ? { backgroundColor: tier.color } : {}}
                 >
                   {tier.cta}
                 </Link>
@@ -181,40 +156,36 @@ export default function PricingPage() {
             ))}
           </div>
 
-          <div className="mt-20 text-center p-12 rounded-3xl bg-green-900/20 border border-green-700/30 max-w-4xl mx-auto">
-            <h2 className="text-2xl font-bold text-white mb-4">Besoin d'une solution sur mesure ?</h2>
-            <p className="text-zinc-400 mb-8">
+          <div className="mt-16 p-10 rounded-2xl bg-zinc-900/50 border border-zinc-800 text-center">
+            <h2 className="text-xl font-semibold text-white mb-3">Besoin d'une solution sur mesure ?</h2>
+            <p className="text-sm text-zinc-400 mb-6 max-w-lg mx-auto">
               Nous proposons des solutions personnalisées pour les besoins spécifiques des grandes entreprises.
             </p>
             <Link 
               href="/contact" 
-              className="inline-flex items-center gap-2 text-green-500 font-bold hover:underline text-lg"
+              className="inline-flex items-center gap-2 text-green-500 text-sm font-semibold hover:text-green-400 transition-colors"
             >
-              Contactez notre équipe commerciale <ArrowRight className="h-5 w-5" />
+              Contacter notre équipe <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
       </main>
 
-      <footer className="py-12 px-6 border-t border-white/5 bg-black">
-        <div className="container mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 relative flex items-center justify-center">
-              <img 
-                src="/logo.png" 
-                alt="ZeChat Logo" 
-                className="w-full h-full object-contain"
-              />
-            </div>
-            <span className="text-base font-bold text-white tracking-tighter italic">ZeChat.site</span>
+      <footer className="border-t border-white/5 bg-zinc-950">
+        <div className="max-w-6xl mx-auto px-8 py-10 flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex items-center gap-2.5">
+            <img src="/logo.png" alt="ZeChat.site" className="w-7 h-7 object-contain" />
+            <span className="text-[15px] font-bold text-white tracking-tight">
+              ZeChat<span className="text-green-500">.site</span>
+            </span>
           </div>
-          <div className="text-zinc-500 text-sm">
-            © 2026 ZeChat — Expert en automatisation WhatsApp.
-          </div>
-          <div className="flex gap-6">
-            <Link className="text-zinc-500 hover:text-white transition-colors" href="#">CGU</Link>
-            <Link className="text-zinc-500 hover:text-white transition-colors" href="#">Confidentialité</Link>
-            <Link className="text-zinc-500 hover:text-white transition-colors" href="#">Contact</Link>
+          <p className="text-sm text-zinc-500">
+            © 2026 ZeChat.site. Tous droits réservés.
+          </p>
+          <div className="flex gap-5">
+            <Link className="text-sm text-zinc-500 hover:text-white transition-colors" href="#">CGU</Link>
+            <Link className="text-sm text-zinc-500 hover:text-white transition-colors" href="#">Confidentialité</Link>
+            <Link className="text-sm text-zinc-500 hover:text-white transition-colors" href="#">Contact</Link>
           </div>
         </div>
       </footer>
