@@ -12,8 +12,8 @@ const getBaseURL = () => {
     const hostname = window.location.hostname;
     
     // En production (domaine personnalisé)
-    if (hostname === 'zechat.site' || hostname === 'www.zechat.site' || hostname === 'ecomcookpit.site') {
-      return 'https://whatsapp-saas-production-77b9.up.railway.app';
+    if (hostname === 'zechat.site' || hostname === 'www.zechat.site' || hostname === 'ecomcookpit.site' || hostname === 'www.ecomcookpit.site') {
+      return 'https://api.ecomcookpit.site';
     }
     
     // En développement local
