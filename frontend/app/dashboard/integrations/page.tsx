@@ -63,7 +63,7 @@ export default function IntegrationsPage() {
           </p>
         </motion.div>
 
-        <div className="bg-[#111] border border-[#1e1e1e] rounded-2xl p-6">
+        <div className="rounded-2xl p-6" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
           <WhatsAppIntegration />
         </div>
       </div>
@@ -94,7 +94,7 @@ export default function IntegrationsPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.07 }}
               className="flex items-center gap-4 p-4 rounded-2xl"
-              style={{ background: "#111", border: "1px solid #1e1e1e" }}
+              style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}
             >
               <div
                 className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
@@ -103,7 +103,7 @@ export default function IntegrationsPage() {
                 <Icon size={18} style={{ color: intg.color }} />
               </div>
               <div className="flex-1">
-                <p className="text-[13px] font-semibold text-white">
+                <p className="text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>
                   {intg.name}
                 </p>
                 <p className="text-[11px] text-[#5a7a5a] mt-0.5">{intg.desc}</p>
@@ -116,7 +116,7 @@ export default function IntegrationsPage() {
                   {t('intg.configure')} <ArrowRight size={11} />
                 </button>
               ) : (
-                <span className="text-[10px] text-[#4a6a4a] bg-[#1a1a1a] px-2 py-1 rounded-full shrink-0">
+                <span className="text-[10px] px-2 py-1 rounded-full shrink-0" style={{ color: 'var(--text-dim)', background: 'var(--border-subtle)' }}>
                   {t('intg.comingSoon')}
                 </span>
               )}

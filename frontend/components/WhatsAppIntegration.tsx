@@ -93,7 +93,7 @@ export default function WhatsAppIntegration() {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-[14px] font-semibold text-white mb-2">Intégration WhatsApp</h3>
+        <h3 className="text-[14px] font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Intégration WhatsApp</h3>
         <p className="text-[12px] text-[#5a7a5a] mb-6">
           Connectez votre instance WhatsApp existante pour activer les fonctionnalités de messagerie.
         </p>
@@ -113,7 +113,7 @@ export default function WhatsAppIntegration() {
         {!config.connected ? (
           <form onSubmit={handleConnect} className="space-y-4">
             <div>
-              <label className="block text-[12px] font-medium text-white mb-1.5">
+              <label className="block text-[12px] font-medium mb-1.5" style={{ color: 'var(--text-primary)' }}>
                 Nom de l'instance
               </label>
               <input
@@ -121,13 +121,14 @@ export default function WhatsAppIntegration() {
                 value={config.instanceName}
                 onChange={(e) => setConfig({ ...config, instanceName: e.target.value })}
                 placeholder="Support Client"
-                className="w-full px-3 py-2 bg-[#0a0a0a] border border-[#1e1e1e] rounded-lg text-white text-[12px] focus:outline-none focus:ring-2 focus:ring-[#25D366] placeholder:text-[#3a3a3a]"
+                className="w-full px-3 py-2 rounded-lg text-[12px] focus:outline-none focus:ring-2 focus:ring-[#25D366]"
+                style={{ background: 'var(--input-bg)', border: '1px solid var(--card-border)', color: 'var(--text-primary)' }}
                 required
               />
             </div>
 
             <div>
-              <label className="block text-[12px] font-medium text-white mb-1.5">
+              <label className="block text-[12px] font-medium mb-1.5" style={{ color: 'var(--text-primary)' }}>
                 ID de l'instance
               </label>
               <input
@@ -135,13 +136,14 @@ export default function WhatsAppIntegration() {
                 value={config.instanceId}
                 onChange={(e) => setConfig({ ...config, instanceId: e.target.value })}
                 placeholder="ID de votre instance"
-                className="w-full px-3 py-2 bg-[#0a0a0a] border border-[#1e1e1e] rounded-lg text-white text-[12px] focus:outline-none focus:ring-2 focus:ring-[#25D366] placeholder:text-[#3a3a3a]"
+                className="w-full px-3 py-2 rounded-lg text-[12px] focus:outline-none focus:ring-2 focus:ring-[#25D366]"
+                style={{ background: 'var(--input-bg)', border: '1px solid var(--card-border)', color: 'var(--text-primary)' }}
                 required
               />
             </div>
 
             <div>
-              <label className="block text-[12px] font-medium text-white mb-1.5">
+              <label className="block text-[12px] font-medium mb-1.5" style={{ color: 'var(--text-primary)' }}>
                 Clé API
               </label>
               <input
@@ -149,7 +151,8 @@ export default function WhatsAppIntegration() {
                 value={config.apiKey}
                 onChange={(e) => setConfig({ ...config, apiKey: e.target.value })}
                 placeholder="votre_cle_api"
-                className="w-full px-3 py-2 bg-[#0a0a0a] border border-[#1e1e1e] rounded-lg text-white text-[12px] focus:outline-none focus:ring-2 focus:ring-[#25D366] placeholder:text-[#3a3a3a]"
+                className="w-full px-3 py-2 rounded-lg text-[12px] focus:outline-none focus:ring-2 focus:ring-[#25D366]"
+                style={{ background: 'var(--input-bg)', border: '1px solid var(--card-border)', color: 'var(--text-primary)' }}
                 required
               />
               <p className="mt-1.5 text-[11px] text-[#5a7a5a]">
@@ -189,15 +192,15 @@ export default function WhatsAppIntegration() {
       </div>
 
       {config.connected && (
-        <div className="bg-[#0a0a0a] border border-[#1e1e1e] rounded-lg p-6">
-          <h3 className="text-[14px] font-semibold text-white mb-2">Message de test</h3>
+        <div className="rounded-lg p-6" style={{ background: 'var(--input-bg)', border: '1px solid var(--card-border)' }}>
+          <h3 className="text-[14px] font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Message de test</h3>
           <p className="text-[12px] text-[#5a7a5a] mb-6">
             Envoyez un message de test pour vérifier que l'intégration fonctionne correctement.
           </p>
 
           <form onSubmit={handleTestMessage} className="space-y-4">
             <div>
-              <label className="block text-[12px] font-medium text-white mb-1.5">
+              <label className="block text-[12px] font-medium mb-1.5" style={{ color: 'var(--text-primary)' }}>
                 Numéro de téléphone
               </label>
               <input
@@ -205,7 +208,8 @@ export default function WhatsAppIntegration() {
                 value={testNumber}
                 onChange={(e) => setTestNumber(e.target.value)}
                 placeholder="+2250701020304"
-                className="w-full px-3 py-2 bg-[#111] border border-[#1e1e1e] rounded-lg text-white text-[12px] focus:outline-none focus:ring-2 focus:ring-[#25D366] placeholder:text-[#3a3a3a]"
+                className="w-full px-3 py-2 rounded-lg text-[12px] focus:outline-none focus:ring-2 focus:ring-[#25D366]"
+                style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-primary)' }}
                 required
               />
               <p className="mt-1.5 text-[11px] text-[#5a7a5a]">
@@ -214,7 +218,7 @@ export default function WhatsAppIntegration() {
             </div>
 
             <div>
-              <label className="block text-[12px] font-medium text-white mb-1.5">
+              <label className="block text-[12px] font-medium mb-1.5" style={{ color: 'var(--text-primary)' }}>
                 Message
               </label>
               <textarea
@@ -222,7 +226,8 @@ export default function WhatsAppIntegration() {
                 onChange={(e) => setTestMessage(e.target.value)}
                 placeholder="Bonjour, ceci est un message de test !"
                 rows={4}
-                className="w-full px-3 py-2 bg-[#111] border border-[#1e1e1e] rounded-lg text-white text-[12px] focus:outline-none focus:ring-2 focus:ring-[#25D366] placeholder:text-[#3a3a3a]"
+                className="w-full px-3 py-2 rounded-lg text-[12px] focus:outline-none focus:ring-2 focus:ring-[#25D366]"
+                style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-primary)' }}
                 required
               />
             </div>

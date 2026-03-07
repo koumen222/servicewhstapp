@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express'
 import { WhatsAppService } from '../../services/whatsAppService.js'
 import { InstanceService } from '../../services/instanceService.js'
+import { MessageUsageService } from '../../services/messageUsageService.js'
 
 const router = Router()
 
@@ -68,7 +69,31 @@ router.post('/whatsapp/send', async (req: Request, res: Response) => {
       })
     }
 
+    // Find the instance in DB to check limits and record usage
+    const instances = await InstanceService.findUserInstanceByNameGlobal(instanceName)
+    if (instances) {
+      if (!instances.isActive) {
+        return res.status(403).json({ success: false, error: 'Instance désactivée.' })
+      }
+      const limitCheck = await MessageUsageService.checkLimits(
+        instances._id.toString(), instances.userId, instanceName, 'free'
+      )
+      if (!limitCheck.allowed) {
+        return res.status(429).json({
+          success: false,
+          error: 'Limite de messages atteinte',
+          message: limitCheck.reason,
+          usage: limitCheck.usage
+        })
+      }
+    }
+
     const result = await WhatsAppService.sendDirect(instanceName, instanceToken, number, message)
+
+    // Record message usage
+    if (instances) {
+      await MessageUsageService.recordMessage(instances._id.toString(), instances.userId, instanceName)
+    }
 
     res.json({
       success: true,

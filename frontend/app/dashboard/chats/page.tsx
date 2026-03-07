@@ -128,7 +128,7 @@ export default function ChatsPage() {
         {/* Header with stats */}
         <div className="flex items-start sm:items-center justify-between mb-6 gap-3 flex-wrap">
           <div>
-            <h2 className="text-[15px] font-semibold text-white flex items-center gap-2">
+            <h2 className="text-[15px] font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
               <MessageSquare size={16} />
               {t('chats.title')}
               {totalUnreadMessages > 0 && (
@@ -191,7 +191,7 @@ export default function ChatsPage() {
             animate={{ opacity: 1 }}
             className="text-center py-20"
           >
-            <div className="w-16 h-16 rounded-2xl bg-[#0d2510] flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--green-bg-subtle)' }}>
               <MessageCircle size={24} className="text-[#22c55e]" />
             </div>
             <p className="font-medium mb-2" style={{ color: 'var(--text-primary)' }}>{t('chats.noFound')}</p>
@@ -204,7 +204,7 @@ export default function ChatsPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="rounded-2xl overflow-hidden"
-            style={{ background: "#111", border: "1px solid #1e1e1e" }}
+            style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}
           >
             <AnimatePresence>
               {filteredChats.map((chat, i) => (
@@ -215,19 +215,20 @@ export default function ChatsPage() {
                   exit={{ opacity: 0, x: -8 }}
                   transition={{ delay: i * 0.03 }}
                   onClick={() => handleChatClick(chat)}
-                  className="flex items-center gap-3 px-4 py-4 border-b border-[#141414] last:border-0 hover:bg-[#131313] cursor-pointer transition-all duration-200 group relative overflow-hidden"
+                  className="flex items-center gap-3 px-4 py-4 last:border-0 cursor-pointer transition-all duration-200 group relative overflow-hidden"
+                  style={{ borderBottom: '1px solid var(--table-border)' }}
                 >
                   {/* Avatar */}
                   <div className="relative">
                     <div
                       className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-transform group-hover:scale-105"
-                      style={{ background: "#0d2510", color: "#22c55e" }}
+                      style={{ background: "var(--green-bg-subtle)", color: "var(--brand-green)" }}
                     >
                       {getInitials(chat.contactName)}
                     </div>
                     
                     {/* Online indicator */}
-                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#111] flex items-center justify-center">
+                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: 'var(--card-bg)' }}>
                       <div className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />
                     </div>
                   </div>
@@ -235,7 +236,7 @@ export default function ChatsPage() {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <p className="text-[13px] font-semibold text-white truncate">
+                      <p className="text-[13px] font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
                         {chat.contactName}
                       </p>
                       <span className="text-[10px] text-[#4a6a4a] shrink-0 flex items-center gap-1">
@@ -287,8 +288,8 @@ export default function ChatsPage() {
 
         {/* No instances message */}
         {!hasInstances && (
-          <div className="mt-6 p-6 rounded-xl text-center" style={{ background: "#0d0d0d", border: "1px dashed #1e1e1e" }}>
-            <div className="w-12 h-12 rounded-xl bg-[#1a1a1a] flex items-center justify-center mx-auto mb-3">
+          <div className="mt-6 p-6 rounded-xl text-center" style={{ background: "var(--bg-deeper)", border: "1px dashed var(--card-border)" }}>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3" style={{ background: 'var(--border-subtle)' }}>
               <Wifi size={20} className="text-[#4a6a4a]" />
             </div>
             <p className="text-[13px] font-medium mb-1" style={{ color: 'var(--text-primary)' }}>

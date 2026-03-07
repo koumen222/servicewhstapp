@@ -152,9 +152,9 @@ console.log(data.data.messageId);`;
 
       {/* Intro */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl p-5" style={{ background: "#111", border: "1px solid #1e1e1e" }}>
+        className="rounded-2xl p-5" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#0d2510" }}>
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "var(--green-bg-subtle)" }}>
             <Code2 size={18} className="text-[#22c55e]" />
           </div>
           <div>
@@ -170,21 +170,21 @@ console.log(data.data.messageId);`;
       <AnimatePresence>
         {revealedKey && (
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className="rounded-2xl p-4" style={{ background: "#071a0e", border: "1px solid #22c55e60" }}>
+            className="rounded-2xl p-4" style={{ background: "var(--green-gradient-end)", border: "1px solid var(--brand-green)" }}>
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <p className="text-[12px] font-semibold text-[#22c55e] flex items-center gap-1.5 mb-1">
                   <Shield size={12} /> {t('api.keyCreated')}
                 </p>
                 <p className="text-[11px] text-[#5a7a5a] mb-2">{revealedKey.name}</p>
-                <div className="flex items-center gap-2 bg-[#0a0a0a] rounded-xl px-3 py-2 font-mono text-[12px] text-[#22c55e]">
+                <div className="flex items-center gap-2 rounded-xl px-3 py-2 font-mono text-[12px]" style={{ background: 'var(--input-bg)', color: 'var(--brand-green)' }}>
                   <span className="truncate">{revealedKey.key}</span>
                   <button onClick={() => copyText(revealedKey.key, "revealed")} className="shrink-0 text-[#3a7a3a] hover:text-[#22c55e]">
                     {copied === "revealed" ? <CheckCircle2 size={13} className="text-[#22c55e]" /> : <Copy size={13} />}
                   </button>
                 </div>
               </div>
-              <button onClick={() => setRevealedKey(null)} className="text-[#3a5a3a] hover:text-white shrink-0 mt-0.5">
+              <button onClick={() => setRevealedKey(null)} className="shrink-0 mt-0.5" style={{ color: 'var(--text-faint)' }}>
                 <X size={14} />
               </button>
             </div>
@@ -194,9 +194,9 @@ console.log(data.data.messageId);`;
 
       {/* API Keys table */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-        className="rounded-2xl overflow-hidden" style={{ background: "#111", border: "1px solid #1e1e1e" }}>
-        <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-[#1a1a1a] flex-wrap">
-          <h3 className="text-[13px] font-semibold text-white flex items-center gap-2">
+        className="rounded-2xl overflow-hidden" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
+        <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 flex-wrap" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+          <h3 className="text-[13px] font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
             <Key size={14} className="text-[#22c55e]" />
             {t('api.keys')}
             <span className="text-[11px] text-[#4a6a4a] font-normal">({keys.length})</span>
@@ -232,9 +232,9 @@ console.log(data.data.messageId);`;
             <tbody>
               {keys.map((k) => (
                 <tr key={k.id}>
-                  <td className="font-medium text-white">{k.name ?? "—"}</td>
+                  <td className="font-medium" style={{ color: 'var(--text-primary)' }}>{k.name ?? "—"}</td>
                   <td>
-                    <span className="px-1.5 py-0.5 rounded text-[10px] bg-[#0d2510] text-[#22c55e]">
+                    <span className="px-1.5 py-0.5 rounded text-[10px]" style={{ background: 'var(--tag-bg)', color: 'var(--tag-text)' }}>
                       {k.instance?.customName ?? "—"}
                     </span>
                   </td>
@@ -259,7 +259,7 @@ console.log(data.data.messageId);`;
                   <td>
                     <div className="flex gap-1 flex-wrap">
                       {(k.permissions ?? []).map((p) => (
-                        <span key={p} className="px-1 py-0.5 rounded text-[9px] bg-[#1a1a1a] text-[#6a8a6a]">{p}</span>
+                        <span key={p} className="px-1 py-0.5 rounded text-[9px]" style={{ background: 'var(--border-subtle)', color: 'var(--text-label)' }}>{p}</span>
                       ))}
                     </div>
                   </td>
@@ -294,14 +294,14 @@ console.log(data.data.messageId);`;
 
       {/* Code example */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-        className="rounded-2xl overflow-hidden" style={{ background: "#111", border: "1px solid #1e1e1e" }}>
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#1a1a1a]">
-          <h3 className="text-[13px] font-semibold text-white">Quick Start — JavaScript</h3>
+        className="rounded-2xl overflow-hidden" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
+        <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+          <h3 className="text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>Quick Start — JavaScript</h3>
           <button onClick={() => copyText(codeExample, "code")} className="btn-ghost text-xs flex items-center gap-1.5">
             {copied === "code" ? <><CheckCircle2 size={12} className="text-[#22c55e]" /> {t('api.copied')}</> : <><Copy size={12} /> {t('api.copy')}</>}
           </button>
         </div>
-        <pre className="px-4 sm:px-5 py-4 text-[11px] font-mono overflow-x-auto text-[#8adc8a] leading-relaxed whitespace-pre" style={{ background: "#080808" }}>
+        <pre className="px-4 sm:px-5 py-4 text-[11px] font-mono overflow-x-auto leading-relaxed whitespace-pre" style={{ background: "var(--code-bg)", color: 'var(--brand-green)' }}>
           {codeExample}
         </pre>
       </motion.div>
@@ -318,14 +318,14 @@ console.log(data.data.messageId);`;
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
               className="rounded-2xl p-6 w-full max-w-md"
-              style={{ background: "#111", border: "1px solid #1e1e1e" }}
+              style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-5">
-                <h3 className="text-[14px] font-semibold text-white flex items-center gap-2">
+                <h3 className="text-[14px] font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
                   <Key size={14} className="text-[#22c55e]" /> {t('api.modal.title')}
                 </h3>
-                <button onClick={() => setShowCreate(false)} className="text-[#3a5a3a] hover:text-white">
+                <button onClick={() => setShowCreate(false)} style={{ color: 'var(--text-faint)' }}>
                   <X size={16} />
                 </button>
               </div>
@@ -338,7 +338,8 @@ console.log(data.data.messageId);`;
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
                     placeholder={t('api.modal.namePlaceholder')}
-                    className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl px-3 py-2 text-[12px] text-white placeholder-[#3a5a3a] focus:border-[#22c55e] focus:outline-none"
+                    className="w-full rounded-xl px-3 py-2 text-[12px] focus:outline-none"
+                    style={{ background: 'var(--input-bg)', border: '1px solid var(--card-border)', color: 'var(--text-primary)' }}
                   />
                 </div>
 
@@ -348,7 +349,8 @@ console.log(data.data.messageId);`;
                   <select
                     value={newInstance}
                     onChange={(e) => setNewInstance(e.target.value)}
-                    className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl px-3 py-2 text-[12px] text-white focus:border-[#22c55e] focus:outline-none"
+                    className="w-full rounded-xl px-3 py-2 text-[12px] focus:outline-none"
+                    style={{ background: 'var(--input-bg)', border: '1px solid var(--card-border)', color: 'var(--text-primary)' }}
                   >
                     <option value="">{t('api.modal.selectInstance')}</option>
                     {instances.map((inst) => (
@@ -365,8 +367,8 @@ console.log(data.data.messageId);`;
                       <label key={id}
                         className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors"
                         style={{
-                          background: newPerms.includes(id) ? "#0d2510" : "#0a0a0a",
-                          border: `1px solid ${newPerms.includes(id) ? "#22c55e40" : "#1a1a1a"}`,
+                          background: newPerms.includes(id) ? "var(--green-bg-subtle)" : "var(--input-bg)",
+                          border: `1px solid ${newPerms.includes(id) ? "var(--brand-green)" : "var(--border-subtle)"}`,
                         }}
                       >
                         <input type="checkbox" checked={newPerms.includes(id)}

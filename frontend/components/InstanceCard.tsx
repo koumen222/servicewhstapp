@@ -152,7 +152,8 @@ export function InstanceCard({
         <div className="relative shrink-0">
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="flex items-center justify-center w-7 h-7 rounded-lg text-[#4a6a4a] hover:text-white hover:bg-[#1a1a1a] transition-colors"
+            className="flex items-center justify-center w-7 h-7 rounded-lg transition-colors"
+            style={{ color: 'var(--text-dim)' }}
           >
             <MoreVertical size={14} />
           </button>
@@ -169,9 +170,9 @@ export function InstanceCard({
                 transition={{ duration: 0.1 }}
                 className="absolute right-0 top-8 z-50 rounded-lg py-1 min-w-[140px]"
                 style={{
-                  background: "#111",
-                  border: "1px solid #1e1e1e",
-                  boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
+                  background: "var(--card-bg)",
+                  border: "1px solid var(--card-border)",
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
                 }}
               >
                 <button
@@ -179,17 +180,18 @@ export function InstanceCard({
                     setMenuOpen(false);
                     onQRCode(instance);
                   }}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-xs text-[#8a9a8a] hover:bg-[#161616] hover:text-white transition-colors"
+                  className="flex items-center gap-2 w-full px-3 py-2 text-xs transition-colors"
+                  style={{ color: 'var(--text-secondary)' }}
                 >
                   <QrCode size={13} /> {t('card.scanQR')}
                 </button>
-                <div className="my-1 border-t border-[#1a1a1a]" />
+                <div className="my-1" style={{ borderTop: '1px solid var(--border-subtle)' }} />
                 <button
                   onClick={() => {
                     setMenuOpen(false);
                     onDelete(instance);
                   }}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-xs text-red-400 hover:bg-[#1a0a0a] transition-colors"
+                  className="flex items-center gap-2 w-full px-3 py-2 text-xs text-red-400 transition-colors"
                 >
                   <Trash2 size={13} /> {t('card.delete')}
                 </button>
@@ -200,7 +202,7 @@ export function InstanceCard({
       </div>
 
       {/* ── Inline Status ────────────────────── */}
-      <div className="flex items-center gap-2 mt-3 px-3 py-2 rounded-lg" style={{ background: '#0a0a0a', border: '1px solid #1a1a1a' }}>
+      <div className="flex items-center gap-2 mt-3 px-3 py-2 rounded-lg" style={{ background: 'var(--input-bg)', border: '1px solid var(--border-subtle)' }}>
         <div
           className={`w-2 h-2 rounded-full shrink-0 ${isConnecting ? 'animate-pulse' : ''}`}
           style={{ background: statusDotColor }}
@@ -245,7 +247,7 @@ export function InstanceCard({
                 {formatNumber(q.used)} / {formatNumber(q.limit)}
               </span>
             </div>
-            <div className="h-1 rounded-full bg-[#1a1a1a] overflow-hidden">
+            <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{
@@ -290,15 +292,15 @@ export function InstanceCard({
       )}
 
       {/* ── Action buttons ──────────────────────── */}
-      <div className="flex items-center gap-2 mt-3.5 pt-3 border-t border-[#161616]">
+      <div className="flex items-center gap-2 mt-3.5 pt-3" style={{ borderTop: '1px solid var(--card-border)' }}>
         <button
           onClick={() => onQRCode(instance)}
           disabled={isExpired}
           className={cn(
             "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 flex-1 justify-center",
             isExpired
-              ? "bg-[#1a1a1a] text-[#3a3a3a] cursor-not-allowed"
-              : "bg-[#0d1f0d] text-[#22c55e] hover:bg-[#0d2510] border border-[#1a2e1a] hover:border-[#22c55e30]"
+              ? "cursor-not-allowed"
+              : ""
           )}
         >
           <QrCode size={12} />

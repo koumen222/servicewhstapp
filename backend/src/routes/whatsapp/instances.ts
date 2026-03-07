@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express'
 import axios from 'axios'
 import { InstanceService } from '../../services/instanceService.js'
 import { WhatsAppService } from '../../services/whatsAppService.js'
+import { MessageUsageService } from '../../services/messageUsageService.js'
 
 const router = Router()
 
@@ -206,6 +207,7 @@ router.post('/check-connection/:instanceId', async (req: Request, res: Response)
 router.post('/send-message/:instanceId', async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id
+    const userPlan = req.user!.plan || 'free'
     const { instanceId } = req.params
     const { to, message } = req.body
 
@@ -218,11 +220,28 @@ router.post('/send-message/:instanceId', async (req: Request, res: Response) => 
       return res.status(404).json({ success: false, error: 'Instance non trouvée' })
     }
 
+    if (!instance.isActive) {
+      return res.status(403).json({ success: false, error: 'Instance désactivée. Veuillez renouveler votre abonnement.' })
+    }
+
     if (instance.status !== 'open') {
       return res.status(400).json({
         success: false,
         error: 'L\'instance n\'est pas connectée',
         status: instance.status
+      })
+    }
+
+    // Check message limits
+    const limitCheck = await MessageUsageService.checkLimits(
+      instance._id.toString(), userId, instance.instanceName, userPlan
+    )
+    if (!limitCheck.allowed) {
+      return res.status(429).json({
+        success: false,
+        error: 'Limite de messages atteinte',
+        message: limitCheck.reason,
+        usage: limitCheck.usage
       })
     }
 
@@ -236,6 +255,9 @@ router.post('/send-message/:instanceId', async (req: Request, res: Response) => 
       text: message
     })
 
+    // Record the sent message
+    await MessageUsageService.recordMessage(instance._id.toString(), userId, instance.instanceName)
+
     res.json({
       success: true,
       evolution: {
@@ -246,7 +268,8 @@ router.post('/send-message/:instanceId', async (req: Request, res: Response) => 
       },
       instanceId,
       to,
-      message
+      message,
+      usage: limitCheck.usage
     })
   } catch (error: any) {
     console.error('[POST /api/send-message]', error)
@@ -426,6 +449,8 @@ router.post('/instance/send-message', async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'number et message sont requis' })
     }
 
+    const userPlan = req.user!.plan || 'free'
+
     // Si instanceName n'est pas fourni, utiliser la première instance connectée de l'utilisateur
     let instance
     if (instanceName) {
@@ -439,8 +464,25 @@ router.post('/instance/send-message', async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, error: 'Aucune instance WhatsApp trouvée. Créez-en une d\'abord.' })
     }
 
+    if (!instance.isActive) {
+      return res.status(403).json({ success: false, error: 'Instance désactivée. Veuillez renouveler votre abonnement.' })
+    }
+
     if (instance.status !== 'open') {
       return res.status(400).json({ success: false, error: 'Instance WhatsApp non connectée. Scannez le QR code d\'abord.' })
+    }
+
+    // Check message limits
+    const limitCheck = await MessageUsageService.checkLimits(
+      instance._id.toString(), userId, instance.instanceName, userPlan
+    )
+    if (!limitCheck.allowed) {
+      return res.status(429).json({
+        success: false,
+        error: 'Limite de messages atteinte',
+        message: limitCheck.reason,
+        usage: limitCheck.usage
+      })
     }
 
     const evolution = getEvolutionClient()
@@ -455,6 +497,9 @@ router.post('/instance/send-message', async (req: Request, res: Response) => {
       text: message
     })
 
+    // Record the sent message
+    await MessageUsageService.recordMessage(instance._id.toString(), userId, instance.instanceName)
+
     console.log(`✅ Message sent via ${instance.instanceName} to ${number}`)
 
     res.json({
@@ -464,7 +509,8 @@ router.post('/instance/send-message', async (req: Request, res: Response) => {
         messageId: result.data?.key?.id || null,
         status: 'sent',
         instanceUsed: instance.instanceName
-      }
+      },
+      usage: limitCheck.usage
     })
   } catch (error: any) {
     console.error('[POST /api/instance/send-message] Error:', {
@@ -485,13 +531,41 @@ router.post('/instance/send-message', async (req: Request, res: Response) => {
 router.post('/whatsapp/send', async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id
+    const userPlan = req.user!.plan || 'free'
     const { number, message } = req.body
 
     if (!number || !message) {
       return res.status(400).json({ success: false, error: 'number et message sont requis' })
     }
 
+    // Find active instance for limit check
+    const allInstances = await InstanceService.findUserInstances(userId)
+    const instance = allInstances.find((i: any) => i.status === 'open') || allInstances[0]
+
+    if (instance) {
+      if (!instance.isActive) {
+        return res.status(403).json({ success: false, error: 'Instance désactivée. Veuillez renouveler votre abonnement.' })
+      }
+
+      const limitCheck = await MessageUsageService.checkLimits(
+        instance._id.toString(), userId, instance.instanceName, userPlan
+      )
+      if (!limitCheck.allowed) {
+        return res.status(429).json({
+          success: false,
+          error: 'Limite de messages atteinte',
+          message: limitCheck.reason,
+          usage: limitCheck.usage
+        })
+      }
+    }
+
     const result = await WhatsAppService.send(userId, number, message)
+
+    // Record the sent message
+    if (instance) {
+      await MessageUsageService.recordMessage(instance._id.toString(), userId, instance.instanceName)
+    }
 
     res.json({
       success: true,
@@ -535,8 +609,26 @@ router.post('/whatsapp/send-bulk', async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, error: 'Aucune instance WhatsApp trouvée' })
     }
 
+    if (!instance.isActive) {
+      return res.status(403).json({ success: false, error: 'Instance désactivée. Veuillez renouveler votre abonnement.' })
+    }
+
     if (instance.status !== 'open') {
       return res.status(400).json({ success: false, error: 'L\'instance sélectionnée n\'est pas connectée' })
+    }
+
+    // Check message limits for bulk
+    const userPlan = req.user!.plan || 'free'
+    const limitCheck = await MessageUsageService.checkLimits(
+      instance._id.toString(), userId, instance.instanceName, userPlan
+    )
+    if (!limitCheck.allowed) {
+      return res.status(429).json({
+        success: false,
+        error: 'Limite de messages atteinte',
+        message: limitCheck.reason,
+        usage: limitCheck.usage
+      })
     }
 
     const evolution = getEvolutionClient()
@@ -548,11 +640,22 @@ router.post('/whatsapp/send-bulk', async (req: Request, res: Response) => {
 
     const results = []
     for (const number of numbers) {
+      // Re-check limits before each message in bulk
+      const bulkCheck = await MessageUsageService.checkLimits(
+        instance._id.toString(), userId, instance.instanceName, userPlan
+      )
+      if (!bulkCheck.allowed) {
+        results.push({ number, success: false, error: 'Limite de messages atteinte' })
+        continue
+      }
+
       try {
         const result = await evolution.post(`/message/sendText/${instance.instanceName}`, {
           number,
           text: message
         })
+        // Record each sent message
+        await MessageUsageService.recordMessage(instance._id.toString(), userId, instance.instanceName)
         results.push({ number, success: true, messageId: result.data?.key?.id })
       } catch (err: any) {
         console.error(`❌ Failed to send to ${number}:`, err?.response?.data || err.message)
@@ -580,6 +683,56 @@ router.post('/whatsapp/send-bulk', async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('[POST /api/whatsapp/send-bulk] Error:', error)
     res.status(500).json({ success: false, error: 'Échec de l\'envoi groupé', message: error.message })
+  }
+})
+
+// ═══════════════════════════════════════════════════════════════
+// USAGE STATS — Message usage tracking
+// ═══════════════════════════════════════════════════════════════
+
+// GET /api/instances/:instanceId/usage — Get usage stats for an instance
+router.get('/instances/:instanceId/usage', async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id
+    const userPlan = req.user!.plan || 'free'
+    const { instanceId } = req.params
+
+    const instance = await InstanceService.findUserInstanceByName(instanceId, userId)
+    if (!instance) {
+      return res.status(404).json({ success: false, error: 'Instance non trouvée' })
+    }
+
+    const usage = await MessageUsageService.getUsageStats(instance._id.toString(), userPlan)
+
+    res.json({
+      success: true,
+      data: {
+        instanceName: instance.instanceName,
+        plan: userPlan,
+        usage
+      }
+    })
+  } catch (error: any) {
+    console.error('[GET /api/instances/:id/usage]', error.message)
+    res.status(500).json({ success: false, error: 'Échec de la récupération des stats' })
+  }
+})
+
+// GET /api/usage — Get global usage stats for the authenticated user
+router.get('/usage', async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id
+    const userPlan = req.user!.plan || 'free'
+
+    const usage = await MessageUsageService.getUserUsageStats(userId, userPlan)
+
+    res.json({
+      success: true,
+      data: usage
+    })
+  } catch (error: any) {
+    console.error('[GET /api/usage]', error.message)
+    res.status(500).json({ success: false, error: 'Échec de la récupération des stats' })
   }
 })
 

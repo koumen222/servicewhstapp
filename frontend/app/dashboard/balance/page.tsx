@@ -68,7 +68,7 @@ export default function BalancePage() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           className="rounded-2xl p-4 flex items-start sm:items-center gap-3"
-          style={{ background: "#0d2010", border: "1px solid #22c55e30" }}
+          style={{ background: "var(--green-bg-subtle)", border: "1px solid var(--brand-green)" }}
         >
           <CheckCircle2 size={18} className="text-[#22c55e] shrink-0 mt-0.5 sm:mt-0" />
           <div className="min-w-0">
@@ -96,8 +96,8 @@ export default function BalancePage() {
               transition={{ delay: i * 0.07 }}
               className="rounded-2xl p-5 relative"
               style={{
-                background: meta.popular ? "linear-gradient(135deg, #0d2010, #071408)" : "#111",
-                border: `1px solid ${isCurrent ? meta.color + "80" : meta.popular ? meta.color + "50" : "#1e1e1e"}`,
+                background: meta.popular ? `linear-gradient(135deg, var(--green-bg-subtle), var(--green-gradient-end))` : "var(--card-bg)",
+                border: `1px solid ${isCurrent ? meta.color + "80" : meta.popular ? meta.color + "50" : "var(--card-border)"}`,
               }}
             >
               {meta.popular && !isCurrent && (
@@ -124,7 +124,7 @@ export default function BalancePage() {
                 <Icon size={16} style={{ color: meta.color }} />
               </div>
 
-              <p className="text-[13px] font-bold text-white">{plan.name}</p>
+              <p className="text-[13px] font-bold" style={{ color: 'var(--text-primary)' }}>{plan.name}</p>
               <div className="my-1.5">
                 {plan.originalPrice && plan.price > 0 ? (
                   <>
@@ -197,10 +197,10 @@ export default function BalancePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           className="rounded-2xl overflow-hidden"
-          style={{ background: "#111", border: "1px solid #1e1e1e" }}
+          style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}
         >
-          <div className="px-5 py-3.5 border-b border-[#1a1a1a]">
-            <h3 className="text-[13px] font-semibold text-white flex items-center gap-2">
+          <div className="px-5 py-3.5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+            <h3 className="text-[13px] font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
               <CreditCard size={13} className="text-[#22c55e]" />
               {t('bal.paymentHistory')}
             </h3>
@@ -218,7 +218,7 @@ export default function BalancePage() {
             <tbody>
               {info.payments.map((p) => (
                 <tr key={p.id}>
-                  <td className="capitalize text-white">{p.plan}</td>
+                  <td className="capitalize" style={{ color: 'var(--text-primary)' }}>{p.plan}</td>
                   <td style={{ color: "#22c55e" }}>{p.amount.toLocaleString("fr-FR")} {p.currency}</td>
                   <td>
                     <span className={`text-[10px] font-medium ${p.status === "success" ? "text-[#22c55e]" : p.status === "pending" ? "text-yellow-400" : "text-red-400"}`}>

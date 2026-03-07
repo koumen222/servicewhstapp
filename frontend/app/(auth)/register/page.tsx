@@ -205,15 +205,15 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#0a0a0a] bg-grid-green">
+    <div className="min-h-screen flex bg-grid-green" style={{ background: 'var(--bg-main)' }}>
       {/* Left panel */}
-      <div className="hidden lg:flex flex-col justify-between w-[420px] shrink-0 p-10 border-r border-[#141414]">
+      <div className="hidden lg:flex flex-col justify-between w-[420px] shrink-0 p-10" style={{ borderRight: '1px solid var(--table-border)' }}>
         <div className="flex items-center gap-2.5">
           <img src="/logo.png" alt="Logo" className="w-8 h-8 object-contain" />
         </div>
 
         <div>
-          <h2 className="text-2xl font-bold text-white mb-2">
+          <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
             Commencez gratuitement dès aujourd'hui
           </h2>
           <p className="text-[13px] text-[#5a7a5a] mb-6">
@@ -231,7 +231,7 @@ export default function RegisterPage() {
 
         <div
           className="p-4 rounded-xl"
-          style={{ background: "#0d2510", border: "1px solid #1a3a1a" }}
+          style={{ background: "var(--green-bg-subtle)", border: "1px solid var(--green-border-subtle)" }}
         >
           <p className="text-[12px] text-[#22c55e] font-semibold mb-1">
             Le plan gratuit inclut
@@ -261,7 +261,7 @@ export default function RegisterPage() {
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="h-5 w-5 text-green-500" />
-              <h1 className="text-2xl font-bold text-white">Créer votre compte</h1>
+              <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Créer votre compte</h1>
             </div>
             <p className="text-[13px] text-[#5a7a5a]">
               Répondez aux questions de notre assistant pour créer votre compte en quelques secondes

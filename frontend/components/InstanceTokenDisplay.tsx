@@ -24,7 +24,7 @@ export function InstanceTokenDisplay({ token, instanceName, className }: Instanc
 
   return (
     <div className={cn("space-y-3", className)}>
-      <div className="flex items-start gap-3 p-3 rounded-lg bg-[#0d1f0d] border border-[#1a2e1a]">
+      <div className="flex items-start gap-3 p-3 rounded-lg" style={{ background: 'var(--green-bg-subtle)', border: '1px solid var(--green-border-subtle)' }}>
         <AlertCircle size={14} className="text-[#22c55e] mt-0.5 shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="text-[11px] text-[#6a9a6a] leading-relaxed">
@@ -38,7 +38,7 @@ export function InstanceTokenDisplay({ token, instanceName, className }: Instanc
         <label className="block text-xs font-medium text-[#8a9a8a] mb-1.5">
           Token d'authentification
         </label>
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-[#0a0a0a] border border-[#1e1e1e]">
+        <div className="flex items-center gap-2 p-3 rounded-lg" style={{ background: 'var(--input-bg)', border: '1px solid var(--card-border)' }}>
           <Key size={13} className={cn(hasToken ? "text-[#22c55e]" : "text-[#3a5a3a]", "shrink-0")} />
           <code className={cn("flex-1 text-[11px] font-mono truncate select-all", hasToken ? "text-[#22c55e]" : "text-[#3a5a3a]")}>
             {hasToken ? (showToken ? token : "•".repeat(Math.min(token.length, 48))) : "Token non disponible"}

@@ -54,12 +54,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex bg-[#0a0a0a] bg-grid-green">
+    <div className="min-h-screen flex bg-grid-green" style={{ background: 'var(--bg-main)' }}>
       {/* Left panel */}
-      <div className="hidden lg:flex flex-col justify-between w-[420px] shrink-0 p-10 border-r border-[#141414]">
+      <div className="hidden lg:flex flex-col justify-between w-[420px] shrink-0 p-10" style={{ borderRight: '1px solid var(--table-border)' }}>
         <div className="flex items-center gap-2.5">
           <img src="/logo.png" alt="ZeChat.site" className="w-8 h-8 object-contain" />
-          <span className="text-[17px] font-bold text-white tracking-tight">
+          <span className="text-[17px] font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
             ZeChat<span className="text-green-500">.site</span>
           </span>
         </div>
@@ -67,11 +67,11 @@ export default function LoginPage() {
         <div>
           <div
             className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6"
-            style={{ background: "#0d2510" }}
+            style={{ background: "var(--green-bg-subtle)" }}
           >
             <MessageSquare size={22} className="text-[#22c55e]" />
           </div>
-          <blockquote className="text-[22px] font-semibold text-white leading-snug mb-4">
+          <blockquote className="text-[22px] font-semibold leading-snug mb-4" style={{ color: 'var(--text-primary)' }}>
             "{t('login.quote')}"
           </blockquote>
           <p className="text-[13px] text-[#5a7a5a]">
@@ -84,8 +84,8 @@ export default function LoginPage() {
             {["#22c55e", "#3b82f6", "#8b5cf6", "#f59e0b"].map((c, i) => (
               <div
                 key={i}
-                className="w-8 h-8 rounded-full border-2 border-[#0a0a0a] flex items-center justify-center text-[10px] font-bold text-black"
-                style={{ background: c }}
+                className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-[10px] font-bold text-black"
+                style={{ borderColor: 'var(--bg-main)', background: c }}
               >
                 {String.fromCharCode(65 + i)}
               </div>
@@ -108,12 +108,12 @@ export default function LoginPage() {
           {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-8 lg:hidden">
             <img src="/logo.png" alt="ZeChat.site" className="w-8 h-8 object-contain" />
-            <span className="text-[17px] font-bold text-white tracking-tight">
+            <span className="text-[17px] font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
               ZeChat<span className="text-green-500">.site</span>
             </span>
           </div>
 
-          <h1 className="text-2xl font-bold text-white mb-1">{t('login.title')}</h1>
+          <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{t('login.title')}</h1>
           <p className="text-[13px] text-[#5a7a5a] mb-7">
             {t('login.subtitle')}
           </p>

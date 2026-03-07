@@ -124,17 +124,17 @@ export function QRScannerModal({ instance, onClose }: QRScannerModalProps) {
           exit={{ opacity: 0, scale: 0.93, y: 16 }}
           transition={{ type: "spring", stiffness: 300, damping: 28 }}
           className="w-full max-w-sm rounded-2xl overflow-hidden"
-          style={{ background: "#111", border: "1px solid #1e1e1e", boxShadow: "0 24px 80px rgba(0,0,0,0.8)" }}
+          style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)", boxShadow: "0 24px 80px rgba(0,0,0,0.4)" }}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[#1a1a1a]">
+          <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
             <div>
-              <h2 className="text-[14px] font-semibold text-white">Scan QR Code</h2>
+              <h2 className="text-[14px] font-semibold" style={{ color: 'var(--text-primary)' }}>Scan QR Code</h2>
               <p className="text-[11px] text-[#5a7a5a] mt-0.5">{instance.name}</p>
             </div>
             <button
               onClick={onClose}
-              className="flex items-center justify-center w-7 h-7 rounded-lg text-[#5a7a5a] hover:text-white hover:bg-[#1a1a1a] transition-colors"
+              className="flex items-center justify-center w-7 h-7 rounded-lg transition-colors" style={{ color: 'var(--text-muted)' }}
             >
               <X size={15} />
             </button>
@@ -143,7 +143,7 @@ export function QRScannerModal({ instance, onClose }: QRScannerModalProps) {
           {/* Body */}
           <div className="px-5 py-5">
             {/* Instructions */}
-            <div className="flex items-start gap-3 mb-4 p-3 rounded-lg bg-[#0d1f0d] border border-[#1a2e1a]">
+            <div className="flex items-start gap-3 mb-4 p-3 rounded-lg" style={{ background: 'var(--green-bg-subtle)', border: '1px solid var(--green-border-subtle)' }}>
               <Smartphone size={14} className="text-[#22c55e] mt-0.5 shrink-0" />
               <p className="text-[11px] text-[#6a9a6a] leading-relaxed">
                 Open WhatsApp → Linked Devices → Link a Device, then scan the QR code below.
@@ -153,7 +153,7 @@ export function QRScannerModal({ instance, onClose }: QRScannerModalProps) {
             {/* QR area */}
             <div
               className="relative flex items-center justify-center rounded-xl overflow-hidden"
-              style={{ background: "#0a0a0a", border: "1px solid #1e1e1e", minHeight: 240 }}
+              style={{ background: "var(--input-bg)", border: "1px solid var(--card-border)", minHeight: 240 }}
             >
               {/* Loading */}
               {loading && (
@@ -189,10 +189,10 @@ export function QRScannerModal({ instance, onClose }: QRScannerModalProps) {
               {/* Initial state — no QR yet */}
               {!loading && !connected && !error && !qrSrc && (
                 <div className="flex flex-col items-center gap-3 px-6 text-center py-4">
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "#0d1f0d", border: "1px solid #1a2e1a" }}>
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "var(--green-bg-subtle)", border: "1px solid var(--green-border-subtle)" }}>
                     <QrCode size={32} className="text-[#22c55e]" />
                   </div>
-                  <p className="text-sm font-medium text-white">Prêt à scanner</p>
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Prêt à scanner</p>
                   <button
                     onClick={handleFetchQR}
                     className="btn-green mt-2 flex items-center gap-2"

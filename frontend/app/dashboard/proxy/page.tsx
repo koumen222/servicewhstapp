@@ -17,8 +17,8 @@ export default function ProxyPage() {
         animate={{ opacity: 1, y: 0 }}
         className="rounded-2xl p-5"
         style={{
-          background: "linear-gradient(135deg, #0d1a2a, #050d14)",
-          border: "1px solid #1a2a3a",
+          background: "linear-gradient(135deg, var(--accent-blue-bg), var(--accent-blue-dark))",
+          border: "1px solid var(--accent-blue-border)",
         }}
       >
         <div className="flex items-start gap-4">
@@ -44,9 +44,9 @@ export default function ProxyPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.05 }}
         className="rounded-2xl overflow-hidden"
-        style={{ background: "#111", border: "1px solid #1e1e1e" }}
+        style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}
       >
-        <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-[#1a1a1a] flex-wrap">
+        <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 flex-wrap" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
           <h3 className="text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>
             {t('proxy.configured')}
           </h3>
@@ -74,7 +74,7 @@ export default function ProxyPage() {
             <tbody>
               {MOCK_PROXIES.map((proxy) => (
                 <tr key={proxy.id}>
-                  <td className="font-mono text-white">{proxy.host}</td>
+                  <td className="font-mono" style={{ color: 'var(--text-primary)' }}>{proxy.host}</td>
                   <td className="font-mono text-[#5a7a5a]">{proxy.port}</td>
                   <td>
                     <span className="uppercase text-[10px] text-[#5a7a5a]">

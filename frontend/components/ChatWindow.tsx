@@ -56,10 +56,12 @@ function MessageBubble({ message }: MessageBubbleProps) {
       <div
         className={`max-w-[70%] rounded-2xl px-4 py-2 ${
           message.isFromMe
-            ? 'bg-[#0d2510] text-white'
-            : 'bg-[#1a1a1a] text-white'
+            ? ''
+            : ''
         }`}
         style={{
+          background: message.isFromMe ? 'var(--green-bg-subtle)' : 'var(--border-subtle)',
+          color: 'var(--text-primary)',
           borderBottomRightRadius: message.isFromMe ? '6px' : '16px',
           borderBottomLeftRadius: message.isFromMe ? '16px' : '6px',
         }}
@@ -217,16 +219,16 @@ export function ChatWindow({ chat, isOpen, onClose, onSendMessage, instanceName,
           exit={{ scale: 0.95, y: 20 }}
           onClick={(e) => e.stopPropagation()}
           className="w-full max-w-md h-[600px] rounded-2xl overflow-hidden flex flex-col"
-          style={{ background: "#111", border: "1px solid #1e1e1e" }}
+          style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}
         >
           {/* Header */}
-          <div className="flex items-center gap-3 p-4 border-b border-[#1e1e1e]">
-            <div className="w-10 h-10 rounded-full bg-[#0d2510] flex items-center justify-center text-[#22c55e] font-bold">
+          <div className="flex items-center gap-3 p-4" style={{ borderBottom: '1px solid var(--card-border)' }}>
+            <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold" style={{ background: 'var(--green-bg-subtle)', color: 'var(--brand-green)' }}>
               {getInitials(chat.contactName)}
             </div>
             
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-semibold text-white truncate">
+              <h3 className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
                 {chat.contactName}
               </h3>
               <p className="text-[11px] text-white/60">
@@ -262,7 +264,7 @@ export function ChatWindow({ chat, isOpen, onClose, onSendMessage, instanceName,
             ) : messages.length === 0 ? (
               <div className="flex items-center justify-center h-full text-center">
                 <div>
-                  <div className="w-16 h-16 rounded-full bg-[#0d2510] flex items-center justify-center mx-auto mb-3">
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3" style={{ background: 'var(--green-bg-subtle)' }}>
                     <div className="text-[#22c55e] font-bold text-xl">
                       {getInitials(chat.contactName)}
                     </div>
@@ -290,7 +292,7 @@ export function ChatWindow({ chat, isOpen, onClose, onSendMessage, instanceName,
           )}
 
           {/* Message Input */}
-          <form onSubmit={handleSendMessage} className="p-4 border-t border-[#1e1e1e]">
+          <form onSubmit={handleSendMessage} className="p-4" style={{ borderTop: '1px solid var(--card-border)' }}>
             <div className="flex items-end gap-3">
               <button
                 type="button"
@@ -308,7 +310,8 @@ export function ChatWindow({ chat, isOpen, onClose, onSendMessage, instanceName,
                   onChange={(e) => setInputMessage(e.target.value)}
                   placeholder={isConnected ? "Écrivez un message..." : "Connectez WhatsApp pour envoyer des messages"}
                   disabled={isSending || !isConnected}
-                  className="w-full px-4 py-3 pr-12 rounded-full text-sm resize-none bg-[#1a1a1a] border border-[#2a2a2a] text-white placeholder-white/50 focus:border-[#22c55e] focus:ring-0 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-3 pr-12 rounded-full text-sm resize-none focus:ring-0 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: 'var(--input-bg)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
                 />
                 <button
                   type="button"

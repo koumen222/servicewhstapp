@@ -154,12 +154,12 @@ export default function InstancesPage() {
           </div>
 
           {/* View mode */}
-          <div className="flex items-center gap-1 p-1 rounded-lg shrink-0" style={{ background: "#111", border: "1px solid #1e1e1e" }}>
+          <div className="flex items-center gap-1 p-1 rounded-lg shrink-0" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
             <button
               onClick={() => setViewMode("grid")}
               className={cn(
                 "p-1.5 rounded-md transition-colors",
-                viewMode === "grid" ? "bg-[#0d2510] text-[#22c55e]" : "text-[#4a6a4a] hover:text-white"
+                viewMode === "grid" ? "text-[#22c55e]" : "hover:text-white"
               )}
             >
               <LayoutGrid size={13} />
@@ -168,7 +168,7 @@ export default function InstancesPage() {
               onClick={() => setViewMode("list")}
               className={cn(
                 "p-1.5 rounded-md transition-colors",
-                viewMode === "list" ? "bg-[#0d2510] text-[#22c55e]" : "text-[#4a6a4a] hover:text-white"
+                viewMode === "list" ? "text-[#22c55e]" : "hover:text-white"
               )}
             >
               <List size={13} />
@@ -178,7 +178,7 @@ export default function InstancesPage() {
 
         {/* Status filter — scrollable on mobile */}
         <div className="overflow-x-auto no-scrollbar">
-          <div className="flex items-center gap-1 p-1 rounded-lg w-max" style={{ background: "#111", border: "1px solid #1e1e1e" }}>
+          <div className="flex items-center gap-1 p-1 rounded-lg w-max" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
             {(["all", "open", "close", "expired", "connecting"] as FilterStatus[]).map(
               (s) => (
                 <button
@@ -187,8 +187,8 @@ export default function InstancesPage() {
                   className={cn(
                     "px-2.5 py-1 rounded-md text-[11px] font-medium transition-all duration-150 whitespace-nowrap",
                     filterStatus === s
-                      ? "bg-[#0d2510] text-[#22c55e]"
-                      : "text-[#5a7a5a] hover:text-white"
+                      ? "text-[#22c55e]"
+                      : "hover:text-white"
                   )}
                 >
                   {s === "open" ? t("inst.filterConnected") : s === "close" ? t("inst.filterDisconnected") : s === "all" ? t("inst.filterAll") : s === "expired" ? t("inst.filterExpired") : t("inst.filterConnecting")}
@@ -214,7 +214,7 @@ export default function InstancesPage() {
             <>
               <div
                 className="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center"
-                style={{ background: "#1a1a1a" }}
+                style={{ background: "var(--border-subtle)" }}
               >
                 <Filter size={20} className="text-[#4a6a4a]" />
               </div>
@@ -235,7 +235,7 @@ export default function InstancesPage() {
             <>
               <div
                 className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center"
-                style={{ background: "#0d2510", border: "1px solid #1a3a1a" }}
+                style={{ background: "var(--green-bg-subtle)", border: "1px solid var(--green-border-subtle)" }}
               >
                 <Plus size={24} className="text-[#22c55e]" />
               </div>
@@ -294,7 +294,7 @@ export default function InstancesPage() {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.93, y: 12 }}
               className="w-full max-w-sm rounded-2xl p-5"
-              style={{ background: "#111", border: "1px solid #1e1e1e" }}
+              style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}
             >
               <h3 className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
                 {t("inst.deleteTitle")}

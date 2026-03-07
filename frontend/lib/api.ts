@@ -326,6 +326,16 @@ export const messagesApi = {
     api.post(`/api/chats/${chatId}/mark-read`, { messageIds }),
 };
 
+// Usage Stats API
+export const usageApi = {
+  /** GET /api/usage — global usage stats for authenticated user */
+  getGlobal: () => api.get("/api/usage"),
+
+  /** GET /api/instances/:instanceId/usage — usage stats for a specific instance */
+  getInstance: (instanceId: string) =>
+    api.get(`/api/instances/${encodeURIComponent(instanceId)}/usage`),
+};
+
 // Instance Connection Status API
 export const connectionApi = {
   getStatus: (instanceName: string) => api.get(`/api/instance/status/${instanceName}`),

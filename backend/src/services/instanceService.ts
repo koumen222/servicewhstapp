@@ -69,6 +69,11 @@ export class InstanceService {
     return collection.findOne({ instanceName, userId, isActive: true })
   }
 
+  static async findUserInstanceByNameGlobal(instanceName: string): Promise<UserInstanceDocument | null> {
+    const collection = await this.getUserInstanceCollection()
+    return collection.findOne({ instanceName })
+  }
+
   static async countUserInstances(userId: string, activeOnly = true): Promise<number> {
     const collection = await this.getUserInstanceCollection()
     const filter = { userId }

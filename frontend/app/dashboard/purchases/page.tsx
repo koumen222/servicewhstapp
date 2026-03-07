@@ -41,9 +41,9 @@ export default function PurchasesPage() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         className="rounded-2xl overflow-hidden"
-        style={{ background: "#111", border: "1px solid #1e1e1e" }}
+        style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}
       >
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-[#1a1a1a]">
+        <div className="flex items-center gap-3 px-5 py-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
           <ShoppingBag size={16} className="text-[#22c55e]" />
           <h2 className="text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>
             {t('purch.title')}
@@ -80,7 +80,7 @@ export default function PurchasesPage() {
                     <td className="font-mono text-[#5a7a5a] text-[11px]">
                       {p.externalRef || p.id.slice(0, 8).toUpperCase()}
                     </td>
-                    <td className="font-medium text-white capitalize">
+                    <td className="font-medium capitalize" style={{ color: 'var(--text-primary)' }}>
                       {p.plan}
                     </td>
                     <td>
