@@ -33,17 +33,21 @@ export default function BalancePage() {
       .catch(() => {});
   }, []);
 
-  async function handleUpgrade(plan: PlanType) {
+  function handleUpgrade(plan: PlanType) {
     if (plan === "free") return;
-    setPaying(plan);
-    try {
-      const res = await subscriptionsApi.initiatePayment(plan);
-      if (res.data?.redirectUrl) {
-        window.location.href = res.data.redirectUrl;
-      }
-    } catch {
-      setPaying(null);
-    }
+    
+    const planDetails = PLAN_CATALOG[plan];
+    const phoneNumber = "237676778377";
+    
+    // Créer le message WhatsApp pré-rempli
+    const message = `Bonjour, je souhaite souscrire au plan ${planDetails.name} à ${planDetails.price.toLocaleString("fr-FR")} XAF/mois pour mon compte ZeChat.site.`;
+    
+    // Encoder le message pour l'URL
+    const encodedMessage = encodeURIComponent(message);
+    
+    // Redirection vers WhatsApp
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+    window.open(whatsappUrl, "_blank");
   }
 
   const currentPlan = (info?.plan ?? user?.plan ?? "free") as PlanType;
@@ -53,7 +57,7 @@ export default function BalancePage() {
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
         <h2 className="text-[15px] font-semibold text-white mb-0.5">Plans & Abonnement</h2>
         <p className="text-[12px] text-[#5a7a5a]">
-          Passez à un plan supérieur pour débloquer plus d'instances et de quotas de messages. Paiement via MoneyFusion (XAF).
+          Passez à un plan supérieur pour débloquer plus d'instances et de quotas de messages. Paiement via WhatsApp.
         </p>
       </motion.div>
 

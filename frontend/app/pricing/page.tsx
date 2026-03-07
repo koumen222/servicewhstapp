@@ -6,7 +6,7 @@ export default function PricingPage() {
     {
       id: "free",
       name: "Free",
-      price: "0 XAF",
+      price: "Gratuit",
       description: "Pour tester et débuter gratuitement.",
       features: [
         "1 instance WhatsApp",
@@ -14,7 +14,7 @@ export default function PricingPage() {
         "Accès API REST",
         "Support communauté",
       ],
-      cta: "Commencer gratuitement",
+      cta: "Plan actuel",
       highlighted: false,
       color: "#5a7a5a",
       icon: Zap,
@@ -22,8 +22,8 @@ export default function PricingPage() {
     {
       id: "starter",
       name: "Starter",
-      price: "15 000 XAF",
-      originalPrice: "30 000 XAF",
+      price: "2 495 XAF",
+      originalPrice: "4 990 XAF",
       discount: "-50%",
       description: "Idéal pour les petites entreprises.",
       features: [
@@ -32,7 +32,7 @@ export default function PricingPage() {
         "Webhooks",
         "Support email",
       ],
-      cta: "Choisir Starter",
+      cta: "Choisir ce plan",
       highlighted: true,
       color: "#22c55e",
       icon: Star,
@@ -40,8 +40,8 @@ export default function PricingPage() {
     {
       id: "pro",
       name: "Pro",
-      price: "45 000 XAF",
-      originalPrice: "90 000 XAF",
+      price: "7 495 XAF",
+      originalPrice: "14 990 XAF",
       discount: "-50%",
       description: "Pour les entreprises en pleine croissance.",
       features: [
@@ -50,7 +50,7 @@ export default function PricingPage() {
         "Support prioritaire",
         "Analytiques avancées",
       ],
-      cta: "Choisir Pro",
+      cta: "Choisir ce plan",
       highlighted: false,
       color: "#3b82f6",
       icon: CreditCard,
@@ -58,8 +58,8 @@ export default function PricingPage() {
     {
       id: "enterprise",
       name: "Enterprise",
-      price: "150 000 XAF",
-      originalPrice: "300 000 XAF",
+      price: "24 995 XAF",
+      originalPrice: "49 990 XAF",
       discount: "-50%",
       description: "Solution sur mesure pour grands comptes.",
       features: [
@@ -68,7 +68,7 @@ export default function PricingPage() {
         "Support dédié",
         "Intégrations sur mesure",
       ],
-      cta: "Contactez-nous",
+      cta: "Choisir ce plan",
       highlighted: false,
       color: "#8b5cf6",
       icon: Building2,

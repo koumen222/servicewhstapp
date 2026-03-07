@@ -105,10 +105,14 @@ router.post('/create-instance', async (req, res) => {
     // Créer l'instance dans Evolution API (sans qrcode pour éviter l'auto-connexion)
     const evolutionResponse = await createEvolutionInstance(instanceName, integration)
 
-    // Extraire la clé API Evolution de façon sécurisée
-    const evolutionApiKey = evolutionResponse?.hash?.apikey
-      || evolutionResponse?.apikey
-      || crypto.randomBytes(32).toString('hex')
+    // IMPORTANT: Extraire le token COMPLET d'Evolution tel quel, sans modification
+    const evolutionApiKey = evolutionResponse?.hash?.apikey || evolutionResponse?.apikey || ''
+    
+    if (!evolutionApiKey) {
+      console.warn('⚠️ Aucun token Evolution reçu, génération d\'un token temporaire')
+    }
+    
+    console.log(`🔑 Token Evolution complet : ${evolutionApiKey ? evolutionApiKey.substring(0, 20) + '...' : 'non fourni'}`)
 
     // Créer l'instance dans notre base de données
     const instance = await InstanceService.createUserInstance({
@@ -143,10 +147,13 @@ router.post('/create-instance', async (req, res) => {
           name: instance.customName,
           instanceName: instance.instanceName,
           status: instance.status,
-          createdAt: instance.createdAt
+          createdAt: instance.createdAt,
+          // Envoyer le token COMPLET d'Evolution tel quel, sans modification
+          instanceToken: evolutionApiKey,
+          apiKey: evolutionApiKey
         },
         apiKey: {
-          key: apiKey, // Clé en clair (sera affichée une seule fois)
+          key: evolutionApiKey, // Token Evolution complet en clair (sera affiché une seule fois)
           id: 'temp-id',
           name: 'Default Key',
           prefix: 'temp',

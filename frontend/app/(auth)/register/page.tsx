@@ -72,8 +72,8 @@ export default function RegisterPage() {
       {/* Left panel */}
       <div className="hidden lg:flex flex-col justify-between w-[420px] shrink-0 p-10 border-r border-[#141414]">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
-            Z
+          <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
+            <CheckCircle2 className="h-5 w-5 text-white" />
           </div>
           <span className="text-white font-semibold text-[15px]">
             ZeChat.site

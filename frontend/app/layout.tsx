@@ -10,10 +10,10 @@ export const metadata: Metadata = {
     "Plateforme professionnelle EcomCookpit de gestion d'instances WhatsApp multi-comptes.",
   icons: {
     icon: [
-      { url: "/favicon.png", sizes: "32x32", type: "image/png" },
+      { url: "/logo.png", sizes: "32x32", type: "image/png" },
     ],
-    shortcut: "/favicon.png",
-    apple: "/favicon.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
   },
 };
 

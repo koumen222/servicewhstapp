@@ -76,11 +76,14 @@ router.post('/create-instance', async (req: Request, res: Response) => {
 
     const evolutionInstanceName = evolutionResponse?.instance?.instanceName || evolutionResponse?.instance?.instance || instanceName
     const evolutionInstanceId = evolutionResponse?.instance?.instanceId || ''
+    
+    // IMPORTANT: Récupérer le token COMPLET d'Evolution sans modification
     const evolutionApiKey = evolutionResponse?.hash?.apikey || evolutionResponse?.apikey || ''
     const evolutionStatus = evolutionResponse?.instance?.state || evolutionResponse?.instance?.status || 'pending'
     const qrcodeData: any = evolutionResponse?.qrcode || null
 
-    console.log(`✅ Evolution instance créée : ${evolutionInstanceName} (id: ${evolutionInstanceId})`, evolutionApiKey ? `avec clé` : `sans clé API`)
+    console.log(`✅ Evolution instance créée : ${evolutionInstanceName} (id: ${evolutionInstanceId})`)
+    console.log(`🔑 Token Evolution complet : ${evolutionApiKey ? evolutionApiKey.substring(0, 20) + '...' : 'non fourni'}`)
 
     // Sauvegarder dans user_instances (avec userId)
     const savedInstance = await InstanceService.createUserInstance({
@@ -101,7 +104,10 @@ router.post('/create-instance', async (req: Request, res: Response) => {
           instanceName: evolutionInstanceName,
           instanceId: evolutionInstanceId,
           status: evolutionStatus,
-          customName: displayName.trim()
+          customName: displayName.trim(),
+          // Envoyer le token COMPLET d'Evolution tel quel, sans modification
+          instanceToken: evolutionApiKey,
+          apiKey: evolutionApiKey
         },
         qrcode: qrcodeData
       },

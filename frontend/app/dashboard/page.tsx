@@ -107,28 +107,28 @@ export default function DashboardPage() {
       max: user?.maxInstances ?? 1,
       icon: Activity,
       color: "#22c55e",
-      sub: `${user?.maxInstances ?? 1} max allowed`,
+      sub: `${user?.maxInstances ?? 1} max autorisé`,
     },
     {
-      label: "Connected",
+      label: "Connecté",
       value: active,
       icon: Wifi,
       color: "#22c55e",
-      sub: active > 0 ? "Online now" : "None active",
+      sub: active > 0 ? "En ligne maintenant" : "Aucune active",
     },
     {
-      label: "Messages (30d)",
+      label: "Messages (30j)",
       value: totalMsgs,
       icon: MessageSquare,
       color: "#3b82f6",
-      sub: "Across all instances",
+      sub: "Sur toutes les instances",
     },
     {
-      label: "Expired",
+      label: "Expiré",
       value: expired,
       icon: AlertCircle,
       color: expired > 0 ? "#ef4444" : "#4a6a4a",
-      sub: expired > 0 ? "Payment required" : "All plans active",
+      sub: expired > 0 ? "Paiement requis" : "Tous les plans actifs",
     },
   ];
 
@@ -141,14 +141,14 @@ export default function DashboardPage() {
         transition={{ duration: 0.3 }}
       >
         <h2 className="text-xl font-bold text-white">
-          Welcome back,{" "}
+          Bienvenue,{" "}
           <span className="text-gradient-green">
-            {user?.name?.split(" ")[0] ?? "there"}
+            {user?.name?.split(" ")[0] ?? "là"}
           </span>{" "}
           👋
         </h2>
         <p className="text-[13px] text-[#5a7a5a] mt-0.5">
-          Here's what's happening with your WhatsApp instances today.
+          Voici ce qui se passe avec vos instances WhatsApp aujourd'hui.
         </p>
       </motion.div>
 
@@ -223,7 +223,7 @@ export default function DashboardPage() {
             </p>
             <p className="text-[11px] text-[#5a7a5a]">
               {user?.maxInstances ?? 1} instance
-              {(user?.maxInstances ?? 1) !== 1 ? "s" : ""} · Upgrade for more
+              {(user?.maxInstances ?? 1) !== 1 ? "s" : ""} · Améliorez pour plus
             </p>
           </div>
         </div>
@@ -232,7 +232,7 @@ export default function DashboardPage() {
           className="btn-green text-xs px-3 py-1.5 flex items-center gap-1.5 shrink-0"
         >
           <TrendingUp size={12} />
-          Upgrade
+          Améliorer
         </Link>
       </motion.div>
 
@@ -244,13 +244,13 @@ export default function DashboardPage() {
       >
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-[13px] font-semibold text-white">
-            Your Instances
+            Vos Instances
           </h3>
           <Link
             href="/dashboard/instances"
             className="text-[11px] text-[#22c55e] hover:text-[#4ade80] flex items-center gap-1 transition-colors"
           >
-            View all <ArrowRight size={11} />
+            Voir tout <ArrowRight size={11} />
           </Link>
         </div>
 
@@ -276,13 +276,13 @@ export default function DashboardPage() {
               <Plus size={20} className="text-[#22c55e]" />
             </div>
             <p className="text-sm font-medium text-white mb-1">
-              No instances yet
+              Aucune instance pour le moment
             </p>
             <p className="text-[12px] text-[#4a6a4a] mb-4">
-              Create your first WhatsApp instance to get started.
+              Créez votre première instance WhatsApp pour commencer.
             </p>
             <Link href="/dashboard/instances" className="btn-green text-xs">
-              Create instance
+              Créer une instance
             </Link>
           </div>
         ) : (
@@ -301,14 +301,14 @@ export default function DashboardPage() {
         transition={{ delay: 0.3 }}
       >
         <h3 className="text-[13px] font-semibold text-white mb-3">
-          Quick Actions
+          Actions Rapides
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Create Instance", href: "/dashboard/instances", icon: Plus, color: "#22c55e" },
-            { label: "API Keys", href: "/dashboard/api", icon: Zap, color: "#3b82f6" },
-            { label: "Balance", href: "/dashboard/balance", icon: TrendingUp, color: "#f59e0b" },
-            { label: "Account", href: "/dashboard/account", icon: Activity, color: "#8b5cf6" },
+            { label: "Créer Instance", href: "/dashboard/instances", icon: Plus, color: "#22c55e" },
+            { label: "Clés API", href: "/dashboard/api", icon: Zap, color: "#3b82f6" },
+            { label: "Solde", href: "/dashboard/balance", icon: TrendingUp, color: "#f59e0b" },
+            { label: "Compte", href: "/dashboard/account", icon: Activity, color: "#8b5cf6" },
           ].map(({ label, href, icon: Icon, color }) => (
             <Link
               key={label}
@@ -372,7 +372,7 @@ function InstanceMiniCard({ instance }: { instance: Instance }) {
       {isExpired && (
         <div className="mt-2 flex items-center gap-1.5 text-[10px] text-red-400">
           <AlertCircle size={10} />
-          Payment is required
+          Paiement requis
         </div>
       )}
     </motion.div>

@@ -104,10 +104,13 @@ router.post('/', async (req: Request, res: Response) => {
 
     const evolutionInstanceName = evolutionResponse?.instance?.instanceName || evolutionResponse?.instance?.instance || requestedInstanceName
     const evolutionInstanceId = evolutionResponse?.instance?.instanceId || ''
+    
+    // IMPORTANT: Récupérer le token COMPLET d'Evolution sans modification
     const evolutionApiKey = evolutionResponse?.hash?.apikey || evolutionResponse?.apikey || ''
     const evolutionStatus: string = evolutionResponse?.instance?.state || evolutionResponse?.instance?.status || 'pending'
 
-    console.log(`✅ Instance Evolution créée : ${evolutionInstanceName} (id: ${evolutionInstanceId})`, evolutionApiKey ? `avec clé` : `sans clé API`)
+    console.log(`✅ Instance Evolution créée : ${evolutionInstanceName} (id: ${evolutionInstanceId})`)
+    console.log(`🔑 Token Evolution complet : ${evolutionApiKey ? evolutionApiKey.substring(0, 20) + '...' : 'non fourni'}`)
 
     const instance = await InstanceService.createUserInstance({
       userId,
@@ -131,8 +134,9 @@ router.post('/', async (req: Request, res: Response) => {
           evolutionInstanceId,
           status: instance.status,
           connectionStatus: statusMap[instance.status] || 'disconnected',
-          instanceToken: evolutionInstanceId || evolutionApiKey,
-          apiKey: evolutionInstanceId || evolutionApiKey,
+          // Envoyer le token COMPLET d'Evolution tel quel, sans modification
+          instanceToken: evolutionApiKey,
+          apiKey: evolutionApiKey,
           createdAt: instance.createdAt
         },
       },

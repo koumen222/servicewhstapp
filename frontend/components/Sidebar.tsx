@@ -86,14 +86,13 @@ export function Sidebar({ mobile = false, onClose }: SidebarProps) {
       <div className="flex items-center h-14 px-4 border-b border-[#162016] shrink-0">
         <Link href="/dashboard" className="flex items-center gap-2.5 min-w-0">
           <div
-            className="flex items-center justify-center w-8 h-8 rounded-lg shrink-0 font-bold text-sm"
+            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
             style={{
               background: "linear-gradient(135deg, #22c55e, #16a34a)",
-              color: "#000",
               boxShadow: "0 0 12px rgba(34,197,94,0.35)",
             }}
           >
-            E
+            <MessageSquare className="h-5 w-5 text-white" />
           </div>
           <AnimatePresence>
             {!collapsed && (
