@@ -8,9 +8,11 @@ import { subscriptionsApi } from "@/lib/api";
 import { PLAN_CATALOG } from "@/lib/types";
 import type { SubscriptionInfo, PlanType } from "@/lib/types";
 import { formatNumber } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 
 export default function AccountPage() {
   const { user, instances } = useAppStore();
+  const { t } = useI18n();
   const [sub, setSub] = useState<SubscriptionInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -45,7 +47,7 @@ export default function AccountPage() {
         style={{ background: "#111", border: "1px solid #1e1e1e" }}
       >
         <h2 className="text-[13px] font-semibold text-[#8a9a8a] uppercase tracking-wider mb-4">
-          Profil
+          {t('acct.profile')}
         </h2>
         <div className="flex items-start sm:items-center gap-4 flex-wrap">
           <div
@@ -78,17 +80,17 @@ export default function AccountPage() {
         style={{ background: "#111", border: "1px solid #1e1e1e" }}
       >
         <h2 className="text-[13px] font-semibold text-[#8a9a8a] uppercase tracking-wider mb-4">
-          Métriques d&apos;utilisation
+          {t('acct.usage')}
         </h2>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-5">
           {[
-            { label: "Messages envoyés (30j)", value: usage?.messages30d ?? 0,       icon: Send,          color: "#22c55e" },
-            { label: "Total messages",          value: usage?.totalMessages ?? 0,     icon: MessageSquare, color: "#3b82f6" },
-            { label: "Messages livrés",         value: usage?.deliveredMessages ?? 0, icon: CheckCircle2,  color: "#22c55e" },
-            { label: "Échecs d'envoi",           value: usage?.failedMessages ?? 0,   icon: XCircle,       color: "#ef4444" },
-            { label: "Instances actives",        value: usage?.activeInstances ?? instances.length, icon: Wifi, color: "#8b5cf6" },
-            { label: "Clés API",                 value: instances.reduce((s, i) => s + (i.apiKeys?.length ?? 0), 0), icon: Key, color: "#f59e0b" },
+            { label: t('acct.msgs30d'), value: usage?.messages30d ?? 0,       icon: Send,          color: "#22c55e" },
+            { label: t('acct.totalMsgs'),          value: usage?.totalMessages ?? 0,     icon: MessageSquare, color: "#3b82f6" },
+            { label: t('acct.delivered'),         value: usage?.deliveredMessages ?? 0, icon: CheckCircle2,  color: "#22c55e" },
+            { label: t('acct.failed'),           value: usage?.failedMessages ?? 0,   icon: XCircle,       color: "#ef4444" },
+            { label: t('acct.activeInstances'),        value: usage?.activeInstances ?? instances.length, icon: Wifi, color: "#8b5cf6" },
+            { label: t('acct.apiKeysCount'),                 value: instances.reduce((s, i) => s + (i.apiKeys?.length ?? 0), 0), icon: Key, color: "#f59e0b" },
           ].map(({ label, value, icon: Icon, color }) => (
             <div
               key={label}
@@ -109,7 +111,7 @@ export default function AccountPage() {
         {/* Instance quota bar */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[12px] text-[#8a9a8a]">Instances utilisées</span>
+            <span className="text-[12px] text-[#8a9a8a]">{t('acct.instancesUsed')}</span>
             <span className="text-[11px] text-[#5a7a5a] font-mono">
               {usage?.activeInstances ?? instances.length} / {maxInst}
             </span>
@@ -136,9 +138,9 @@ export default function AccountPage() {
       >
         <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
           <h2 className="text-[13px] font-semibold text-[#8a9a8a] uppercase tracking-wider">
-            Abonnement
+            {t('acct.subscription')}
           </h2>
-          <a href="/dashboard/balance" className="btn-green text-xs px-3 py-1.5">Upgrader</a>
+          <a href="/dashboard/balance" className="btn-green text-xs px-3 py-1.5">{t('acct.upgrade')}</a>
         </div>
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#0d2510" }}>
@@ -148,7 +150,7 @@ export default function AccountPage() {
             <p className="text-[14px] font-semibold text-white capitalize">{plan} Plan</p>
             <p className="text-[12px] text-[#5a7a5a] mt-0.5 break-words">
               {planData.maxInstances} instance{planData.maxInstances !== 1 ? "s" : ""} ·{" "}
-              {planData.price === 0 ? "Gratuit" : `${planData.price.toLocaleString("fr-FR")} XAF/mois`}
+              {planData.price === 0 ? t('bal.free') : `${planData.price.toLocaleString("fr-FR")} XAF${t('bal.month')}`}
             </p>
           </div>
         </div>
@@ -163,12 +165,12 @@ export default function AccountPage() {
         style={{ background: "#111", border: "1px solid #1e1e1e" }}
       >
         <h2 className="text-[13px] font-semibold text-[#8a9a8a] uppercase tracking-wider mb-4">
-          Sécurité
+          {t('acct.security')}
         </h2>
         <div className="space-y-2">
           {[
-            { label: "Changer le mot de passe", desc: "Mettre à jour votre mot de passe" },
-            { label: "Authentification 2FA",     desc: "Ajouter une couche de sécurité supplémentaire" },
+            { label: t('acct.changePassword'), desc: t('acct.changePasswordDesc') },
+            { label: t('acct.2fa'),     desc: t('acct.2faDesc') },
           ].map(({ label, desc }) => (
             <div
               key={label}
@@ -182,7 +184,7 @@ export default function AccountPage() {
                   <p className="text-[10px] text-[#4a6a4a]">{desc}</p>
                 </div>
               </div>
-              <button className="btn-ghost text-xs shrink-0">Configurer</button>
+              <button className="btn-ghost text-xs shrink-0">{t('acct.configure')}</button>
             </div>
           ))}
         </div>

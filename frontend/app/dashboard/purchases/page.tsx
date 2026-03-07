@@ -6,16 +6,18 @@ import { ShoppingBag, CheckCircle2, Clock, XCircle, Loader2 } from "lucide-react
 import { formatDate } from "@/lib/utils";
 import { subscriptionsApi } from "@/lib/api";
 import type { Payment } from "@/lib/types";
-
-const STATUS = {
-  completed: { label: "Payé", color: "#22c55e", icon: CheckCircle2 },
-  pending: { label: "En attente", color: "#f59e0b", icon: Clock },
-  failed: { label: "Échoué", color: "#ef4444", icon: XCircle },
-};
+import { useI18n } from "@/lib/i18n";
 
 export default function PurchasesPage() {
+  const { t } = useI18n();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const STATUS = {
+    completed: { label: t('purch.paid'), color: "#22c55e", icon: CheckCircle2 },
+    pending: { label: t('purch.pending'), color: "#f59e0b", icon: Clock },
+    failed: { label: t('purch.failed'), color: "#ef4444", icon: XCircle },
+  };
 
   useEffect(() => {
     async function loadPayments() {
@@ -43,8 +45,8 @@ export default function PurchasesPage() {
       >
         <div className="flex items-center gap-3 px-5 py-4 border-b border-[#1a1a1a]">
           <ShoppingBag size={16} className="text-[#22c55e]" />
-          <h2 className="text-[13px] font-semibold text-white">
-            Historique des achats
+          <h2 className="text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>
+            {t('purch.title')}
           </h2>
         </div>
 
@@ -54,18 +56,18 @@ export default function PurchasesPage() {
           </div>
         ) : payments.length === 0 ? (
           <div className="px-5 py-10 text-center">
-            <p className="text-[13px] text-[#5a7a5a]">Aucun achat pour le moment.</p>
+            <p className="text-[13px] text-[#5a7a5a]">{t('purch.empty')}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
           <table className="w-full data-table min-w-[480px]">
             <thead>
               <tr>
-                <th className="text-left">INVOICE</th>
-                <th className="text-left">PLAN</th>
-                <th className="text-left">AMOUNT</th>
-                <th className="text-left">DATE</th>
-                <th className="text-left">STATUS</th>
+                <th className="text-left">{t('purch.col.invoice')}</th>
+                <th className="text-left">{t('purch.col.plan')}</th>
+                <th className="text-left">{t('purch.col.amount')}</th>
+                <th className="text-left">{t('purch.col.date')}</th>
+                <th className="text-left">{t('purch.col.status')}</th>
                 <th />
               </tr>
             </thead>
@@ -100,7 +102,7 @@ export default function PurchasesPage() {
                     </td>
                     <td>
                       <button className="text-[11px] text-[#22c55e] hover:text-[#4ade80] transition-colors">
-                        Download
+                        {t('purch.download')}
                       </button>
                     </td>
                   </tr>

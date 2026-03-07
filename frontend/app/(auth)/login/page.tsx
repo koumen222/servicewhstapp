@@ -11,6 +11,7 @@ import { Loader2, Eye, EyeOff, MessageSquare, AlertCircle } from "lucide-react";
 import { authApi } from "@/lib/api";
 import { useAppStore } from "@/store/useStore";
 import { setCookie } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 import type { User } from "@/lib/types";
 
 const schema = z.object({
@@ -23,6 +24,7 @@ type FormData = z.infer<typeof schema>;
 export default function LoginPage() {
   const router = useRouter();
   const { setUser } = useAppStore();
+  const { t } = useI18n();
   const [showPass, setShowPass] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -46,7 +48,7 @@ export default function LoginPage() {
       router.push("/dashboard");
     } catch (err: unknown) {
       const msg =
-        (err as any)?.response?.data?.error ?? "Échec de la connexion. Veuillez réessayer.";
+        (err as any)?.response?.data?.error ?? t("login.error");
       setServerError(msg);
     }
   }
@@ -70,10 +72,10 @@ export default function LoginPage() {
             <MessageSquare size={22} className="text-[#22c55e]" />
           </div>
           <blockquote className="text-[22px] font-semibold text-white leading-snug mb-4">
-            "La plateforme d'automatisation WhatsApp la plus puissante pour les entreprises en Afrique."
+            "{t('login.quote')}"
           </blockquote>
           <p className="text-[13px] text-[#5a7a5a]">
-            Gérez plusieurs instances WhatsApp, automatisez vos messages et développez votre relation client.
+            {t('login.quoteDesc')}
           </p>
         </div>
 
@@ -90,7 +92,7 @@ export default function LoginPage() {
             ))}
           </div>
           <p className="text-[12px] text-[#5a7a5a]">
-            Rejoignez plus de <span className="text-[#22c55e] font-medium">500</span> entreprises locales
+            {t('login.social')} <span className="text-[#22c55e] font-medium">{t('login.socialCount')}</span> {t('login.socialSuffix')}
           </p>
         </div>
       </div>
@@ -111,9 +113,9 @@ export default function LoginPage() {
             </span>
           </div>
 
-          <h1 className="text-2xl font-bold text-white mb-1">Bon retour parmi nous</h1>
+          <h1 className="text-2xl font-bold text-white mb-1">{t('login.title')}</h1>
           <p className="text-[13px] text-[#5a7a5a] mb-7">
-            Connectez-vous à votre compte pour continuer
+            {t('login.subtitle')}
           </p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -126,7 +128,7 @@ export default function LoginPage() {
 
             <div>
               <label className="block text-xs font-medium text-[#8a9a8a] mb-1.5">
-                Adresse email
+                {t('login.email')}
               </label>
               <input
                 {...register("email")}
@@ -146,13 +148,13 @@ export default function LoginPage() {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-medium text-[#8a9a8a]">
-                  Mot de passe
+                  {t('login.password')}
                 </label>
                 <button
                   type="button"
                   className="text-[11px] text-[#22c55e] hover:text-[#4ade80] transition-colors"
                 >
-                  Mot de passe oublié ?
+                  {t('login.forgotPassword')}
                 </button>
               </div>
               <div className="relative">
@@ -186,21 +188,21 @@ export default function LoginPage() {
               {isSubmitting ? (
                 <>
                   <Loader2 size={14} className="animate-spin" />
-                  Connexion...
+                  {t('login.submitting')}
                 </>
               ) : (
-                "Se connecter"
+                t('login.submit')
               )}
             </button>
           </form>
 
           <p className="text-center text-[13px] text-[#5a7a5a] mt-5">
-            Vous n'avez pas de compte ?{" "}
+            {t('login.noAccount')}{" "}
             <Link
               href="/register"
               className="text-[#22c55e] hover:text-[#4ade80] font-medium transition-colors"
             >
-              S'inscrire
+              {t('login.register')}
             </Link>
           </p>
         </motion.div>

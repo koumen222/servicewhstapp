@@ -9,6 +9,7 @@ import {
 import { useAppStore } from "@/store/useStore";
 import { apiKeysApi } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
@@ -32,6 +33,7 @@ interface LiveKey {
 
 export default function ApiPage() {
   const { instances } = useAppStore();
+  const { t } = useI18n();
 
   const [keys, setKeys]             = useState<LiveKey[]>([]);
   const [loading, setLoading]       = useState(true);
@@ -73,8 +75,8 @@ export default function ApiPage() {
   }
 
   async function handleCreate() {
-    if (!newInstance) { setCreateError("Sélectionnez une instance"); return; }
-    if (newPerms.length === 0) { setCreateError("Sélectionnez au moins une permission"); return; }
+    if (!newInstance) { setCreateError(t("api.modal.selectError")); return; }
+    if (newPerms.length === 0) { setCreateError(t("api.modal.permError")); return; }
     setCreating(true);
     setCreateError("");
     try {
@@ -86,7 +88,7 @@ export default function ApiPage() {
       setNewName(""); setNewInstance(""); setNewPerms(["send_message", "get_instance_status"]);
       await loadKeys();
     } catch (e: any) {
-      setCreateError(e?.response?.data?.error ?? "Erreur lors de la création");
+      setCreateError(e?.response?.data?.error ?? t("api.modal.selectError"));
     } finally {
       setCreating(false);
     }
@@ -156,9 +158,9 @@ console.log(data.data.messageId);`;
             <Code2 size={18} className="text-[#22c55e]" />
           </div>
           <div>
-            <h2 className="text-[14px] font-semibold text-white mb-0.5">Accès API REST</h2>
-            <p className="text-[12px] text-[#5a7a5a]">
-              Utilisez des clés API pour authentifier vos requêtes. Chaque instance possède ses propres clés avec des permissions configurables.
+            <h2 className="text-[14px] font-semibold mb-0.5" style={{ color: 'var(--text-primary)' }}>{t('api.title')}</h2>
+            <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
+              {t('api.desc')}
             </p>
           </div>
         </div>
@@ -172,7 +174,7 @@ console.log(data.data.messageId);`;
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <p className="text-[12px] font-semibold text-[#22c55e] flex items-center gap-1.5 mb-1">
-                  <Shield size={12} /> Clé créée — copiez-la maintenant, elle ne sera plus affichée
+                  <Shield size={12} /> {t('api.keyCreated')}
                 </p>
                 <p className="text-[11px] text-[#5a7a5a] mb-2">{revealedKey.name}</p>
                 <div className="flex items-center gap-2 bg-[#0a0a0a] rounded-xl px-3 py-2 font-mono text-[12px] text-[#22c55e]">
@@ -196,11 +198,11 @@ console.log(data.data.messageId);`;
         <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-[#1a1a1a] flex-wrap">
           <h3 className="text-[13px] font-semibold text-white flex items-center gap-2">
             <Key size={14} className="text-[#22c55e]" />
-            Clés API
+            {t('api.keys')}
             <span className="text-[11px] text-[#4a6a4a] font-normal">({keys.length})</span>
           </h3>
           <button onClick={() => setShowCreate(true)} className="btn-green text-xs flex items-center gap-1.5 px-3 py-1.5">
-            <Plus size={12} /> Nouvelle clé
+            <Plus size={12} /> {t('api.newKey')}
           </button>
         </div>
 
@@ -211,19 +213,19 @@ console.log(data.data.messageId);`;
         ) : keys.length === 0 ? (
           <div className="px-5 py-10 text-center">
             <Key size={24} className="text-[#2a3a2a] mx-auto mb-2" />
-            <p className="text-[13px] text-[#5a7a5a]">Aucune clé API. Créez une instance puis générez une clé.</p>
+            <p className="text-[13px] text-[#5a7a5a]">{t('api.noKeys')}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
           <table className="w-full data-table min-w-[600px]">
             <thead>
               <tr>
-                <th className="text-left">Nom</th>
-                <th className="text-left">Instance</th>
-                <th className="text-left">Clé (préfixe)</th>
-                <th className="text-left">Permissions</th>
-                <th className="text-left">Utilisations</th>
-                <th className="text-left">Créée le</th>
+                <th className="text-left">{t('api.col.name')}</th>
+                <th className="text-left">{t('api.col.instance')}</th>
+                <th className="text-left">{t('api.col.key')}</th>
+                <th className="text-left">{t('api.col.permissions')}</th>
+                <th className="text-left">{t('api.col.usage')}</th>
+                <th className="text-left">{t('api.col.created')}</th>
                 <th />
               </tr>
             </thead>
@@ -269,7 +271,7 @@ console.log(data.data.messageId);`;
                         onClick={() => handleRegenerate(k)}
                         disabled={regenerating === k.id || revoking === k.id}
                         className="text-[11px] text-[#3a5a3a] hover:text-[#22c55e] transition-colors disabled:opacity-40 font-mono"
-                        title="Régénérer (révoque l'ancienne clé)"
+                        title={t('api.regen')}
                       >
                         {regenerating === k.id ? <Loader2 size={11} className="animate-spin" /> : "↻"}
                       </button>
@@ -296,7 +298,7 @@ console.log(data.data.messageId);`;
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#1a1a1a]">
           <h3 className="text-[13px] font-semibold text-white">Quick Start — JavaScript</h3>
           <button onClick={() => copyText(codeExample, "code")} className="btn-ghost text-xs flex items-center gap-1.5">
-            {copied === "code" ? <><CheckCircle2 size={12} className="text-[#22c55e]" /> Copié</> : <><Copy size={12} /> Copier</>}
+            {copied === "code" ? <><CheckCircle2 size={12} className="text-[#22c55e]" /> {t('api.copied')}</> : <><Copy size={12} /> {t('api.copy')}</>}
           </button>
         </div>
         <pre className="px-4 sm:px-5 py-4 text-[11px] font-mono overflow-x-auto text-[#8adc8a] leading-relaxed whitespace-pre" style={{ background: "#080808" }}>
@@ -321,7 +323,7 @@ console.log(data.data.messageId);`;
             >
               <div className="flex items-center justify-between mb-5">
                 <h3 className="text-[14px] font-semibold text-white flex items-center gap-2">
-                  <Key size={14} className="text-[#22c55e]" /> Nouvelle clé API
+                  <Key size={14} className="text-[#22c55e]" /> {t('api.modal.title')}
                 </h3>
                 <button onClick={() => setShowCreate(false)} className="text-[#3a5a3a] hover:text-white">
                   <X size={16} />
@@ -331,24 +333,24 @@ console.log(data.data.messageId);`;
               <div className="space-y-4">
                 {/* Name */}
                 <div>
-                  <label className="text-[11px] text-[#8a9a8a] block mb-1">Nom (optionnel)</label>
+                  <label className="text-[11px] text-[#8a9a8a] block mb-1">{t('api.modal.name')}</label>
                   <input
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
-                    placeholder="ex: Clé de Production"
+                    placeholder={t('api.modal.namePlaceholder')}
                     className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl px-3 py-2 text-[12px] text-white placeholder-[#3a5a3a] focus:border-[#22c55e] focus:outline-none"
                   />
                 </div>
 
                 {/* Instance */}
                 <div>
-                  <label className="text-[11px] text-[#8a9a8a] block mb-1">Instance *</label>
+                  <label className="text-[11px] text-[#8a9a8a] block mb-1">{t('api.modal.instance')}</label>
                   <select
                     value={newInstance}
                     onChange={(e) => setNewInstance(e.target.value)}
                     className="w-full bg-[#0a0a0a] border border-[#1e1e1e] rounded-xl px-3 py-2 text-[12px] text-white focus:border-[#22c55e] focus:outline-none"
                   >
-                    <option value="">— Sélectionner —</option>
+                    <option value="">{t('api.modal.selectInstance')}</option>
                     {instances.map((inst) => (
                       <option key={inst.id} value={inst.id}>{inst.name}</option>
                     ))}
@@ -357,7 +359,7 @@ console.log(data.data.messageId);`;
 
                 {/* Permissions */}
                 <div>
-                  <label className="text-[11px] text-[#8a9a8a] block mb-2">Permissions *</label>
+                  <label className="text-[11px] text-[#8a9a8a] block mb-2">{t('api.modal.permissions')}</label>
                   <div className="grid grid-cols-2 gap-1.5">
                     {ALL_PERMISSIONS.map(({ id, label }) => (
                       <label key={id}
@@ -383,9 +385,9 @@ console.log(data.data.messageId);`;
                 )}
 
                 <div className="flex gap-2 pt-1">
-                  <button onClick={() => setShowCreate(false)} className="btn-ghost flex-1 py-2 text-xs">Annuler</button>
+                  <button onClick={() => setShowCreate(false)} className="btn-ghost flex-1 py-2 text-xs">{t('api.modal.cancel')}</button>
                   <button onClick={handleCreate} disabled={creating} className="btn-green flex-1 py-2 text-xs flex items-center justify-center gap-1.5">
-                    {creating ? <><Loader2 size={12} className="animate-spin" /> Création…</> : <><Key size={12} /> Générer</>}
+                    {creating ? <><Loader2 size={12} className="animate-spin" /> {t('api.modal.creating')}</> : <><Key size={12} /> {t('api.modal.generate')}</>}
                   </button>
                 </div>
               </div>

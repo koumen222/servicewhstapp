@@ -22,6 +22,7 @@ import { cn, getAvatarColor, timeAgo, formatNumber } from "@/lib/utils";
 import { StatusBadge } from "./StatusBadge";
 import { InstanceTokenDisplay } from "./InstanceTokenDisplay";
 import { useInstanceStatus } from "@/hooks/useInstanceStatus";
+import { useI18n } from "@/lib/i18n";
 import type { Instance } from "@/lib/types";
 
 interface InstanceCardProps {
@@ -35,6 +36,7 @@ export function InstanceCard({
   onQRCode,
   onDelete,
 }: InstanceCardProps) {
+  const { t } = useI18n();
   const [menuOpen, setMenuOpen] = useState(false);
   const [apiKeys, setApiKeys] = useState<any[]>([]);
   const [copied, setCopied] = useState(false);
@@ -82,7 +84,7 @@ export function InstanceCard({
   const isConnecting = currentStatus === 'connecting';
 
   const statusDotColor = isConnected ? '#22c55e' : isConnecting ? '#f59e0b' : isExpired ? '#ef4444' : '#6b7280';
-  const statusLabel = isConnected ? '🟢 Connecté' : isConnecting ? '🟡 Connexion…' : isExpired ? '🔴 Expiré' : '⚫ Déconnecté';
+  const statusLabel = isConnected ? `🟢 ${t('card.connected')}` : isConnecting ? `🟡 ${t('card.connectingStatus')}` : isExpired ? `🔴 ${t('card.expired')}` : `⚫ ${t('card.disconnected')}`;
 
   const avatarColor = getAvatarColor(instance.name);
   const initials = instance.name
@@ -124,7 +126,7 @@ export function InstanceCard({
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="text-[14px] font-semibold text-white truncate">
+            <h3 className="text-[14px] font-semibold truncate" style={{ color: "var(--text-primary)" }}>
               {instance.name}
             </h3>
             <StatusBadge status={displayStatus} size="sm" />
@@ -179,7 +181,7 @@ export function InstanceCard({
                   }}
                   className="flex items-center gap-2 w-full px-3 py-2 text-xs text-[#8a9a8a] hover:bg-[#161616] hover:text-white transition-colors"
                 >
-                  <QrCode size={13} /> Scanner QR
+                  <QrCode size={13} /> {t('card.scanQR')}
                 </button>
                 <div className="my-1 border-t border-[#1a1a1a]" />
                 <button
@@ -189,7 +191,7 @@ export function InstanceCard({
                   }}
                   className="flex items-center gap-2 w-full px-3 py-2 text-xs text-red-400 hover:bg-[#1a0a0a] transition-colors"
                 >
-                  <Trash2 size={13} /> Supprimer
+                  <Trash2 size={13} /> {t('card.delete')}
                 </button>
               </motion.div>
             </>
@@ -216,12 +218,12 @@ export function InstanceCard({
         <div className="flex items-center gap-1.5 text-[11px] text-[#5a7a5a]">
           <MessageSquare size={11} className="shrink-0" />
           <span>
-            {formatNumber(instance.stats?.messagesLast30Days ?? 0)} msgs/30j
+            {formatNumber(instance.stats?.messagesLast30Days ?? 0)} {t('card.msgs30d')}
           </span>
         </div>
         <div className="flex items-center gap-1.5 text-[11px] text-[#5a7a5a]">
           <Key size={11} className="shrink-0" />
-          <span>{instance.stats?.totalApiKeys ?? 0} clés API</span>
+          <span>{instance.stats?.totalApiKeys ?? 0} {t('card.apiKeys')}</span>
         </div>
         <div className="flex items-center gap-1.5 text-[11px] text-[#5a7a5a]">
           <Clock size={11} className="shrink-0" />
@@ -237,7 +239,7 @@ export function InstanceCard({
           <div className="mt-3">
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] text-[#4a6a4a]">
-                Quota de messages
+                {t('card.msgQuota')}
               </span>
               <span className="text-[10px] text-[#5a7a5a]">
                 {formatNumber(q.used)} / {formatNumber(q.limit)}
@@ -278,12 +280,11 @@ export function InstanceCard({
         >
           <AlertCircle size={12} className="text-red-400 shrink-0" />
           <p className="text-[11px] text-red-400 flex-1">
-            <span className="font-semibold">Paiement requis</span> pour utiliser
-            cette instance.
+            <span className="font-semibold">{t('card.paymentRequired')}</span> {t('card.paymentDesc')}
           </p>
           <button className="btn-danger text-[10px] px-2 py-1 flex items-center gap-1">
             <CreditCard size={10} />
-            Payer
+            {t('card.pay')}
           </button>
         </motion.div>
       )}
@@ -301,7 +302,7 @@ export function InstanceCard({
           )}
         >
           <QrCode size={12} />
-          {isConnected ? "QR Code" : isConnecting ? "Connexion…" : "Scanner QR"}
+          {isConnected ? t('card.qrCode') : isConnecting ? t('card.connecting') : t('card.scanQR')}
         </button>
 
         <button

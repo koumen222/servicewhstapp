@@ -2,12 +2,14 @@
 
 import { motion } from "framer-motion";
 import { Globe, Plus, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 const MOCK_PROXIES = [
   { id: "1", host: "proxy.example.com", port: 8080, protocol: "http", status: "active" },
 ];
 
 export default function ProxyPage() {
+  const { t } = useI18n();
   return (
     <div className="max-w-3xl space-y-5">
       <motion.div
@@ -27,12 +29,11 @@ export default function ProxyPage() {
             <Globe size={18} className="text-[#3b82f6]" />
           </div>
           <div>
-            <h2 className="text-[14px] font-semibold text-white mb-1">
-              Proxy Configuration
+            <h2 className="text-[14px] font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
+              {t('proxy.title')}
             </h2>
-            <p className="text-[12px] text-[#5a7a8a]">
-              Route WhatsApp connections through proxies to bypass regional
-              restrictions or improve reliability.
+            <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
+              {t('proxy.desc')}
             </p>
           </div>
         </div>
@@ -46,27 +47,27 @@ export default function ProxyPage() {
         style={{ background: "#111", border: "1px solid #1e1e1e" }}
       >
         <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-[#1a1a1a] flex-wrap">
-          <h3 className="text-[13px] font-semibold text-white">
-            Configured Proxies
+          <h3 className="text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>
+            {t('proxy.configured')}
           </h3>
           <button className="btn-ghost text-xs flex items-center gap-1.5">
-            <Plus size={12} /> Add proxy
+            <Plus size={12} /> {t('proxy.add')}
           </button>
         </div>
 
         {MOCK_PROXIES.length === 0 ? (
           <div className="px-5 py-8 text-center">
-            <p className="text-[12px] text-[#5a7a5a]">No proxies configured.</p>
+            <p className="text-[12px] text-[#5a7a5a]">{t('proxy.empty')}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
           <table className="w-full data-table min-w-[320px]">
             <thead>
               <tr>
-                <th className="text-left">Host</th>
-                <th className="text-left">Port</th>
-                <th className="text-left">Protocol</th>
-                <th className="text-left">Status</th>
+                <th className="text-left">{t('proxy.col.host')}</th>
+                <th className="text-left">{t('proxy.col.port')}</th>
+                <th className="text-left">{t('proxy.col.protocol')}</th>
+                <th className="text-left">{t('proxy.col.status')}</th>
                 <th />
               </tr>
             </thead>

@@ -17,6 +17,7 @@ import { InstanceCard } from "@/components/InstanceCard";
 import { QRScannerModal } from "@/components/QRScannerModal";
 import { CreateInstanceModal } from "@/components/CreateInstanceModal";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 import type { Instance, InstanceStatus } from "@/lib/types";
 
 const MOCK_INSTANCES: Instance[] = [];
@@ -26,6 +27,7 @@ type FilterStatus = "all" | InstanceStatus;
 export default function InstancesPage() {
   const { user, instances, setInstances, addInstance, removeInstance, instancesLoaded, setInstancesLoaded, isLoadingInstances } =
     useAppStore();
+  const { t } = useI18n();
 
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -97,14 +99,14 @@ export default function InstancesPage() {
       {/* Page header */}
       <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
         <div>
-          <h2 className="text-[15px] font-semibold text-white">
-            Instances
-            <span className="ml-2 text-[12px] font-normal text-[#4a6a4a]">
+          <h2 className="text-[15px] font-semibold" style={{ color: "var(--text-primary)" }}>
+            {t("inst.title")}
+            <span className="ml-2 text-[12px] font-normal" style={{ color: "var(--text-muted)" }}>
               {instances.length}/{user?.maxInstances ?? 1}
             </span>
           </h2>
-          <p className="text-[12px] text-[#5a7a5a] mt-0.5">
-            Gérez vos connexions WhatsApp
+          <p className="text-[12px] mt-0.5" style={{ color: "var(--text-muted)" }}>
+            {t("inst.subtitle")}
           </p>
         </div>
 
@@ -115,20 +117,20 @@ export default function InstancesPage() {
             className="btn-ghost flex items-center gap-1.5"
           >
             <RefreshCw size={13} className={refreshing ? "animate-spin" : ""} />
-            Actualiser
+            {t("inst.refresh")}
           </button>
 
           <button
             onClick={() => setShowCreate(true)}
             disabled={!canCreate}
-            title={!canCreate ? `Maximum ${user?.maxInstances} instances sur votre plan` : undefined}
+            title={!canCreate ? t("inst.maxPlan").replace("{max}", String(user?.maxInstances)) : undefined}
             className={cn(
               "btn-green flex items-center gap-1.5",
               !canCreate && "opacity-50 cursor-not-allowed hover:bg-[#22c55e] hover:shadow-none hover:transform-none"
             )}
           >
             <Plus size={14} />
-            Créer une instance
+            {t("inst.create")}
           </button>
         </div>
       </div>
@@ -146,7 +148,7 @@ export default function InstancesPage() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher des instances…"
+              placeholder={t("inst.search")}
               className="input-dark w-full pl-8 text-xs h-8"
             />
           </div>
@@ -189,7 +191,7 @@ export default function InstancesPage() {
                       : "text-[#5a7a5a] hover:text-white"
                   )}
                 >
-                  {s === "open" ? "Connecté" : s === "close" ? "Déconnecté" : s === "all" ? "Tous" : s === "expired" ? "Expiré" : "Connexion"}
+                  {s === "open" ? t("inst.filterConnected") : s === "close" ? t("inst.filterDisconnected") : s === "all" ? t("inst.filterAll") : s === "expired" ? t("inst.filterExpired") : t("inst.filterConnecting")}
                 </button>
               )
             )}
@@ -216,17 +218,17 @@ export default function InstancesPage() {
               >
                 <Filter size={20} className="text-[#4a6a4a]" />
               </div>
-              <p className="text-sm font-medium text-white mb-1">
-                Aucune instance ne correspond à votre filtre
+              <p className="text-sm font-medium mb-1" style={{ color: "var(--text-primary)" }}>
+                {t("inst.noMatch")}
               </p>
-              <p className="text-[12px] text-[#4a6a4a]">
-                Essayez d'ajuster votre recherche ou filtre.
+              <p className="text-[12px]" style={{ color: "var(--text-muted)" }}>
+                {t("inst.noMatch.desc")}
               </p>
               <button
                 onClick={() => { setSearch(""); setFilterStatus("all"); }}
                 className="mt-3 text-[11px] text-[#22c55e] hover:text-[#4ade80]"
               >
-                Effacer les filtres
+                {t("inst.clearFilters")}
               </button>
             </>
           ) : (
@@ -237,19 +239,18 @@ export default function InstancesPage() {
               >
                 <Plus size={24} className="text-[#22c55e]" />
               </div>
-              <p className="text-[15px] font-semibold text-white mb-1">
-                Aucune instance pour le moment
+              <p className="text-[15px] font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
+                {t("inst.empty")}
               </p>
-              <p className="text-[13px] text-[#5a7a5a] mb-5 max-w-xs">
-                Créez votre première instance WhatsApp pour commencer à envoyer et
-                recevoir des messages.
+              <p className="text-[13px] mb-5 max-w-xs" style={{ color: "var(--text-muted)" }}>
+                {t("inst.empty.desc")}
               </p>
               <button
                 onClick={() => setShowCreate(true)}
                 className="btn-green flex items-center gap-2"
               >
                 <Plus size={14} />
-                Créer une instance
+                {t("inst.create")}
               </button>
             </>
           )}
@@ -295,25 +296,25 @@ export default function InstancesPage() {
               className="w-full max-w-sm rounded-2xl p-5"
               style={{ background: "#111", border: "1px solid #1e1e1e" }}
             >
-              <h3 className="text-sm font-semibold text-white mb-1">
-                Supprimer l'instance ?
+              <h3 className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
+                {t("inst.deleteTitle")}
               </h3>
-              <p className="text-[12px] text-[#5a7a5a] mb-4">
-                <span className="text-white font-medium">{deleteConfirm.name}</span>{" "}
-                sera définitivement supprimée. Cette action est irréversible.
+              <p className="text-[12px] mb-4" style={{ color: "var(--text-muted)" }}>
+                <span style={{ color: "var(--text-primary)" }} className="font-medium">{deleteConfirm.name}</span>{" "}
+                {t("inst.deleteDesc")}
               </p>
               <div className="flex gap-2">
                 <button
                   onClick={() => setDeleteConfirm(null)}
                   className="btn-ghost flex-1"
                 >
-                  Annuler
+                  {t("inst.cancel")}
                 </button>
                 <button
                   onClick={() => handleDelete(deleteConfirm)}
                   className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-red-500/15 text-red-400 hover:bg-red-500/25 border border-red-500/25 transition-colors"
                 >
-                  Supprimer
+                  {t("inst.delete")}
                 </button>
               </div>
             </motion.div>

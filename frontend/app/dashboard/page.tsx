@@ -16,6 +16,7 @@ import Link from "next/link";
 import { useAppStore } from "@/store/useStore";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatNumber, timeAgo } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 import type { Instance } from "@/lib/types";
 
 const stagger = {
@@ -29,6 +30,7 @@ const fadeUp = {
 
 export default function DashboardPage() {
   const { user, instances, isLoadingInstances } = useAppStore();
+  const { t } = useI18n();
 
   const active = instances.filter(
     (i) => i.connectionStatus === "open" || i.status === "open"
@@ -43,33 +45,33 @@ export default function DashboardPage() {
 
   const STATS = [
     {
-      label: "Total Instances",
+      label: t("dash.stat.total"),
       value: instances.length,
       max: user?.maxInstances ?? 1,
       icon: Activity,
       color: "#22c55e",
-      sub: `${user?.maxInstances ?? 1} max autorisé`,
+      sub: `${user?.maxInstances ?? 1} ${t("dash.stat.maxAllowed")}`,
     },
     {
-      label: "Connecté",
+      label: t("dash.stat.connected"),
       value: active,
       icon: Wifi,
       color: "#22c55e",
-      sub: active > 0 ? "En ligne maintenant" : "Aucune active",
+      sub: active > 0 ? t("dash.stat.onlineNow") : t("dash.stat.noActive"),
     },
     {
-      label: "Messages (30j)",
+      label: t("dash.stat.messages30d"),
       value: totalMsgs,
       icon: MessageSquare,
       color: "#3b82f6",
-      sub: "Sur toutes les instances",
+      sub: t("dash.stat.allInstances"),
     },
     {
-      label: "Expiré",
+      label: t("dash.stat.expired"),
       value: expired,
       icon: AlertCircle,
       color: expired > 0 ? "#ef4444" : "#4a6a4a",
-      sub: expired > 0 ? "Paiement requis" : "Tous les plans actifs",
+      sub: expired > 0 ? t("dash.stat.paymentRequired") : t("dash.stat.allActive"),
     },
   ];
 
@@ -81,15 +83,15 @@ export default function DashboardPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <h2 className="text-xl font-bold text-white">
-          Bienvenue,{" "}
+        <h2 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>
+          {t("dash.welcome")}{" "}
           <span className="text-gradient-green">
-            {user?.name?.split(" ")[0] ?? "là"}
+            {user?.name?.split(" ")[0] ?? t("dash.welcome.fallback")}
           </span>{" "}
           👋
         </h2>
-        <p className="text-[13px] text-[#5a7a5a] mt-0.5">
-          Voici ce qui se passe avec vos instances WhatsApp aujourd'hui.
+        <p className="text-[13px] mt-0.5" style={{ color: "var(--text-muted)" }}>
+          {t("dash.subtitle")}
         </p>
       </motion.div>
 
@@ -110,23 +112,20 @@ export default function DashboardPage() {
                 <Icon size={16} style={{ color }} />
               </div>
               {max !== undefined && (
-                <span className="text-[10px] text-[#4a6a4a] font-mono">
+                <span className="text-[10px] font-mono" style={{ color: "var(--text-muted)" }}>
                   {value}/{max}
                 </span>
               )}
             </div>
-            <p
-              className="text-2xl font-bold mb-0.5"
-              style={{ color }}
-            >
+            <p className="text-2xl font-bold mb-0.5" style={{ color }}>
               {formatNumber(value)}
             </p>
-            <p className="text-xs font-medium text-white mb-0.5">{label}</p>
-            <p className="text-[10px] text-[#4a6a4a]">{sub}</p>
+            <p className="text-xs font-medium mb-0.5" style={{ color: "var(--text-primary)" }}>{label}</p>
+            <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>{sub}</p>
 
             {/* Usage bar */}
             {max !== undefined && max > 0 && (
-              <div className="mt-2.5 h-1 rounded-full bg-[#1a1a1a] overflow-hidden">
+              <div className="mt-2.5 h-1 rounded-full overflow-hidden" style={{ background: "var(--card-border)" }}>
                 <div
                   className="h-full rounded-full transition-all"
                   style={{
@@ -147,24 +146,23 @@ export default function DashboardPage() {
         transition={{ delay: 0.2 }}
         className="rounded-xl p-4 flex items-center justify-between gap-4"
         style={{
-          background: "linear-gradient(135deg, #0d2510 0%, #051405 100%)",
-          border: "1px solid #1a3a1a",
+          background: "linear-gradient(135deg, var(--sidebar-active) 0%, var(--sidebar-bg) 100%)",
+          border: "1px solid var(--sidebar-border)",
         }}
       >
         <div className="flex items-center gap-3">
           <div
             className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: "#22c55e20" }}
+            style={{ background: "var(--brand-green-muted)" }}
           >
-            <Zap size={16} className="text-[#22c55e]" />
+            <Zap size={16} style={{ color: "var(--brand-green)" }} />
           </div>
           <div>
-            <p className="text-sm font-semibold text-white">
-              {user?.plan?.toUpperCase() ?? "FREE"} Plan
+            <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+              {user?.plan?.toUpperCase() ?? "FREE"} {t("dash.plan.plan")}
             </p>
-            <p className="text-[11px] text-[#5a7a5a]">
-              {user?.maxInstances ?? 1} instance
-              {(user?.maxInstances ?? 1) !== 1 ? "s" : ""} · Améliorez pour plus
+            <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+              {user?.maxInstances ?? 1} {(user?.maxInstances ?? 1) !== 1 ? t("dash.plan.instances") : t("dash.plan.instance")} · {t("dash.plan.upgradeMore")}
             </p>
           </div>
         </div>
@@ -173,7 +171,7 @@ export default function DashboardPage() {
           className="btn-green text-xs px-3 py-1.5 flex items-center gap-1.5 shrink-0"
         >
           <TrendingUp size={12} />
-          Améliorer
+          {t("dash.plan.upgrade")}
         </Link>
       </motion.div>
 
@@ -184,14 +182,15 @@ export default function DashboardPage() {
         transition={{ delay: 0.25 }}
       >
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-[13px] font-semibold text-white">
-            Vos Instances
+          <h3 className="text-[13px] font-semibold" style={{ color: "var(--text-primary)" }}>
+            {t("dash.yourInstances")}
           </h3>
           <Link
             href="/dashboard/instances"
-            className="text-[11px] text-[#22c55e] hover:text-[#4ade80] flex items-center gap-1 transition-colors"
+            className="text-[11px] flex items-center gap-1 transition-colors"
+            style={{ color: "var(--brand-green)" }}
           >
-            Voir tout <ArrowRight size={11} />
+            {t("dash.viewAll")} <ArrowRight size={11} />
           </Link>
         </div>
 
@@ -201,29 +200,29 @@ export default function DashboardPage() {
               <div
                 key={i}
                 className="h-32 rounded-xl animate-pulse"
-                style={{ background: "#131313" }}
+                style={{ background: "var(--card-bg)" }}
               />
             ))}
           </div>
         ) : instances.length === 0 ? (
           <div
-            className="rounded-xl p-8 text-center border border-dashed border-[#1e1e1e]"
-            style={{ background: "#0d0d0d" }}
+            className="rounded-xl p-8 text-center border border-dashed"
+            style={{ background: "var(--card-bg)", borderColor: "var(--card-border)" }}
           >
             <div
               className="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center"
-              style={{ background: "#0d2510" }}
+              style={{ background: "var(--avatar-bg)" }}
             >
-              <Plus size={20} className="text-[#22c55e]" />
+              <Plus size={20} style={{ color: "var(--brand-green)" }} />
             </div>
-            <p className="text-sm font-medium text-white mb-1">
-              Aucune instance pour le moment
+            <p className="text-sm font-medium mb-1" style={{ color: "var(--text-primary)" }}>
+              {t("dash.noInstances")}
             </p>
-            <p className="text-[12px] text-[#4a6a4a] mb-4">
-              Créez votre première instance WhatsApp pour commencer.
+            <p className="text-[12px] mb-4" style={{ color: "var(--text-muted)" }}>
+              {t("dash.noInstances.desc")}
             </p>
             <Link href="/dashboard/instances" className="btn-green text-xs">
-              Créer une instance
+              {t("dash.createInstance")}
             </Link>
           </div>
         ) : (
@@ -241,21 +240,21 @@ export default function DashboardPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
       >
-        <h3 className="text-[13px] font-semibold text-white mb-3">
-          Actions Rapides
+        <h3 className="text-[13px] font-semibold mb-3" style={{ color: "var(--text-primary)" }}>
+          {t("dash.quickActions")}
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Créer Instance", href: "/dashboard/instances", icon: Plus, color: "#22c55e" },
-            { label: "Clés API", href: "/dashboard/api", icon: Zap, color: "#3b82f6" },
-            { label: "Solde", href: "/dashboard/balance", icon: TrendingUp, color: "#f59e0b" },
-            { label: "Compte", href: "/dashboard/account", icon: Activity, color: "#8b5cf6" },
-          ].map(({ label, href, icon: Icon, color }) => (
+            { labelKey: "dash.action.createInstance" as const, href: "/dashboard/instances", icon: Plus, color: "#22c55e" },
+            { labelKey: "dash.action.apiKeys" as const, href: "/dashboard/api", icon: Zap, color: "#3b82f6" },
+            { labelKey: "dash.action.balance" as const, href: "/dashboard/balance", icon: TrendingUp, color: "#f59e0b" },
+            { labelKey: "dash.action.account" as const, href: "/dashboard/account", icon: Activity, color: "#8b5cf6" },
+          ].map(({ labelKey, href, icon: Icon, color }) => (
             <Link
-              key={label}
+              key={labelKey}
               href={href}
-              className="flex flex-col items-center gap-2 p-4 rounded-xl border border-[#1a1a1a] hover:border-[#2a2a2a] transition-all duration-150 group"
-              style={{ background: "#0d0d0d" }}
+              className="flex flex-col items-center gap-2 p-4 rounded-xl transition-all duration-150 group"
+              style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}
             >
               <div
                 className="w-9 h-9 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform"
@@ -263,8 +262,8 @@ export default function DashboardPage() {
               >
                 <Icon size={16} style={{ color }} />
               </div>
-              <span className="text-[11px] font-medium text-[#8a9a8a] group-hover:text-white transition-colors">
-                {label}
+              <span className="text-[11px] font-medium transition-colors" style={{ color: "var(--text-secondary)" }}>
+                {t(labelKey)}
               </span>
             </Link>
           ))}
@@ -275,6 +274,7 @@ export default function DashboardPage() {
 }
 
 function InstanceMiniCard({ instance }: { instance: Instance }) {
+  const { t } = useI18n();
   const displayStatus = (instance.connectionStatus ?? instance.status) as Instance["status"];
   const isExpired = displayStatus === "expired";
 
@@ -287,17 +287,17 @@ function InstanceMiniCard({ instance }: { instance: Instance }) {
         <div
           className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
           style={{
-            background: isExpired ? "#1a0505" : "#0d2510",
-            color: isExpired ? "#ef4444" : "#22c55e",
+            background: isExpired ? "#1a0505" : "var(--avatar-bg)",
+            color: isExpired ? "#ef4444" : "var(--avatar-text)",
           }}
         >
           {instance.name.charAt(0).toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-medium text-white truncate">
+          <p className="text-[13px] font-medium truncate" style={{ color: "var(--text-primary)" }}>
             {instance.name}
           </p>
-          <p className="text-[10px] text-[#4a6a4a] truncate font-mono">
+          <p className="text-[10px] truncate font-mono" style={{ color: "var(--text-muted)" }}>
             {instance.instanceName?.slice(0, 28)}…
           </p>
         </div>
@@ -305,15 +305,15 @@ function InstanceMiniCard({ instance }: { instance: Instance }) {
 
       <div className="flex items-center justify-between">
         <StatusBadge status={displayStatus} size="sm" />
-        <span className="text-[10px] text-[#4a6a4a]">
-          {formatNumber(instance.stats?.messagesLast30Days ?? 0)} msgs
+        <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>
+          {formatNumber(instance.stats?.messagesLast30Days ?? 0)} {t("common.msgs")}
         </span>
       </div>
 
       {isExpired && (
         <div className="mt-2 flex items-center gap-1.5 text-[10px] text-red-400">
           <AlertCircle size={10} />
-          Paiement requis
+          {t("dash.paymentRequired")}
         </div>
       )}
     </motion.div>

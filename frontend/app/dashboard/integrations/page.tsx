@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Puzzle, Webhook, Code2, ArrowRight, CheckCircle2, MessageSquare } from "lucide-react";
 import { useState } from "react";
 import WhatsAppIntegration from "@/components/WhatsAppIntegration";
+import { useI18n } from "@/lib/i18n";
 
 const INTEGRATIONS = [
   {
@@ -38,6 +39,7 @@ const INTEGRATIONS = [
 ];
 
 export default function IntegrationsPage() {
+  const { t } = useI18n();
   const [activeIntegration, setActiveIntegration] = useState<string | null>(null);
 
   if (activeIntegration === "whatsapp") {
@@ -51,13 +53,13 @@ export default function IntegrationsPage() {
             onClick={() => setActiveIntegration(null)}
             className="text-[12px] text-[#5a7a5a] hover:text-white mb-4 flex items-center gap-1"
           >
-            ← Back to Integrations
+            {t('intg.back')}
           </button>
-          <h2 className="text-[15px] font-semibold text-white mb-1">
-            WhatsApp Instance Integration
+          <h2 className="text-[15px] font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
+            {t('intg.whatsapp.title')}
           </h2>
-          <p className="text-[12px] text-[#5a7a5a]">
-            Connect your existing WhatsApp instance from the SaaS service.
+          <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
+            {t('intg.whatsapp.desc')}
           </p>
         </motion.div>
 
@@ -74,11 +76,11 @@ export default function IntegrationsPage() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h2 className="text-[15px] font-semibold text-white mb-1">
-          Integrations
+        <h2 className="text-[15px] font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
+          {t('intg.title')}
         </h2>
-        <p className="text-[12px] text-[#5a7a5a]">
-          Connect your WhatsApp instances with external tools and services.
+        <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
+          {t('intg.desc')}
         </p>
       </motion.div>
 
@@ -111,11 +113,11 @@ export default function IntegrationsPage() {
                   onClick={() => intg.component && setActiveIntegration(intg.component)}
                   className="flex items-center gap-1.5 text-[11px] text-[#22c55e] hover:text-[#4ade80] transition-colors shrink-0"
                 >
-                  Configure <ArrowRight size={11} />
+                  {t('intg.configure')} <ArrowRight size={11} />
                 </button>
               ) : (
                 <span className="text-[10px] text-[#4a6a4a] bg-[#1a1a1a] px-2 py-1 rounded-full shrink-0">
-                  Coming soon
+                  {t('intg.comingSoon')}
                 </span>
               )}
             </motion.div>

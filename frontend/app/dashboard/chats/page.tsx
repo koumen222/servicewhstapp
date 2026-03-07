@@ -8,10 +8,12 @@ import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { ChatWindow } from "@/components/ChatWindow";
 import { useRealTimeChats } from "@/hooks/useRealTimeChats";
 import { instanceApi } from "@/lib/api";
+import { useI18n } from "@/lib/i18n";
 import type { Chat, ConnectionStatus as ConnectionStatusType } from "@/lib/types";
 
 export default function ChatsPage() {
   const { instances } = useAppStore();
+  const { t } = useI18n();
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [frozenInstanceName, setFrozenInstanceName] = useState<string | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState("");
@@ -128,22 +130,22 @@ export default function ChatsPage() {
           <div>
             <h2 className="text-[15px] font-semibold text-white flex items-center gap-2">
               <MessageSquare size={16} />
-              Conversations
+              {t('chats.title')}
               {totalUnreadMessages > 0 && (
                 <span className="px-2 py-0.5 text-[10px] font-bold bg-[#22c55e] text-black rounded-full">
                   {totalUnreadMessages}
                 </span>
               )}
             </h2>
-            <p className="text-[12px] text-[#5a7a5a] mt-0.5">
-              {hasChats ? `${chats.length} conversations` : "Aucune conversation pour le moment"}
+            <p className="text-[12px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
+              {hasChats ? `${chats.length} ${t('chats.count')}` : t('chats.noChats')}
             </p>
           </div>
           
           <div className="flex items-center gap-3 flex-wrap">
             <div className="hidden sm:flex items-center gap-2 text-[11px]">
               <Users size={12} className="text-[#4a6a4a]" />
-              <span className="text-[#5a7a5a]">{hasChats ? `${chats.length} contacts` : "0 contacts"}</span>
+              <span className="text-[#5a7a5a]">{hasChats ? `${chats.length} ${t('chats.contacts')}` : `0 ${t('chats.contacts')}`}</span>
             </div>
             
             {activeInstance && (
@@ -173,7 +175,7 @@ export default function ChatsPage() {
           <input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Rechercher des conversations…"
+            placeholder={t('chats.search')}
             className="input-dark w-full pl-8 text-xs"
           />
         </div>
@@ -192,9 +194,9 @@ export default function ChatsPage() {
             <div className="w-16 h-16 rounded-2xl bg-[#0d2510] flex items-center justify-center mx-auto mb-4">
               <MessageCircle size={24} className="text-[#22c55e]" />
             </div>
-            <p className="text-white font-medium mb-2">Aucune conversation trouvée</p>
-            <p className="text-[12px] text-[#5a7a5a]">
-              {searchQuery ? "Essayez d'ajuster votre recherche" : "Commencez à envoyer des messages pour voir les conversations ici"}
+            <p className="font-medium mb-2" style={{ color: 'var(--text-primary)' }}>{t('chats.noFound')}</p>
+            <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
+              {searchQuery ? t('chats.noFound.search') : t('chats.noFound.empty')}
             </p>
           </motion.div>
         ) : (
@@ -289,11 +291,11 @@ export default function ChatsPage() {
             <div className="w-12 h-12 rounded-xl bg-[#1a1a1a] flex items-center justify-center mx-auto mb-3">
               <Wifi size={20} className="text-[#4a6a4a]" />
             </div>
-            <p className="text-[13px] font-medium text-white mb-1">
-              Aucune instance WhatsApp connectée
+            <p className="text-[13px] font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
+              {t('chats.noInstance')}
             </p>
-            <p className="text-[12px] text-[#4a6a4a]">
-              Connectez une instance WhatsApp pour voir vos conversations ici.
+            <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
+              {t('chats.noInstance.desc')}
             </p>
           </div>
         )}

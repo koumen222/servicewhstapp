@@ -7,6 +7,7 @@ import { subscriptionsApi } from "@/lib/api";
 import { PLAN_CATALOG } from "@/lib/types";
 import type { PlanType, SubscriptionInfo } from "@/lib/types";
 import { useAppStore } from "@/store/useStore";
+import { useI18n } from "@/lib/i18n";
 
 const PLAN_META: Record<PlanType, { color: string; icon: typeof Zap; popular: boolean }> = {
   free:       { color: "#5a7a5a", icon: Zap,       popular: false },
@@ -15,15 +16,16 @@ const PLAN_META: Record<PlanType, { color: string; icon: typeof Zap; popular: bo
   enterprise: { color: "#8b5cf6", icon: Building2, popular: false },
 };
 
-const PLAN_FEATURES: Record<PlanType, string[]> = {
-  free:       ["1 instance WhatsApp",    "500 messages/mois",        "Accès API REST",             "Support communauté"],
-  starter:    ["1 instance WhatsApp",    "100,000 messages/mois",    "Webhooks",                   "Support email"],
-  pro:        ["5 instances WhatsApp",   "1,000,000 messages/mois",  "Support prioritaire",        "Analytiques avancées"],
-  enterprise: ["10 instances WhatsApp",  "Messages illimités",       "Support dédié",              "Intégrations sur mesure"],
-};
-
 export default function BalancePage() {
   const { user } = useAppStore();
+  const { t } = useI18n();
+
+  const PLAN_FEATURES: Record<PlanType, string[]> = {
+    free:       [t("bal.feat.free.1"), t("bal.feat.free.2"), t("bal.feat.free.3"), t("bal.feat.free.4")],
+    starter:    [t("bal.feat.starter.1"), t("bal.feat.starter.2"), t("bal.feat.starter.3"), t("bal.feat.starter.4")],
+    pro:        [t("bal.feat.pro.1"), t("bal.feat.pro.2"), t("bal.feat.pro.3"), t("bal.feat.pro.4")],
+    enterprise: [t("bal.feat.enterprise.1"), t("bal.feat.enterprise.2"), t("bal.feat.enterprise.3"), t("bal.feat.enterprise.4")],
+  };
   const [info, setInfo] = useState<SubscriptionInfo | null>(null);
   const [paying, setPaying] = useState<PlanType | null>(null);
 
@@ -55,9 +57,9 @@ export default function BalancePage() {
   return (
     <div className="space-y-6">
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-        <h2 className="text-[15px] font-semibold text-white mb-0.5">Plans & Abonnement</h2>
-        <p className="text-[12px] text-[#5a7a5a]">
-          Passez à un plan supérieur pour débloquer plus d'instances et de quotas de messages. Paiement via WhatsApp.
+        <h2 className="text-[15px] font-semibold mb-0.5" style={{ color: 'var(--text-primary)' }}>{t('bal.title')}</h2>
+        <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
+          {t('bal.desc')}
         </p>
       </motion.div>
 
@@ -70,8 +72,8 @@ export default function BalancePage() {
         >
           <CheckCircle2 size={18} className="text-[#22c55e] shrink-0 mt-0.5 sm:mt-0" />
           <div className="min-w-0">
-            <p className="text-[12px] font-semibold text-white">
-              Plan actuel : <span className="text-[#22c55e] capitalize">{info.plan}</span>
+            <p className="text-[12px] font-semibold" style={{ color: 'var(--text-primary)' }}>
+              {t('bal.currentPlan')} : <span className="text-[#22c55e] capitalize">{info.plan}</span>
             </p>
             <p className="text-[11px] text-[#5a7a5a] mt-0.5 break-words">
               {info.usage.activeInstances} instance(s) · {info.usage.messages30d} msgs (30j) · {info.usage.totalMessages} total
@@ -103,7 +105,7 @@ export default function BalancePage() {
                   className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-bold px-2.5 py-0.5 rounded-full whitespace-nowrap"
                   style={{ background: meta.color, color: "#000" }}
                 >
-                  POPULAIRE
+                  {t('bal.popular')}
                 </div>
               )}
               {isCurrent && (
@@ -111,7 +113,7 @@ export default function BalancePage() {
                   className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-bold px-2.5 py-0.5 rounded-full whitespace-nowrap"
                   style={{ background: meta.color, color: "#000" }}
                 >
-                  PLAN ACTUEL
+                  {t('bal.current')}
                 </div>
               )}
 
@@ -144,7 +146,7 @@ export default function BalancePage() {
                 ) : (
                   <div className="flex items-end gap-0.5">
                     <span className="text-xl font-extrabold" style={{ color: meta.color }}>
-                      {plan.price === 0 ? "Gratuit" : `${plan.price.toLocaleString("fr-FR")} XAF`}
+                      {plan.price === 0 ? t('bal.free') : `${plan.price.toLocaleString("fr-FR")} XAF`}
                     </span>
                     {plan.price > 0 && (
                       <span className="text-[10px] text-[#5a7a5a] mb-0.5">/mois</span>
@@ -154,7 +156,7 @@ export default function BalancePage() {
               </div>
 
               <p className="text-[11px] text-[#5a7a5a] mb-3">
-                Jusqu'à {plan.maxInstances} {plan.maxInstances === 1 ? "instance" : "instances"}
+                {t('bal.upTo')} {plan.maxInstances} {plan.maxInstances === 1 ? t('bal.instance') : t('bal.instances')}
               </p>
 
               <ul className="space-y-1.5 mb-4">
@@ -177,11 +179,11 @@ export default function BalancePage() {
                 }}
               >
                 {paying === key ? (
-                  <><Loader2 size={11} className="animate-spin" /> Redirection…</>
+                  <><Loader2 size={11} className="animate-spin" /> {t('bal.redirecting')}</>
                 ) : isCurrent ? (
-                  "Plan actuel"
+                  t('bal.currentPlan')
                 ) : (
-                  <>{key === "free" ? "Rétrograder" : "Choisir ce plan"} <ArrowRight size={11} /></>
+                  <>{key === "free" ? t('bal.downgrade') : t('bal.choosePlan')} <ArrowRight size={11} /></>
                 )}
               </button>
             </motion.div>
@@ -200,17 +202,17 @@ export default function BalancePage() {
           <div className="px-5 py-3.5 border-b border-[#1a1a1a]">
             <h3 className="text-[13px] font-semibold text-white flex items-center gap-2">
               <CreditCard size={13} className="text-[#22c55e]" />
-              Historique des paiements
+              {t('bal.paymentHistory')}
             </h3>
           </div>
           <div className="overflow-x-auto">
           <table className="w-full data-table min-w-[360px]">
             <thead>
               <tr>
-                <th className="text-left">Plan</th>
-                <th className="text-left">Montant</th>
-                <th className="text-left">Statut</th>
-                <th className="text-left">Date</th>
+                <th className="text-left">{t('bal.col.plan')}</th>
+                <th className="text-left">{t('bal.col.amount')}</th>
+                <th className="text-left">{t('bal.col.status')}</th>
+                <th className="text-left">{t('bal.col.date')}</th>
               </tr>
             </thead>
             <tbody>
