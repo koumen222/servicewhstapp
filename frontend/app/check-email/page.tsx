@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Mail, ArrowRight, CheckCircle2 } from "lucide-react";
 
-export default function CheckEmailPage() {
+function CheckEmailContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
   const [countdown, setCountdown] = useState(60);
@@ -149,5 +149,17 @@ export default function CheckEmailPage() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+export default function CheckEmailPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] bg-grid-green">
+        <div className="text-white">Chargement...</div>
+      </div>
+    }>
+      <CheckEmailContent />
+    </Suspense>
   );
 }
