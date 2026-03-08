@@ -1,18 +1,23 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/", "/login", "/register", "/pricing"];
+const PUBLIC_PATHS = ["/", "/login", "/register", "/pricing", "/admin"];
 const ADMIN_PATHS = ["/admin"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("auth_token")?.value;
+  
+  // ✅ Admin routes are always accessible (handled by admin page itself)
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    return NextResponse.next();
+  }
+  
   const AUTH_PAGES = ["/login", "/register"];
   const isAuthPage = AUTH_PAGES.some((p) => pathname.startsWith(p));
   const isPublic = PUBLIC_PATHS.some((p) => 
     p === "/" ? pathname === "/" : pathname.startsWith(p)
   );
-  const isAdmin = ADMIN_PATHS.some((p) => pathname.startsWith(p));
 
   // 1. Root path (Landing Page) is always accessible
   if (pathname === "/") {
