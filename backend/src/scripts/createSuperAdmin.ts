@@ -1,10 +1,10 @@
-import { connectMongo, closeMongo } from '../lib/mongo.js'
+import { connectMongoose, disconnectMongoose } from '../lib/mongoose.js'
 import { AdminService } from '../services/adminService.js'
 
 async function createSuperAdmin() {
   try {
     console.log('🔄 Connexion à MongoDB...')
-    await connectMongo()
+    await connectMongoose()
 
     const email = 'admin@whatsapp-saas.com'
     const password = 'Admin@2024!'
@@ -21,11 +21,11 @@ async function createSuperAdmin() {
     console.log('\n⚠️  IMPORTANT: Changez le mot de passe après la première connexion!')
     console.log('🌐 Accédez au dashboard admin sur: http://localhost:3000/admin')
 
-    await closeMongo()
+    await disconnectMongoose()
     process.exit(0)
   } catch (error: any) {
     console.error('❌ Erreur:', error.message)
-    await closeMongo()
+    await disconnectMongoose()
     process.exit(1)
   }
 }

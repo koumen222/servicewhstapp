@@ -4,6 +4,7 @@ import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
 import { env } from './config/env.js'
 import { connectMongo, closeMongo } from './lib/mongo.js'
+import { connectMongoose, disconnectMongoose } from './lib/mongoose.js'
 import authRoutes from './routes/auth.js'
 import instancesNewRoutes from './routes/instances-new.js'
 import instanceManagementRoutes from './routes/instanceManagement.js'
@@ -11,6 +12,7 @@ import whatsappInstanceRoutes from './routes/whatsapp/instances.js'
 import publicWhatsAppRoutes from './routes/whatsapp/public.js'
 import supportRoutes from './routes/support.js'
 import adminRoutes from './routes/admin.js'
+import analyticsRoutes from './routes/analytics.js'
 import { authMiddleware } from './middleware/auth.js'
 
 declare global {
@@ -157,6 +159,19 @@ async function initializeMongoWithRetry() {
 // Démarrer l'initialisation MongoDB en arrière-plan
 initializeMongoWithRetry()
 
+// Initialiser Mongoose pour les modèles Admin
+async function initializeMongoose() {
+  try {
+    await connectMongoose()
+    console.log('✅ Mongoose initialized successfully')
+  } catch (error) {
+    console.error('❌ Mongoose initialization failed:', error)
+  }
+}
+
+// Démarrer l'initialisation Mongoose
+initializeMongoose()
+
 // =============== WEBHOOKS (sans authentification - Evolution API) ===============
 // app.use('/webhooks', webhookRoutes)
 // console.log('✅ Registered webhook endpoint: /webhooks/evolution')
@@ -185,6 +200,10 @@ console.log('✅ Registered auth routes: /api/auth/login, /api/auth/register, /a
 // Admin routes (avec authentification admin)
 app.use('/api/admin', adminRoutes)
 console.log('✅ Registered admin routes: /api/admin/*')
+
+// Analytics routes (tracking et admin)
+app.use('/api/analytics', analyticsRoutes)
+console.log('✅ Registered analytics routes: /api/analytics/*')
 
 // Support chatbot (public - no auth required)
 app.use('/api/support', supportRoutes)
@@ -261,6 +280,13 @@ const gracefulShutdown = (signal: string) => {
     console.log('🔴 MongoDB connection closed')
   }).catch((err: any) => {
     console.error('❌ Error closing MongoDB:', err)
+  })
+  
+  // Fermer Mongoose
+  disconnectMongoose().then(() => {
+    console.log('🔴 Mongoose connection closed')
+  }).catch((err: any) => {
+    console.error('❌ Error closing Mongoose:', err)
   })
   
   process.exit(0)
