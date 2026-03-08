@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Wifi,
   ExternalLink,
+  BarChart3,
 } from "lucide-react";
 import { useAppStore } from "@/store/useStore";
 import { cn } from "@/lib/utils";
@@ -34,6 +35,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/integrations", labelKey: "sidebar.integrations" as const, icon: Puzzle },
   { href: "/dashboard/proxy", labelKey: "sidebar.proxy" as const, icon: Globe },
   { href: "/dashboard/account", labelKey: "sidebar.account" as const, icon: User },
+  { href: "/admin", labelKey: "sidebar.admin" as const, icon: BarChart3 },
 ];
 
 const ADMIN_ITEMS = [
