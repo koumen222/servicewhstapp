@@ -1,4 +1,4 @@
-import { PageView, Event, Session, Conversion, INotification, IEmailCampaign } from '../models/Analytics.js'
+import { PageView, Event, Session, Conversion, Notification, EmailCampaign, INotification, IEmailCampaign } from '../models/Analytics.js'
 import { User } from '../models/User.js'
 import { UserInstance } from '../models/UserInstance.js'
 import axios from 'axios'
@@ -16,7 +16,7 @@ async function getLocationFromIP(ip: string) {
       }
     }
   } catch (error) {
-    console.log('GeoIP lookup failed:', error.message)
+    console.log('GeoIP lookup failed:', error instanceof Error ? error.message : 'Unknown error')
   }
   return null
 }
