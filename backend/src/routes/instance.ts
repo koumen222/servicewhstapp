@@ -104,7 +104,7 @@ router.post('/create', async (req, res) => {
     
     while (attempts < maxAttempts) {
       instanceName = buildInstanceName(userId, customName.trim())
-      const existing = await InstanceService.findByInstanceName(instanceName)
+      const existing = await InstanceService.findUserInstanceByNameGlobal(instanceName)
       if (!existing) break
       attempts++
     }
@@ -118,7 +118,20 @@ router.post('/create', async (req, res) => {
     }
 
     // Créer l'instance dans Evolution API
-    const evolutionResponse = await createEvolutionInstance(instanceName, integration)
+    console.log(`🔧 Tentative de création Evolution instance: ${instanceName}`)
+    let evolutionResponse: any
+    try {
+      evolutionResponse = await createEvolutionInstance(instanceName, integration)
+      console.log(`✅ Evolution API response:`, JSON.stringify(evolutionResponse, null, 2))
+    } catch (evoError: any) {
+      console.error('❌ Evolution API error:', evoError?.response?.data || evoError.message)
+      return res.status(502).json({
+        error: 'WhatsApp service unavailable',
+        message: 'Unable to create instance on WhatsApp service',
+        code: 'EVOLUTION_API_ERROR',
+        details: evoError?.response?.data || evoError.message
+      })
+    }
 
     // Extraire le token d'Evolution
     const evolutionApiKey = evolutionResponse?.hash?.apikey || evolutionResponse?.apikey || ''

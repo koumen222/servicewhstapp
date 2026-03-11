@@ -17,9 +17,14 @@ interface JWTPayload {
 // Uses JWT claims directly — no MongoDB lookup on every request (faster + more resilient)
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   try {
+    // Logging pour débogage
+    console.log('🔍 Auth middleware - Headers:', JSON.stringify(req.headers, null, 2))
+    console.log('🔍 Auth header:', req.headers.authorization)
+    
     // Vérifier la présence du header Authorization
     const authHeader = req.headers.authorization
     if (!authHeader?.startsWith('Bearer ')) {
+      console.log('❌ Missing or invalid Bearer token format')
       return res.status(401).json({ 
         error: 'Authentication required',
         message: 'Please provide a valid Bearer token',
@@ -29,7 +34,10 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
 
     // Extraire et vérifier le token
     const token = authHeader.substring(7)
+    console.log('🔍 Extracted token:', token ? token.substring(0, 20) + '...' : 'empty')
+    
     if (!token || token.length === 0) {
+      console.log('❌ Empty token')
       return res.status(401).json({
         error: 'Invalid token',
         message: 'Bearer token is empty',
@@ -40,8 +48,11 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     // Vérifier le token JWT directement (pas de requête MongoDB)
     let decoded: JWTPayload
     try {
+      console.log('🔍 Verifying JWT with secret:', JWT_SECRET ? 'present' : 'missing')
       decoded = jwt.verify(token, JWT_SECRET) as JWTPayload
+      console.log('✅ JWT decoded successfully:', decoded.id, decoded.email)
     } catch (jwtError: any) {
+      console.log('❌ JWT verification failed:', jwtError.name, jwtError.message)
       const isExpired = jwtError?.name === 'TokenExpiredError'
       return res.status(401).json({
         error: 'Invalid token',
