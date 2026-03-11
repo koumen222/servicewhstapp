@@ -188,7 +188,7 @@ router.post('/create', async (req, res) => {
 
 /**
  * GET /api/instance/status/:name
- * Obtenir le statut d'une instance par son nom
+ * Obtenir le statut d'une instance par son nom (accepte customName OU instanceName)
  */
 router.get('/status/:name', async (req, res) => {
   try {
@@ -202,12 +202,24 @@ router.get('/status/:name', async (req, res) => {
       })
     }
 
-    // Chercher l'instance par nom
-    const instance = await InstanceService.findUserInstanceByName(name, userId)
+    console.log(`🔍 Searching for instance: ${name} for user: ${userId}`)
+
+    // Récupérer toutes les instances de l'utilisateur et chercher par customName ou instanceName
+    const userInstances = await InstanceService.findUserInstances(userId, true)
+    const instance = userInstances.find(inst => 
+      inst.customName === name || 
+      inst.instanceName === name ||
+      inst.instanceName.includes(name) || // recherche partielle
+      name.includes(inst.instanceName)
+    )
+
+    console.log(`📋 Instance found:`, instance ? `${instance.customName} (${instance.instanceName})` : 'null')
+
     if (!instance) {
       return res.status(404).json({
         error: 'Instance not found',
-        code: 'INSTANCE_NOT_FOUND'
+        code: 'INSTANCE_NOT_FOUND',
+        details: `No instance found with name: ${name}`
       })
     }
 
@@ -223,8 +235,10 @@ router.get('/status/:name', async (req, res) => {
     // Obtenir le statut depuis Evolution API
     let state = 'close'
     try {
+      console.log(`🔍 Checking Evolution API status for: ${instance.instanceName}`)
       const connRes = await evolution.get(`/instance/connectionState/${instance.instanceName}`)
       state = connRes.data?.instance?.state || connRes.data?.state || 'close'
+      console.log(`✅ Evolution state: ${state}`)
     } catch (err: any) {
       console.warn(`⚠️ connectionState error for ${instance.instanceName}:`, err?.response?.status)
       if (err?.response?.status === 404) state = 'close'
@@ -255,6 +269,105 @@ router.get('/status/:name', async (req, res) => {
     return res.status(500).json({
       error: 'Failed to get instance status',
       code: 'STATUS_ERROR'
+    })
+  }
+})
+
+/**
+ * GET /api/instance/qrcode/:name
+ * Obtenir le QR code d'une instance par son nom
+ */
+router.get('/qrcode/:name', async (req, res) => {
+  try {
+    const { name } = req.params
+    const userId = req.user?.id
+
+    if (!userId) {
+      return res.status(401).json({
+        error: 'Authentication required',
+        code: 'AUTH_REQUIRED'
+      })
+    }
+
+    console.log(`🔍 Searching for instance to get QR code: ${name} for user: ${userId}`)
+
+    // Récupérer toutes les instances de l'utilisateur et chercher par customName ou instanceName
+    const userInstances = await InstanceService.findUserInstances(userId, true)
+    const instance = userInstances.find(inst => 
+      inst.customName === name || 
+      inst.instanceName === name ||
+      inst.instanceName.includes(name) || // recherche partielle
+      name.includes(inst.instanceName)
+    )
+
+    console.log(`📋 Instance found for QR:`, instance ? `${instance.customName} (${instance.instanceName})` : 'null')
+
+    if (!instance) {
+      return res.status(404).json({
+        error: 'Instance not found',
+        code: 'INSTANCE_NOT_FOUND',
+        details: `No instance found with name: ${name}`
+      })
+    }
+
+    // Créer le client Evolution
+    const evolution = createEvolutionClient()
+    if (!evolution) {
+      return res.status(503).json({
+        error: 'WhatsApp service unavailable',
+        code: 'EVOLUTION_UNAVAILABLE'
+      })
+    }
+
+    console.log(`🔍 Fetching QR code for instance: ${instance.instanceName}`)
+    
+    try {
+      // Générer le QR code via Evolution API
+      const qrRes = await evolution.get(`/instance/connect/${instance.instanceName}`, {
+        timeout: 15000
+      })
+      
+      console.log(`✅ QR code response:`, JSON.stringify(qrRes.data, null, 2))
+      
+      const qrData = qrRes.data
+      const qrCodeBase64 = qrData?.base64 || qrData?.code || qrData?.qrcode?.base64 || null
+      
+      if (!qrCodeBase64) {
+        return res.status(502).json({ 
+          error: 'QR code unavailable',
+          code: 'EVOLUTION_EMPTY_QR', 
+          message: 'Evolution API did not return a QR code. The instance may already be connected.' 
+        })
+      }
+
+      const response = {
+        success: true,
+        data: {
+          instanceId: instance._id?.toString(),
+          instanceName: instance.instanceName,
+          customName: instance.customName,
+          qrCode: qrCodeBase64,
+          pairingCode: qrData?.pairingCode || null,
+          count: qrData?.count || 0
+        }
+      }
+
+      res.status(200).json(response)
+
+    } catch (evoError: any) {
+      console.error('❌ Evolution QR error:', evoError?.response?.data || evoError.message)
+      return res.status(502).json({
+        error: 'Failed to generate QR code',
+        message: evoError?.response?.data?.message || 'WhatsApp service error',
+        code: 'QR_GENERATION_ERROR'
+      })
+    }
+
+  } catch (error) {
+    console.error('Get QR code error:', error)
+    return res.status(500).json({
+      error: 'Failed to get QR code',
+      code: 'QR_ERROR'
     })
   }
 })
