@@ -187,7 +187,7 @@ router.post('/create-instance', async (req, res) => {
 
 /**
  * GET /instances
- * Lister toutes les instances de l'utilisateur connecté
+ * Lister toutes les instances de l'utilisateur connecté avec synchronisation Evolution API
  */
 router.get('/', async (req, res) => {
   try {
@@ -208,35 +208,126 @@ router.get('/', async (req, res) => {
       connecting: 'connecting',
       close: 'disconnected',
       closed: 'disconnected',
+      pending: 'disconnected',
+      disconnected: 'disconnected',
+      error: 'disconnected'
     }
 
-    // Enrichir les données avec le statut Evolution API (un appel par instance, pas fetchAll)
+    // Synchroniser avec Evolution API pour obtenir les vrais statuts
+    const evolution = createEvolutionClient()
+    let evolutionStates: Record<string, { state: string, profileName?: string, profilePicUrl?: string, number?: string }> = {}
+    
+    if (evolution) {
+      try {
+        console.log('🔄 Fetching all Evolution instances for status sync...')
+        const evoRes = await evolution.get('/instance/fetchInstances', { timeout: 5000 })
+        const evoInstances = Array.isArray(evoRes.data) ? evoRes.data : []
+        
+        for (const evo of evoInstances) {
+          const name = evo.name || evo.instanceName
+          if (name) {
+            evolutionStates[name] = {
+              state: evo.connectionStatus || evo.state || 'close',
+              profileName: evo.profileName || undefined,
+              profilePicUrl: evo.profilePicUrl || undefined,
+              number: evo.number || undefined,
+            }
+          }
+        }
+        console.log(`✅ Synced ${evoInstances.length} Evolution instances`)
+      } catch (evoErr: any) {
+        console.warn('⚠️ Could not fetch Evolution states:', evoErr?.message)
+      }
+    }
+
+    // Enrichir les données avec le statut Evolution API et récupérer les tokens complets
     const enrichedInstances = await Promise.all(
       instances.map(async (instance: any) => {
-        let rawState = instance.status // fallback to DB value
-        try {
-          const stateResp = await getEvolutionConnectionState(instance.instanceName)
-          rawState = stateResp.instance?.state || stateResp.state || instance.status
-          // Persist updated status to DB if changed
-          if (rawState !== instance.status) {
-            await InstanceService.updateUserInstance(instance._id!.toString(), userId, { status: rawState as any })
-          }
-        } catch (error) {
-          console.warn(`[INSTANCES] Could not get live status for ${instance.instanceName}, using DB:`, (error as any)?.message)
+        const evoState = evolutionStates[instance.instanceName]
+        const realStatus = evoState?.state || instance.status
+        const isOpen = realStatus === 'open'
+
+        // Mettre à jour en DB si le statut a changé
+        if (evoState && realStatus !== instance.status) {
+          InstanceService.updateUserInstance(instance._id!.toString(), userId, {
+            status: realStatus as any,
+            ...(evoState.profileName ? { profileName: evoState.profileName } : {}),
+            ...(evoState.profilePicUrl ? { profilePictureUrl: evoState.profilePicUrl } : {}),
+            ...(evoState.number ? { whatsappNumber: evoState.number } : {}),
+          }).catch(() => {})
         }
 
-        const connectionStatus = statusMap[rawState] || 'disconnected'
+        // Récupérer le vrai token si le token stocké est court
+        let realToken = instance.instanceToken
+        const hasShortToken = instance.instanceToken && instance.instanceToken.length < 50
+        
+        if (hasShortToken && evolution) {
+          try {
+            console.log(`🔍 Fetching real token for instance: ${instance.instanceName}`)
+            const fetchRes = await evolution.get('/instance/fetchInstances', {
+              params: { instanceName: instance.instanceName },
+              headers: { 'apikey': process.env.EVOLUTION_MASTER_API_KEY }
+            })
+            
+            let evoInstances = []
+            if (Array.isArray(fetchRes.data)) {
+              evoInstances = fetchRes.data
+            } else if (fetchRes.data?.response && Array.isArray(fetchRes.data.response)) {
+              evoInstances = fetchRes.data.response
+            } else if (fetchRes.data) {
+              evoInstances = [fetchRes.data]
+            }
+            
+            const foundInstance = evoInstances.find((evo: any) => 
+              (evo.name || evo.instanceName) === instance.instanceName
+            )
+            
+            if (foundInstance) {
+              if (foundInstance.hash && typeof foundInstance.hash === 'string') {
+                realToken = foundInstance.hash
+                console.log(`✅ Token found in hash: ${realToken?.substring(0, 20)}...`)
+              } else if (foundInstance.hash?.apikey) {
+                realToken = foundInstance.hash.apikey
+                console.log(`✅ Token found in hash.apikey: ${realToken?.substring(0, 20)}...`)
+              } else if (foundInstance.apikey) {
+                realToken = foundInstance.apikey
+                console.log(`✅ Token found in apikey: ${realToken?.substring(0, 20)}...`)
+              }
+              
+              // Mettre à jour le token en DB
+              if (realToken && realToken !== instance.instanceToken) {
+                console.log(`💾 Updating token in DB for ${instance.instanceName}`)
+                InstanceService.updateUserInstance(instance._id!.toString(), userId, {
+                  instanceToken: realToken
+                }).catch(() => {})
+              }
+            }
+          } catch (err: any) {
+            console.warn(`⚠️ Could not fetch real token for ${instance.instanceName}:`, err?.message)
+          }
+        }
+
+        const connectionStatus = isOpen ? 'connected' : (statusMap[realStatus] || 'disconnected')
 
         return {
           id: instance._id?.toString(),
+          _id: instance._id?.toString(),
+          instanceId: instance._id?.toString(),
           name: instance.customName,
+          customName: instance.customName,
           instanceName: instance.instanceName,
-          status: rawState,
+          evolutionInstanceId: instance.evolutionInstanceId || '',
+          status: realStatus,
           connectionStatus,
-          profileName: instance.profileName,
-          profilePictureUrl: instance.profilePictureUrl,
+          instanceToken: realToken,
+          apiKey: realToken,
+          whatsappNumber: evoState?.number || instance.whatsappNumber,
+          profileName: evoState?.profileName || instance.profileName,
+          profilePictureUrl: evoState?.profilePicUrl || instance.profilePictureUrl,
           createdAt: instance.createdAt,
+          updatedAt: instance.updatedAt,
           lastUsed: instance.lastActivity,
+          lastActivity: instance.lastActivity,
           apiKeys: [], // TODO: Get from ApiKeyService
           quotas: [], // TODO: Get from QuotaService
           stats: {
@@ -268,6 +359,422 @@ router.get('/', async (req, res) => {
       error: 'Failed to list instances',
       message: 'An error occurred while retrieving instances',
       code: 'LIST_ERROR'
+    })
+  }
+})
+
+/**
+ * POST /instances/:instanceId/check-connection
+ * Vérifier la connexion d'une instance WhatsApp
+ */
+router.post('/:instanceId/check-connection', async (req, res) => {
+  try {
+    const { instanceId } = req.params
+    const userId = req.user?.id
+
+    if (!userId) {
+      return res.status(401).json({
+        error: 'Authentication required',
+        code: 'AUTH_REQUIRED'
+      })
+    }
+
+    const instance = await InstanceService.findUserInstanceById(instanceId, userId)
+    if (!instance) {
+      return res.status(404).json({
+        error: 'Instance not found',
+        code: 'INSTANCE_NOT_FOUND'
+      })
+    }
+
+    // Vérifier la connexion via Evolution API
+    const evolution = createEvolutionClient()
+    if (!evolution) {
+      return res.status(503).json({
+        error: 'WhatsApp service unavailable',
+        code: 'EVOLUTION_UNAVAILABLE'
+      })
+    }
+
+    let state = 'close'
+    try {
+      const connRes = await evolution.get(`/instance/connectionState/${instance.instanceName}`)
+      console.log(`🔍 connectionState response for ${instance.instanceName}:`, JSON.stringify(connRes.data))
+      state = connRes.data?.instance?.state || connRes.data?.state || 'close'
+    } catch (err: any) {
+      console.warn(`⚠️ connectionState error for ${instance.instanceName}:`, err?.response?.status, err?.response?.data)
+      if (err?.response?.status === 404) state = 'close'
+      else throw err
+    }
+
+    const connected = state === 'open'
+    console.log(`📡 Connection check: ${instance.instanceName} → state=${state}, connected=${connected}`)
+
+    // Mettre à jour le statut en DB
+    await InstanceService.updateUserInstance(instanceId, userId, { status: state as any })
+
+    const response = {
+      success: true,
+      data: {
+        instanceId,
+        instanceName: instance.customName,
+        connected,
+        status: state,
+        connectionStatus: connected ? 'connected' : 'disconnected',
+        fullData: { instance: { state, connectionStatus: connected ? 'connected' : 'disconnected' } }
+      }
+    }
+
+    res.status(200).json(response)
+
+  } catch (error) {
+    console.error('Check connection error:', error)
+    return res.status(500).json({
+      error: 'Failed to check connection',
+      code: 'CONNECTION_CHECK_ERROR'
+    })
+  }
+})
+
+/**
+ * POST /instances/:instanceId/refresh-qr
+ * Rafraîchir le QR code pour une instance
+ */
+router.post('/:instanceId/refresh-qr', async (req, res) => {
+  try {
+    const { instanceId } = req.params
+    const userId = req.user?.id
+
+    if (!userId) {
+      return res.status(401).json({
+        error: 'Authentication required',
+        code: 'AUTH_REQUIRED'
+      })
+    }
+
+    const instance = await InstanceService.findUserInstanceById(instanceId, userId)
+    if (!instance) {
+      return res.status(404).json({
+        error: 'Instance not found',
+        code: 'INSTANCE_NOT_FOUND'
+      })
+    }
+
+    // Rafraîchir le QR via Evolution API
+    const evolution = createEvolutionClient()
+    if (!evolution) {
+      return res.status(503).json({
+        error: 'WhatsApp service unavailable',
+        code: 'EVOLUTION_UNAVAILABLE'
+      })
+    }
+
+    const qrRes = await evolution.get(`/instance/connect/${instance.instanceName}`)
+    const qrData = qrRes.data?.qrcode || qrRes.data
+
+    // Mettre à jour le statut en DB
+    await InstanceService.updateUserInstance(instanceId, userId, {
+      status: (qrRes.data?.instance?.state || instance.status) as any
+    })
+
+    const response = {
+      success: true,
+      data: {
+        instanceId,
+        instanceName: instance.customName,
+        qrcode: { base64: qrData?.base64 || '' },
+        pairingCode: qrData?.pairingCode || null,
+        count: qrData?.count || 1
+      }
+    }
+
+    res.status(200).json(response)
+
+  } catch (error) {
+    console.error('Refresh QR error:', error)
+    return res.status(500).json({
+      error: 'Failed to refresh QR code',
+      code: 'QR_REFRESH_ERROR'
+    })
+  }
+})
+
+/**
+ * POST /instances/:instanceId/send-message
+ * Envoyer un message via une instance
+ */
+router.post('/:instanceId/send-message', async (req, res) => {
+  try {
+    const { instanceId } = req.params
+    const { number, message } = req.body
+    const userId = req.user?.id
+
+    if (!userId) {
+      return res.status(401).json({
+        error: 'Authentication required',
+        code: 'AUTH_REQUIRED'
+      })
+    }
+
+    if (!number || !message) {
+      return res.status(400).json({
+        error: 'Number and message are required',
+        code: 'MISSING_FIELDS'
+      })
+    }
+
+    const instance = await InstanceService.findUserInstanceById(instanceId, userId)
+    if (!instance) {
+      return res.status(404).json({
+        error: 'Instance not found',
+        code: 'INSTANCE_NOT_FOUND'
+      })
+    }
+
+    if (!instance.isActive) {
+      return res.status(403).json({
+        error: 'Instance is inactive',
+        code: 'INSTANCE_INACTIVE'
+      })
+    }
+
+    if (instance.status !== 'open') {
+      return res.status(400).json({
+        error: 'WhatsApp instance not connected',
+        code: 'INSTANCE_NOT_CONNECTED'
+      })
+    }
+
+    // Envoyer via Evolution API
+    const evolution = createEvolutionClient()
+    if (!evolution) {
+      return res.status(503).json({
+        error: 'WhatsApp service unavailable',
+        code: 'EVOLUTION_UNAVAILABLE'
+      })
+    }
+
+    console.log(`📤 Sending message via ${instance.instanceName} to ${number}`)
+    const result = await evolution.post(`/message/sendText/${instance.instanceName}`, {
+      number,
+      text: message
+    })
+
+    const response = {
+      success: true,
+      data: {
+        key: result.data?.key || {},
+        messageId: result.data?.key?.id || null,
+        status: 'sent',
+        instanceUsed: instance.instanceName,
+        to: number,
+        message
+      }
+    }
+
+    console.log(`✅ Message sent via ${instance.instanceName} to ${number}`)
+    res.status(200).json(response)
+
+  } catch (error) {
+    console.error('Send message error:', error)
+    return res.status(500).json({
+      error: 'Failed to send message',
+      code: 'SEND_MESSAGE_ERROR'
+    })
+  }
+})
+
+/**
+ * GET /instances/:instanceId/chats
+ * Récupérer les conversations d'une instance
+ */
+router.get('/:instanceId/chats', async (req, res) => {
+  try {
+    const { instanceId } = req.params
+    const userId = req.user?.id
+
+    if (!userId) {
+      return res.status(401).json({
+        error: 'Authentication required',
+        code: 'AUTH_REQUIRED'
+      })
+    }
+
+    const instance = await InstanceService.findUserInstanceById(instanceId, userId)
+    if (!instance) {
+      return res.status(404).json({
+        error: 'Instance not found',
+        code: 'INSTANCE_NOT_FOUND'
+      })
+    }
+
+    // Récupérer les chats via Evolution API
+    const evolution = createEvolutionClient()
+    if (!evolution) {
+      return res.status(503).json({
+        error: 'WhatsApp service unavailable',
+        code: 'EVOLUTION_UNAVAILABLE'
+      })
+    }
+
+    const evoRes = await evolution.post(`/chat/findChats/${instance.instanceName}`)
+    const rawChats = Array.isArray(evoRes.data) ? evoRes.data : []
+    
+    // Mapper les chats Evolution vers le format frontend
+    const chats = rawChats
+      .filter((c: any) => c.remoteJid)
+      .slice(0, 100)
+      .map((c: any) => {
+        const remoteJid = c.remoteJid || c.id || ''
+        const name = c.pushName || c.name || c.contact?.pushName || remoteJid.replace('@s.whatsapp.net', '').replace('@lid', '')
+        const lastMsg = c.lastMessage || c.messages?.[0] || null
+
+        return {
+          id: c.id || remoteJid,
+          instanceId: instance.instanceName,
+          contactId: remoteJid,
+          contactName: name,
+          contactAvatar: c.profilePicUrl || null,
+          unreadCount: c.unreadMessages || 0,
+          lastActivity: lastMsg?.messageTimestamp
+            ? new Date(Number(lastMsg.messageTimestamp) * 1000).toISOString()
+            : c.updatedAt || new Date().toISOString(),
+          lastMessage: lastMsg ? {
+            id: lastMsg.key?.id || `msg_${Date.now()}`,
+            chatId: remoteJid,
+            instanceId: instance.instanceName,
+            senderId: lastMsg.key?.fromMe ? 'me' : remoteJid,
+            recipientId: lastMsg.key?.fromMe ? remoteJid : 'me',
+            content: lastMsg.message?.conversation
+              || lastMsg.message?.extendedTextMessage?.text
+              || lastMsg.message?.imageMessage?.caption
+              || '[Media]',
+            messageType: 'text',
+            status: lastMsg.key?.fromMe ? 'sent' : 'delivered',
+            isFromMe: Boolean(lastMsg.key?.fromMe),
+            timestamp: lastMsg.messageTimestamp
+              ? new Date(Number(lastMsg.messageTimestamp) * 1000).toISOString()
+              : new Date().toISOString(),
+          } : null,
+          messages: [],
+        }
+      })
+      .sort((a: any, b: any) => new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime())
+
+    console.log(`📨 Chats loaded for ${instance.instanceName}: ${chats.length} conversations`)
+
+    const response = {
+      success: true,
+      data: { chats }
+    }
+
+    res.status(200).json(response)
+
+  } catch (error) {
+    console.error('Get chats error:', error)
+    return res.status(500).json({
+      error: 'Failed to retrieve chats',
+      code: 'CHATS_ERROR'
+    })
+  }
+})
+
+/**
+ * GET /instances/:instanceId/chats/:remoteJid/messages
+ * Récupérer les messages d'une conversation
+ */
+router.get('/:instanceId/chats/:remoteJid/messages', async (req, res) => {
+  try {
+    const { instanceId, remoteJid } = req.params
+    const userId = req.user?.id
+    const limit = parseInt(req.query.limit as string) || 50
+
+    if (!userId) {
+      return res.status(401).json({
+        error: 'Authentication required',
+        code: 'AUTH_REQUIRED'
+      })
+    }
+
+    const instance = await InstanceService.findUserInstanceById(instanceId, userId)
+    if (!instance) {
+      return res.status(404).json({
+        error: 'Instance not found',
+        code: 'INSTANCE_NOT_FOUND'
+      })
+    }
+
+    // Récupérer les messages via Evolution API
+    const evolution = createEvolutionClient()
+    if (!evolution) {
+      return res.status(503).json({
+        error: 'WhatsApp service unavailable',
+        code: 'EVOLUTION_UNAVAILABLE'
+      })
+    }
+
+    const evoRes = await evolution.post(`/chat/findMessages/${instance.instanceName}`, {
+      where: {
+        key: {
+          remoteJid: decodeURIComponent(remoteJid)
+        }
+      },
+      limit
+    })
+    const rawMessages = Array.isArray(evoRes.data) ? evoRes.data : evoRes.data?.messages || []
+
+    // Mapper les messages Evolution vers le format frontend
+    const messages = rawMessages.map((m: any) => {
+      const key = m.key || {}
+      const msg = m.message || {}
+      const content = msg.conversation
+        || msg.extendedTextMessage?.text
+        || msg.imageMessage?.caption
+        || msg.videoMessage?.caption
+        || msg.documentMessage?.title
+        || msg.audioMessage ? '[Audio]'
+        : msg.stickerMessage ? '[Sticker]'
+        : msg.contactMessage?.displayName ? `[Contact: ${msg.contactMessage.displayName}]`
+        : msg.locationMessage ? '[Location]'
+        : '[Media]'
+
+      return {
+        id: key.id || m.id || `msg_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+        chatId: key.remoteJid || remoteJid,
+        instanceId: instance.instanceName,
+        senderId: key.fromMe ? 'me' : key.remoteJid || remoteJid,
+        recipientId: key.fromMe ? key.remoteJid || remoteJid : 'me',
+        content,
+        messageType: msg.imageMessage ? 'image'
+          : msg.audioMessage ? 'audio'
+          : msg.videoMessage ? 'video'
+          : msg.documentMessage ? 'document'
+          : 'text',
+        status: m.status === 'READ' ? 'read'
+          : m.status === 'DELIVERY_ACK' ? 'delivered'
+          : key.fromMe ? 'sent'
+          : 'delivered',
+        isFromMe: Boolean(key.fromMe),
+        timestamp: m.messageTimestamp
+          ? new Date(Number(m.messageTimestamp) * 1000).toISOString()
+          : m.createdAt || new Date().toISOString(),
+      }
+    })
+
+    console.log(`💬 Messages loaded for ${remoteJid}: ${messages.length} messages`)
+
+    const response = {
+      success: true,
+      data: { messages }
+    }
+
+    res.status(200).json(response)
+
+  } catch (error) {
+    console.error('Get messages error:', error)
+    return res.status(500).json({
+      error: 'Failed to retrieve messages',
+      code: 'MESSAGES_ERROR'
     })
   }
 })

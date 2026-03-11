@@ -209,6 +209,8 @@ export default function UltraAdvancedAdminPage() {
 
   async function loadAllData(token: string) {
     try {
+      console.log("🔐 Loading admin data with token:", token.substring(0, 20) + "...");
+      
       const [
         statsRes,
         growthRes,
@@ -274,8 +276,22 @@ export default function UltraAdvancedAdminPage() {
       if (activityRes.data.success) setActivity(activityRes.data.data);
       if (usersRes.data.success) setUsers(usersRes.data.data.users || []);
       if (instancesRes.data.success) setInstances(instancesRes.data.data.instances || []);
-    } catch (error) {
-      console.error("Error loading data:", error);
+      
+      console.log("✅ Admin data loaded successfully");
+    } catch (error: any) {
+      console.error("❌ Error loading admin data:", error);
+      
+      // Gestion spécifique des erreurs 401
+      if (error.response?.status === 401) {
+        console.error("🔴 Token invalide ou expiré");
+        // Effacer le token et rediriger vers le login
+        localStorage.removeItem("adminToken");
+        localStorage.removeItem("adminInfo");
+        setAdminToken(null);
+        setAdminInfo(null);
+        setIsAuthenticated(false);
+        setLoginError("Session expirée. Veuillez vous reconnecter.");
+      }
     }
   }
 
