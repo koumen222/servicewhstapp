@@ -506,7 +506,7 @@ router.post('/:instanceId/refresh-qr', async (req, res) => {
 router.post('/:instanceId/send-message', async (req, res) => {
   try {
     const { instanceId } = req.params
-    const { number, message } = req.body
+    const { number, message, simulateHuman = false } = req.body
     const userId = req.user?.id
 
     if (!userId) {
@@ -554,10 +554,23 @@ router.post('/:instanceId/send-message', async (req, res) => {
       })
     }
 
-    console.log(`📤 Sending message via ${instance.instanceName} to ${number}`)
+    let processedMessage = message
+    let sendDelay = 0
+
+    // Simulation du comportement humain
+    if (simulateHuman) {
+      processedMessage = addHumanVariations(message)
+      sendDelay = Math.floor(Math.random() * 4000) + 1000
+    }
+
+    // Appliquer le délai si nécessaire
+    if (sendDelay > 0) {
+      await new Promise(resolve => setTimeout(resolve, sendDelay))
+    }
+
     const result = await evolution.post(`/message/sendText/${instance.instanceName}`, {
       number,
-      text: message
+      text: processedMessage
     })
 
     const response = {
@@ -568,11 +581,9 @@ router.post('/:instanceId/send-message', async (req, res) => {
         status: 'sent',
         instanceUsed: instance.instanceName,
         to: number,
-        message
+        message: processedMessage
       }
     }
-
-    console.log(`✅ Message sent via ${instance.instanceName} to ${number}`)
     res.status(200).json(response)
 
   } catch (error) {
@@ -583,6 +594,198 @@ router.post('/:instanceId/send-message', async (req, res) => {
     })
   }
 })
+
+/**
+ * POST /instances/:instanceId/send-bulk-messages
+ * Envoyer plusieurs messages en simulant le comportement humain
+ */
+router.post('/:instanceId/send-bulk-messages', async (req, res) => {
+  try {
+    const { instanceId } = req.params
+    const { messages, simulateHuman = true, minDelay = 10000, maxDelay = 10000 } = req.body
+    const userId = req.user?.id
+
+    if (!userId) {
+      return res.status(401).json({
+        error: 'Authentication required',
+        code: 'AUTH_REQUIRED'
+      })
+    }
+
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({
+        error: 'Messages array is required',
+        code: 'MISSING_MESSAGES'
+      })
+    }
+
+    const instance = await InstanceService.findUserInstanceById(instanceId, userId)
+    if (!instance) {
+      return res.status(404).json({
+        error: 'Instance not found',
+        code: 'INSTANCE_NOT_FOUND'
+      })
+    }
+
+    if (!instance.isActive) {
+      return res.status(403).json({
+        error: 'Instance is inactive',
+        code: 'INSTANCE_INACTIVE'
+      })
+    }
+
+    if (instance.status !== 'open') {
+      return res.status(400).json({
+        error: 'WhatsApp instance not connected',
+        code: 'INSTANCE_NOT_CONNECTED'
+      })
+    }
+
+    const evolution = createEvolutionClient()
+    if (!evolution) {
+      return res.status(503).json({
+        error: 'WhatsApp service unavailable',
+        code: 'EVOLUTION_UNAVAILABLE'
+      })
+    }
+
+    const results = []
+    let totalDelay = 0
+
+    for (let i = 0; i < messages.length; i++) {
+      const msgData = messages[i]
+      const { number, message, customDelay } = msgData
+
+      if (!number || !message) {
+        results.push({
+          index: i,
+          success: false,
+          error: 'Number and message are required',
+          to: number,
+          message
+        })
+        continue
+      }
+
+      try {
+        let processedMessage = message
+        let sendDelay = customDelay
+
+        if (simulateHuman) {
+          processedMessage = addHumanVariations(message)
+          
+          if (i > 0) {
+            sendDelay = customDelay || Math.floor(Math.random() * (maxDelay - minDelay)) + minDelay
+          } else {
+            sendDelay = Math.floor(Math.random() * 2000) + 8000
+          }
+        }
+
+        if (sendDelay > 0) {
+          await new Promise(resolve => setTimeout(resolve, sendDelay))
+          totalDelay += sendDelay
+        }
+
+        const result = await evolution.post(`/message/sendText/${instance.instanceName}`, {
+          number,
+          text: processedMessage
+        })
+
+        results.push({
+          index: i,
+          success: true,
+          messageId: result.data?.key?.id || null,
+          to: number,
+          message: processedMessage,
+          timestamp: new Date().toISOString()
+        })
+
+        if (simulateHuman && i < messages.length - 1) {
+          const microPause = Math.floor(Math.random() * 1000) + 200
+          await new Promise(resolve => setTimeout(resolve, microPause))
+          totalDelay += microPause
+        }
+
+      } catch (error: any) {
+        results.push({
+          index: i,
+          success: false,
+          error: error?.message || 'Send failed',
+          to: number,
+          message
+        })
+      }
+    }
+
+    const response = {
+      success: true,
+      data: {
+        instanceId,
+        instanceName: instance.customName,
+        totalMessages: messages.length,
+        successfulMessages: results.filter(r => r.success).length,
+        failedMessages: results.filter(r => !r.success).length,
+        results
+      }
+    }
+    res.status(200).json(response)
+
+  } catch (error) {
+    console.error('Bulk send error:', error)
+    return res.status(500).json({
+      error: 'Failed to send bulk messages',
+      code: 'BULK_SEND_ERROR'
+    })
+  }
+})
+
+// =============== FONCTIONS UTILITAIRES ===============
+
+/**
+ * Ajoute des variations humaines à un message
+ */
+function addHumanVariations(message: string): string {
+  let variations = message
+
+  // Ajouter des espaces aléatoires (double espaces, tabulations)
+  if (Math.random() < 0.1) { // 10% de chance
+    variations = variations.replace(/\s/g, (match) => {
+      if (Math.random() < 0.2) return '  ' // Double espace
+      if (Math.random() < 0.05) return '\t' // Tabulation
+      return match
+    })
+  }
+
+  // Ajouter des ponctuations aléatoires
+  if (Math.random() < 0.05) { // 5% de chance
+    const punctuation = ['...', '!', '!!', '?', '??']
+    const randomPunc = punctuation[Math.floor(Math.random() * punctuation.length)]
+    variations += randomPunc
+  }
+
+  // Variation de casse (majuscules/minuscules)
+  if (Math.random() < 0.08) { // 8% de chance
+    variations = variations.split('').map(char => {
+      if (Math.random() < 0.3) {
+        return char.toUpperCase()
+      }
+      return char.toLowerCase()
+    }).join('')
+  }
+
+  // Ajouter des émojis occasionnellement
+  if (Math.random() < 0.03) { // 3% de chance
+    const emojis = ['😊', '👍', '😄', '🎉', '✨', '💪', '🙏']
+    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)]
+    variations += ` ${randomEmoji}`
+  }
+
+  // Nettoyer les variations extrêmes
+  variations = variations.replace(/\s{3,}/g, '  ') // Limiter les espaces multiples
+  variations = variations.replace(/\t{2,}/g, '\t') // Limiter les tabulations
+
+  return variations.trim()
+}
 
 /**
  * GET /instances/:instanceId/chats

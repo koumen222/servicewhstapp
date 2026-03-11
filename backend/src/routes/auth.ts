@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import { AuthService } from '../services/authService.mongo.js'
+import { UserService } from '../services/userService.js'
 import { emailService } from '../services/email.service.js'
 
 const router = Router()
@@ -143,6 +144,52 @@ router.post('/login', async (req, res) => {
     }
     console.log('🚨 Server error:', error)
     res.status(500).json({ error: 'Erreur serveur' })
+  }
+})
+
+/**
+ * GET /profile
+ * Obtenir le profil de l'utilisateur connecté
+ */
+router.get('/profile', async (req, res) => {
+  try {
+    const userId = req.user?.id
+
+    if (!userId) {
+      return res.status(401).json({
+        error: 'Authentication required',
+        code: 'AUTH_REQUIRED'
+      })
+    }
+
+    const user = await UserService.findById(userId)
+    if (!user) {
+      return res.status(404).json({
+        error: 'User not found',
+        code: 'USER_NOT_FOUND'
+      })
+    }
+
+    res.json({
+      success: true,
+      data: {
+        id: user._id?.toString(),
+        email: user.email,
+        name: user.name,
+        phone: user.phone,
+        plan: user.plan,
+        maxInstances: user.maxInstances,
+        isActive: user.isActive,
+        emailVerified: user.emailVerified,
+        createdAt: user.createdAt
+      }
+    })
+  } catch (error) {
+    console.error('Get profile error:', error)
+    res.status(500).json({
+      error: 'Failed to get profile',
+      code: 'PROFILE_ERROR'
+    })
   }
 })
 

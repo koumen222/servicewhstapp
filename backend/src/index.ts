@@ -8,6 +8,7 @@ import { connectMongoose, disconnectMongoose } from './lib/mongoose.js'
 import authRoutes from './routes/auth.js'
 import instancesNewRoutes from './routes/instances-new.js'
 import instanceManagementRoutes from './routes/instanceManagement.js'
+import instanceRoutes from './routes/instance.js'
 import whatsappInstanceRoutes from './routes/whatsapp/instances.js'
 import publicWhatsAppRoutes from './routes/whatsapp/public.js'
 import supportRoutes from './routes/support.js'
@@ -210,6 +211,10 @@ app.use('/api/support', supportRoutes)
 console.log('✅ Registered support chatbot route: /api/support/chat')
 
 app.use('/api/instances', authMiddleware, instancesNewRoutes)
+
+// Routes d'instance (compatibles avec les tests)
+app.use('/api/instance', authMiddleware, instanceRoutes)
+console.log('✅ Registered instance routes: /api/instance/create, /api/instance/status/:name')
 
 // Routes protégées par JWT
 app.use('/api/instance-management', authMiddleware, instanceManagementRoutes)
