@@ -141,7 +141,7 @@ export default function BalancePage() {
                 ) : (
                   <div className="flex items-end gap-0.5">
                     <span className="text-xl font-extrabold" style={{ color: meta.color }}>
-                      {plan.price === 0 ? t('bal.free') : `${plan.price.toLocaleString("fr-FR")} XAF`}
+                      {plan.price.toLocaleString("fr-FR")} XAF
                     </span>
                     {plan.price > 0 && (
                       <span className="text-[10px] text-[#5a7a5a] mb-0.5">/mois</span>
@@ -178,7 +178,7 @@ export default function BalancePage() {
                 ) : isCurrent ? (
                   t('bal.currentPlan')
                 ) : (
-                  <>{key === "free" ? t('bal.downgrade') : t('bal.choosePlan')} <ArrowRight size={11} /></>
+                  <>{t('bal.choosePlan')} <ArrowRight size={11} /></>
                 )}
               </button>
             </motion.div>

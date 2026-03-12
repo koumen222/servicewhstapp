@@ -230,7 +230,7 @@ export default function AccountPage() {
             <p className="text-[14px] font-semibold capitalize" style={{ color: 'var(--text-primary)' }}>{plan} Plan</p>
             <p className="text-[12px] text-[#5a7a5a] mt-0.5 break-words">
               {planData.maxInstances} instance{planData.maxInstances !== 1 ? "s" : ""} ·{" "}
-              {planData.price === 0 ? t('bal.free') : `${planData.price.toLocaleString("fr-FR")} XAF${t('bal.month')}`}
+              {planData.price.toLocaleString("fr-FR")} XAF{t('bal.month')}
             </p>
           </div>
         </div>

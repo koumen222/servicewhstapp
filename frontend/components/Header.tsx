@@ -275,7 +275,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                       className="inline-flex items-center mt-1.5 px-2 py-0.5 rounded-md text-[10px] font-semibold"
                       style={{ background: "var(--avatar-bg)", color: "var(--avatar-text)" }}
                     >
-                      {user?.plan?.toUpperCase() ?? "FREE"}
+                      {user?.plan?.toUpperCase() ?? "BASIC"}
                     </span>
                   </div>
 

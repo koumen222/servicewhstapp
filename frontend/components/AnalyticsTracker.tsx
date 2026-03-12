@@ -109,7 +109,7 @@ export function AnalyticsTracker({ children }: AnalyticsTrackerProps) {
           console.error('Failed to track page view:', await response.text());
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       // Silencieux pour les erreurs de réseau ou timeout
       if (process.env.NODE_ENV === 'production' && error.name !== 'AbortError') {
         console.error('Error tracking page view:', error);
@@ -157,7 +157,7 @@ export function AnalyticsTracker({ children }: AnalyticsTrackerProps) {
           console.error('Failed to track event:', await response.text());
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       // Silencieux pour les erreurs de réseau ou timeout
       if (process.env.NODE_ENV === 'production' && error.name !== 'AbortError') {
         console.error('Error tracking event:', error);

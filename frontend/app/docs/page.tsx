@@ -191,7 +191,7 @@ Content-Type: application/json
       "id": "d992fe3f",
       "email": "moussa.traore@exemple.com",
       "name": "Moussa Traoré",
-      "plan": "free",
+      "plan": "basic",
       "maxInstances": 1
     }
   }
@@ -678,10 +678,8 @@ for (const chat of chatsData.chats) {
                       </thead>
                       <tbody>
                         {[
-                          { plan: "Free", instances: "1", daily: "50", monthly: "500", rate: "10 req/min" },
-                          { plan: "Starter", instances: "1", daily: "500", monthly: "100,000", rate: "30 req/min" },
-                          { plan: "Pro", instances: "5", daily: "5,000", monthly: "1,000,000", rate: "100 req/min" },
-                          { plan: "Enterprise", instances: "10", daily: "Illimité", monthly: "Illimité", rate: "500 req/min" },
+                          { plan: "Basic", instances: "1", daily: "Illimité", monthly: "Illimité", rate: "30 req/min" },
+                          { plan: "Premium", instances: "Illimité", daily: "Illimité", monthly: "Illimité", rate: "100 req/min" },
                         ].map((row, i) => (
                           <tr key={i} className="border-b border-[#2a2a2a]/50">
                             <td className="py-3 px-4 text-white font-medium">{row.plan}</td>
