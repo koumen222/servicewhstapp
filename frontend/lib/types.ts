@@ -3,7 +3,7 @@ export type InstanceStatus = 'open' | 'close' | 'connecting' | 'expired' | 'unkn
 export type ConnectionStatus = 'connected' | 'disconnected' | 'connecting' | 'expired' | 'unknown';
 export type MessageStatus = 'pending' | 'sent' | 'delivered' | 'read' | 'failed';
 export type MessageType = 'text' | 'image' | 'audio' | 'video' | 'document';
-export type PlanType = 'free' | 'starter' | 'pro' | 'enterprise';
+export type PlanType = 'basic' | 'premium';
 export type PaymentStatus = 'pending' | 'success' | 'failed' | 'cancelled';
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
@@ -17,6 +17,9 @@ export interface User {
   isActive?: boolean;
   role?: UserRole;
   createdAt?: string;
+  trialEndsAt?: string;
+  hasPaid?: boolean;
+  isPaidAccount?: boolean;
 }
 
 export interface AuthResponse {
@@ -126,10 +129,8 @@ export interface PlanDetails {
 }
 
 export const PLAN_CATALOG: Record<PlanType, PlanDetails> = {
-  free:       { name: 'Free',       price: 0,     maxInstances: 1,  currency: 'XAF' },
-  starter:    { name: 'Starter',    price: 2495,  originalPrice: 4990,  maxInstances: 1,  currency: 'XAF' },
-  pro:        { name: 'Pro',        price: 7495,  originalPrice: 14990, maxInstances: 5,  currency: 'XAF' },
-  enterprise: { name: 'Enterprise', price: 24995, originalPrice: 49990, maxInstances: 10, currency: 'XAF' },
+  basic:    { name: 'Basic',    price: 3000,  maxInstances: 1,   currency: 'XAF' },
+  premium:  { name: 'Premium',  price: 10000, maxInstances: 999, currency: 'XAF' },
 };
 
 export interface Payment {

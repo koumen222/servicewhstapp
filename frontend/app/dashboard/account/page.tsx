@@ -28,7 +28,7 @@ export default function AccountPage() {
       .catch(() => {});
   }, []);
 
-  const plan = (sub?.plan ?? user?.plan ?? "free") as PlanType;
+  const plan = (sub?.plan ?? user?.plan ?? "basic") as PlanType;
   const planData = PLAN_CATALOG[plan];
   const usage = sub?.usage;
   const maxInst = sub?.maxInstances ?? user?.maxInstances ?? 1;

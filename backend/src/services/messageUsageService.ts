@@ -3,10 +3,8 @@ import { getMongoCollection } from '../lib/mongo.js'
 
 // Plan limits configuration
 export const PLAN_LIMITS: Record<string, { dailyMessages: number; monthlyMessages: number }> = {
-  free: { dailyMessages: 50, monthlyMessages: 100 },
-  starter: { dailyMessages: 500, monthlyMessages: 5000 },
-  pro: { dailyMessages: 2000, monthlyMessages: 30000 },
-  enterprise: { dailyMessages: 10000, monthlyMessages: 200000 },
+  basic: { dailyMessages: 999999, monthlyMessages: 999999 },
+  premium: { dailyMessages: 999999, monthlyMessages: 999999 },
 }
 
 export interface MessageUsage {
@@ -63,7 +61,7 @@ export class MessageUsageService {
     instanceName: string,
     plan: string
   ): Promise<{ allowed: boolean; reason?: string; usage: UsageStats }> {
-    const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free
+    const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.basic
     const { date, month } = this.getDateKeys()
     const collection = await this.getCollection()
 
@@ -150,7 +148,7 @@ export class MessageUsageService {
     instanceId: string,
     plan: string
   ): Promise<UsageStats> {
-    const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free
+    const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.basic
     const { date, month } = this.getDateKeys()
     const collection = await this.getCollection()
 
@@ -193,7 +191,7 @@ export class MessageUsageService {
     userId: string,
     plan: string
   ): Promise<{ daily: number; monthly: number; total: number; limits: { daily: number; monthly: number } }> {
-    const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free
+    const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.basic
     const { date, month } = this.getDateKeys()
     const collection = await this.getCollection()
 

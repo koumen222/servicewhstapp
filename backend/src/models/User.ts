@@ -7,6 +7,9 @@ export interface IUser extends Document {
   plan: string
   maxInstances: number
   isActive: boolean
+  trialEndsAt?: Date
+  hasPaid: boolean
+  isPaidAccount: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -31,16 +34,28 @@ const userSchema = new Schema<IUser>(
     },
     plan: {
       type: String,
-      enum: ['free', 'starter', 'pro', 'enterprise'],
-      default: 'free',
+      enum: ['basic', 'premium'],
+      required: true,
     },
     maxInstances: {
       type: Number,
-      default: 1,
+      required: true,
     },
     isActive: {
       type: Boolean,
       default: true,
+    },
+    trialEndsAt: {
+      type: Date,
+      required: false,
+    },
+    hasPaid: {
+      type: Boolean,
+      default: false,
+    },
+    isPaidAccount: {
+      type: Boolean,
+      default: false,
     },
   },
   {

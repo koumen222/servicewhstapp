@@ -1106,9 +1106,9 @@ export default function UltraAdvancedAdminPage() {
               <div className="p-6 rounded-xl" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
                 <h3 className="text-sm font-semibold text-white mb-2">Premium</h3>
                 <p className="text-2xl font-bold text-purple-400">
-                  {users.filter(u => u.plan === 'pro' || u.plan === 'enterprise').length}
+                  {users.filter(u => u.plan === 'premium').length}
                 </p>
-                <p className="text-xs text-gray-400 mt-1">Pro & Enterprise</p>
+                <p className="text-xs text-gray-400 mt-1">Plan Premium</p>
               </div>
             </div>
 
@@ -1137,9 +1137,8 @@ export default function UltraAdvancedAdminPage() {
                         </td>
                         <td className="py-3 px-4">
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            user.plan === 'enterprise' ? 'bg-purple-500/10 text-purple-400' :
-                            user.plan === 'pro' ? 'bg-green-500/10 text-green-400' :
-                            user.plan === 'starter' ? 'bg-blue-500/10 text-blue-400' :
+                            user.plan === 'premium' ? 'bg-blue-500/10 text-blue-400' :
+                            user.plan === 'basic' ? 'bg-green-500/10 text-green-400' :
                             'bg-gray-500/10 text-gray-400'
                           }`}>
                             {user.plan}

@@ -12,8 +12,8 @@ const MOCK_USERS: (User & { instanceCount: number; lastLogin: string })[] = [
     name: "Alice Martin",
     email: "alice@example.com",
     role: "user",
-    plan: "pro",
-    maxInstances: 10,
+    plan: "premium",
+    maxInstances: 999,
     isActive: true,
     createdAt: new Date(Date.now() - 60 * 86400000).toISOString(),
     instanceCount: 4,
@@ -24,11 +24,11 @@ const MOCK_USERS: (User & { instanceCount: number; lastLogin: string })[] = [
     name: "Bob Chen",
     email: "bob@example.com",
     role: "user",
-    plan: "starter",
-    maxInstances: 3,
+    plan: "basic",
+    maxInstances: 1,
     isActive: true,
     createdAt: new Date(Date.now() - 30 * 86400000).toISOString(),
-    instanceCount: 2,
+    instanceCount: 1,
     lastLogin: new Date(Date.now() - 24 * 3600000).toISOString(),
   },
   {
@@ -36,7 +36,7 @@ const MOCK_USERS: (User & { instanceCount: number; lastLogin: string })[] = [
     name: "Carol Davis",
     email: "carol@example.com",
     role: "user",
-    plan: "free",
+    plan: "basic",
     maxInstances: 1,
     isActive: true,
     createdAt: new Date(Date.now() - 15 * 86400000).toISOString(),
@@ -48,8 +48,8 @@ const MOCK_USERS: (User & { instanceCount: number; lastLogin: string })[] = [
     name: "Admin User",
     email: "admin@example.com",
     role: "admin",
-    plan: "enterprise",
-    maxInstances: 99,
+    plan: "premium",
+    maxInstances: 999,
     isActive: true,
     createdAt: new Date(Date.now() - 180 * 86400000).toISOString(),
     instanceCount: 0,
@@ -58,10 +58,8 @@ const MOCK_USERS: (User & { instanceCount: number; lastLogin: string })[] = [
 ];
 
 const PLAN_COLOR: Record<string, string> = {
-  free: "#5a7a5a",
-  starter: "#22c55e",
-  pro: "#3b82f6",
-  enterprise: "#8b5cf6",
+  basic: "#22c55e",
+  premium: "#3b82f6",
 };
 
 export default function AdminUsersPage() {
@@ -173,8 +171,8 @@ export default function AdminUsersPage() {
                   <span
                     className="px-1.5 py-0.5 rounded text-[10px] font-semibold capitalize"
                     style={{
-                      background: `${PLAN_COLOR[u.plan ?? "free"]}18`,
-                      color: PLAN_COLOR[u.plan ?? "free"],
+                      background: `${PLAN_COLOR[u.plan ?? "basic"]}18`,
+                      color: PLAN_COLOR[u.plan ?? "basic"],
                     }}
                   >
                     {u.plan}
@@ -218,8 +216,8 @@ export default function AdminUsersPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { label: "Total Users", value: users.length, color: "#22c55e" },
-          { label: "Pro/Enterprise", value: users.filter(u => ["pro","enterprise"].includes(u.plan ?? "")).length, color: "#3b82f6" },
-          { label: "Free Plan", value: users.filter(u => u.plan === "free").length, color: "#5a7a5a" },
+          { label: "Premium Plan", value: users.filter(u => u.plan === "premium").length, color: "#3b82f6" },
+          { label: "Basic Plan", value: users.filter(u => u.plan === "basic").length, color: "#22c55e" },
           { label: "Admins", value: users.filter(u => u.role === "admin").length, color: "#ef4444" },
         ].map(({ label, value, color }) => (
           <motion.div

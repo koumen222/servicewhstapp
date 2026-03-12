@@ -11,7 +11,7 @@ const registerSchema = z.object({
   name: z.string().min(2),
   password: z.string().min(6),
   phone: z.string().optional(),
-  plan: z.enum(['free', 'starter', 'pro', 'enterprise']).optional(),
+  plan: z.enum(['basic', 'premium']),
 })
 
 const loginSchema = z.object({
@@ -28,7 +28,7 @@ router.post('/register', async (req, res) => {
       name,
       password,
       phone,
-      plan: plan || 'free'
+      plan
     })
 
     if (!result) {

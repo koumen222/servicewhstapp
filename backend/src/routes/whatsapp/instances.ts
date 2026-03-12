@@ -3,6 +3,7 @@ import axios from 'axios'
 import { InstanceService } from '../../services/instanceService.js'
 import { WhatsAppService } from '../../services/whatsAppService.js'
 import { MessageUsageService } from '../../services/messageUsageService.js'
+import { checkTrialExpiration } from '../../middleware/checkTrial.js'
 
 const router = Router()
 
@@ -23,7 +24,7 @@ function normalizeEvolutionInstanceName(input: string): string {
 }
 
 // POST /api/create-instance — Créer une instance WhatsApp
-router.post('/create-instance', async (req: Request, res: Response) => {
+router.post('/create-instance', checkTrialExpiration, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id
     const { instanceName: displayName } = req.body
@@ -230,7 +231,7 @@ router.post('/check-connection/:instanceId', async (req: Request, res: Response)
 })
 
 // POST /api/send-message/:instanceId — Envoyer un message WhatsApp
-router.post('/send-message/:instanceId', async (req: Request, res: Response) => {
+router.post('/send-message/:instanceId', checkTrialExpiration, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id
     const userPlan = req.user!.plan || 'free'
@@ -464,7 +465,7 @@ router.get('/instance/chats/:instanceName/:remoteJid/messages', async (req: Requ
 })
 
 // POST /api/instance/send-message — Envoyer un message via Evolution API
-router.post('/instance/send-message', async (req: Request, res: Response) => {
+router.post('/instance/send-message', checkTrialExpiration, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id
     const { instanceName, number, message } = req.body

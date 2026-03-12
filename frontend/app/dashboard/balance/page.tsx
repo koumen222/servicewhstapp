@@ -10,10 +10,8 @@ import { useAppStore } from "@/store/useStore";
 import { useI18n } from "@/lib/i18n";
 
 const PLAN_META: Record<PlanType, { color: string; icon: typeof Zap; popular: boolean }> = {
-  free:       { color: "#5a7a5a", icon: Zap,       popular: false },
-  starter:    { color: "#22c55e", icon: Star,       popular: true  },
-  pro:        { color: "#3b82f6", icon: CreditCard, popular: false },
-  enterprise: { color: "#8b5cf6", icon: Building2, popular: false },
+  basic:    { color: "#22c55e", icon: Star,       popular: true  },
+  premium:  { color: "#3b82f6", icon: Building2, popular: false },
 };
 
 export default function BalancePage() {
@@ -21,10 +19,8 @@ export default function BalancePage() {
   const { t } = useI18n();
 
   const PLAN_FEATURES: Record<PlanType, string[]> = {
-    free:       [t("bal.feat.free.1"), t("bal.feat.free.2"), t("bal.feat.free.3"), t("bal.feat.free.4")],
-    starter:    [t("bal.feat.starter.1"), t("bal.feat.starter.2"), t("bal.feat.starter.3"), t("bal.feat.starter.4")],
-    pro:        [t("bal.feat.pro.1"), t("bal.feat.pro.2"), t("bal.feat.pro.3"), t("bal.feat.pro.4")],
-    enterprise: [t("bal.feat.enterprise.1"), t("bal.feat.enterprise.2"), t("bal.feat.enterprise.3"), t("bal.feat.enterprise.4")],
+    basic:    ["1 instance WhatsApp", "Envois illimités", "Accès API REST", "Support email"],
+    premium:  ["Instances illimitées", "Envois illimités", "Accès API REST", "Support prioritaire"],
   };
   const [info, setInfo] = useState<SubscriptionInfo | null>(null);
   const [paying, setPaying] = useState<PlanType | null>(null);
@@ -36,7 +32,6 @@ export default function BalancePage() {
   }, []);
 
   function handleUpgrade(plan: PlanType) {
-    if (plan === "free") return;
     
     const planDetails = PLAN_CATALOG[plan];
     const phoneNumber = "237676778377";
@@ -52,7 +47,7 @@ export default function BalancePage() {
     window.open(whatsappUrl, "_blank");
   }
 
-  const currentPlan = (info?.plan ?? user?.plan ?? "free") as PlanType;
+  const currentPlan = (info?.plan ?? user?.plan ?? "basic") as PlanType;
 
   return (
     <div className="space-y-6">

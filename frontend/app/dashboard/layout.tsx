@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
+import { TrialBanner } from "@/components/TrialBanner";
 import { useAppStore } from "@/store/useStore";
 import { instancesApi } from "@/lib/api";
 
@@ -123,7 +124,10 @@ export default function DashboardLayout({
 
         <main className="flex-1 overflow-y-auto">
           <div className="p-5 md:p-6 max-w-[1400px] mx-auto">
-            {children}
+            <TrialBanner />
+            <div className="mt-5">
+              {children}
+            </div>
           </div>
         </main>
       </div>

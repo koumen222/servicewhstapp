@@ -5,31 +5,14 @@ import { PublicHeader } from "@/components/PublicHeader";
 export default function PricingPage() {
   const tiers = [
     {
-      id: "free",
-      name: "Free",
-      price: "Gratuit",
-      description: "Pour tester et débuter gratuitement.",
+      id: "basic",
+      name: "Basic",
+      price: "3 000 XAF",
+      description: "Plan de démarrage pour les petites entreprises.",
       features: [
         "1 instance WhatsApp",
-        "500 messages/mois",
+        "Envois illimités",
         "Accès API REST",
-        "Support communauté",
-      ],
-      cta: "Plan actuel",
-      highlighted: false,
-      color: "#5a7a5a",
-      icon: Zap,
-    },
-    {
-      id: "starter",
-      name: "Starter",
-      price: "2 495 XAF",
-      originalPrice: "4 990 XAF",
-      discount: "-50%",
-      description: "Idéal pour les petites entreprises.",
-      features: [
-        "1 instance WhatsApp",
-        "100,000 messages/mois",
         "Webhooks",
         "Support email",
       ],
@@ -39,39 +22,21 @@ export default function PricingPage() {
       icon: Star,
     },
     {
-      id: "pro",
-      name: "Pro",
-      price: "7 495 XAF",
-      originalPrice: "14 990 XAF",
-      discount: "-50%",
-      description: "Pour les entreprises en pleine croissance.",
+      id: "premium",
+      name: "Premium",
+      price: "10 000 XAF",
+      description: "Solution complète pour les entreprises en croissance.",
       features: [
-        "5 instances WhatsApp",
-        "1,000,000 messages/mois",
+        "Instances illimitées",
+        "Envois illimités",
+        "Accès API REST",
+        "Webhooks",
         "Support prioritaire",
         "Analytiques avancées",
       ],
       cta: "Choisir ce plan",
       highlighted: false,
       color: "#3b82f6",
-      icon: CreditCard,
-    },
-    {
-      id: "enterprise",
-      name: "Enterprise",
-      price: "24 995 XAF",
-      originalPrice: "49 990 XAF",
-      discount: "-50%",
-      description: "Solution sur mesure pour grands comptes.",
-      features: [
-        "10 instances WhatsApp",
-        "Messages illimités",
-        "Support dédié",
-        "Intégrations sur mesure",
-      ],
-      cta: "Choisir ce plan",
-      highlighted: false,
-      color: "#8b5cf6",
       icon: Building2,
     },
   ];
@@ -115,17 +80,11 @@ export default function PricingPage() {
                   <h3 className="text-base font-semibold text-white mb-1">{tier.name}</h3>
                   
                   <div className="flex flex-col gap-0.5">
-                    {tier.originalPrice && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-zinc-500 line-through">{tier.originalPrice}</span>
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-500/20 text-red-400">{tier.discount}</span>
-                      </div>
-                    )}
                     <div className="flex items-baseline gap-1">
                       <span className="text-xl font-bold" style={{ color: tier.highlighted ? '#22c55e' : 'white' }}>
                         {tier.price}
                       </span>
-                      {tier.id !== 'free' && <span className="text-zinc-500 text-xs">/mois</span>}
+                      <span className="text-zinc-500 text-xs">/mois</span>
                     </div>
                   </div>
                   <p className="mt-3 text-zinc-400 text-xs leading-relaxed">{tier.description}</p>
@@ -145,8 +104,6 @@ export default function PricingPage() {
                   className={`w-full py-2.5 rounded-lg text-center text-sm font-semibold transition-all ${
                     tier.highlighted
                       ? "bg-green-600 text-white hover:bg-green-500"
-                      : tier.id === 'free'
-                      ? "bg-zinc-700 text-zinc-300 hover:bg-zinc-600"
                       : "bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-700"
                   }`}
                 >

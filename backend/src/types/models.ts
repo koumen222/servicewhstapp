@@ -13,9 +13,12 @@ export interface User extends BaseDocument {
   name: string
   password: string
   phone?: string
-  plan: 'free' | 'starter' | 'pro' | 'enterprise'
+  plan: 'basic' | 'premium'
   maxInstances: number
   isActive: boolean
+  trialEndsAt?: Date
+  hasPaid: boolean
+  isPaidAccount: boolean
   emailVerified?: boolean
   emailVerificationToken?: string
 }
@@ -42,7 +45,7 @@ export interface ApiKey extends BaseDocument {
 // Subscription document
 export interface Subscription extends BaseDocument {
   userId: ObjectId
-  plan: 'free' | 'starter' | 'pro' | 'enterprise'
+  plan: 'basic' | 'premium'
   status: 'active' | 'cancelled' | 'expired'
   startDate: Date
   endDate?: Date

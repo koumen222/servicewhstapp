@@ -126,15 +126,22 @@ export class AuthService {
       // Generate email verification token
       const verificationToken = this.generateEmailVerificationToken(userData.email)
 
+      // Calculate trial end date (3 days from now)
+      const trialEndsAt = new Date()
+      trialEndsAt.setDate(trialEndsAt.getDate() + 3)
+
       // Create new user (active immediately - email verification is optional)
       const user = await UserService.create({
         email: userData.email,
         name: userData.name,
         password: userData.password,
         phone: userData.phone,
-        plan: (userData.plan as any) || 'free',
-        maxInstances: this.getMaxInstancesForPlan(userData.plan || 'free'),
+        plan: (userData.plan as any),
+        maxInstances: this.getMaxInstancesForPlan(userData.plan!),
         isActive: true,
+        trialEndsAt: trialEndsAt,
+        hasPaid: false,
+        isPaidAccount: false,
         emailVerified: false,
         emailVerificationToken: verificationToken
       })
@@ -151,10 +158,8 @@ export class AuthService {
 
   private static getMaxInstancesForPlan(plan: string): number {
     const planLimits = {
-      free: 1,
-      starter: 3,
-      pro: 10,
-      enterprise: 50
+      basic: 1,
+      premium: 999
     }
     return planLimits[plan as keyof typeof planLimits] || 1
   }
