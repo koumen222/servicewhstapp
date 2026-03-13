@@ -11,7 +11,7 @@ const registerSchema = z.object({
   name: z.string().min(2),
   password: z.string().min(6),
   phone: z.string().optional(),
-  plan: z.enum(['basic', 'premium']),
+  plan: z.enum(['basic', 'premium']).optional().default('basic'),
 })
 
 const loginSchema = z.object({

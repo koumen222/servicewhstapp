@@ -20,7 +20,7 @@ export interface IPageView extends Document {
 export interface IEvent extends Document {
   sessionId: string
   userId?: string
-  type: 'click' | 'scroll' | 'form_submit' | 'purchase' | 'signup' | 'login' | 'logout' | 'page_view'
+  type: 'click' | 'scroll' | 'form_submit' | 'purchase' | 'signup' | 'login' | 'logout' | 'page_view' | 'engagement' | 'session_end'
   category: string
   action: string
   label?: string
@@ -123,7 +123,7 @@ const eventSchema = new Schema<IEvent>({
   userId: { type: String, index: true },
   type: { 
     type: String, 
-    enum: ['click', 'scroll', 'form_submit', 'purchase', 'signup', 'login', 'logout', 'page_view'],
+    enum: ['click', 'scroll', 'form_submit', 'purchase', 'signup', 'login', 'logout', 'page_view', 'engagement', 'session_end'],
     required: true 
   },
   category: { type: String, required: true },
