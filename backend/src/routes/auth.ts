@@ -38,7 +38,7 @@ router.post('/register', async (req, res) => {
     const { user, token, verificationToken } = result
 
     // Send verification email in background (non-blocking)
-    // Don't await - let it run asynchronously
+    // Don't await - let it run asynchronouslyjuherdfv
     emailService.sendVerificationEmail({
       to: user.email,
       name: user.name,
