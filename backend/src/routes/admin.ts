@@ -127,6 +127,20 @@ router.put('/users/:userId/toggle', adminAuthMiddleware, async (req: Request, re
   }
 })
 
+// DELETE /api/admin/users/:userId - Supprimer un utilisateur
+router.delete('/users/:userId', adminAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params
+    const user = await AdminService.deleteUser(userId)
+    console.log(`🗑️ Admin deleted user: ${user.email}`)
+
+    return res.json({ success: true, message: 'Utilisateur supprimé avec succès' })
+  } catch (error: any) {
+    console.error('Admin delete user error:', error)
+    return res.status(500).json({ success: false, error: 'Erreur lors de la suppression de l\'utilisateur' })
+  }
+})
+
 // GET /api/admin/instances - Liste des instances
 router.get('/instances', adminAuthMiddleware, async (req: Request, res: Response) => {
   try {

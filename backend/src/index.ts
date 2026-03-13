@@ -14,6 +14,7 @@ import publicWhatsAppRoutes from './routes/whatsapp/public.js'
 import supportRoutes from './routes/support.js'
 import adminRoutes from './routes/admin.js'
 import analyticsRoutes from './routes/analytics.js'
+import subscriptionRoutes from './routes/subscriptions.js'
 import { authMiddleware } from './middleware/auth.js'
 
 declare global {
@@ -211,6 +212,10 @@ app.use('/api/support', supportRoutes)
 console.log('✅ Registered support chatbot route: /api/support/chat')
 
 app.use('/api/instances', authMiddleware, instancesNewRoutes)
+
+// Subscription routes (avec authentification)
+app.use('/api/subscriptions', authMiddleware, subscriptionRoutes)
+console.log('✅ Registered subscription routes: /api/subscriptions/*')
 
 // Routes d'instance (compatibles avec les tests)
 app.use('/api/instance', authMiddleware, instanceRoutes)

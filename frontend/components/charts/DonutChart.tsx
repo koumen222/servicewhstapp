@@ -47,8 +47,8 @@ export function DonutChart({
   };
 
   const renderCustomLabel = (entry: any) => {
-    const percent = ((entry.value / total) * 100).toFixed(0);
-    return percent > 5 ? `${percent}%` : '';
+    const percent = (entry.value / total) * 100;
+    return percent > 5 ? `${percent.toFixed(0)}%` : '';
   };
 
   const CustomizedLabel = ({ cx, cy }: any) => {

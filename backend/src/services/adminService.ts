@@ -204,6 +204,23 @@ export class AdminService {
   }
 
   /**
+   * Supprimer un utilisateur et ses instances
+   */
+  static async deleteUser(userId: string) {
+    const user = await User.findById(userId)
+    if (!user) {
+      throw new Error('User not found')
+    }
+
+    // Supprimer les instances de l'utilisateur
+    await UserInstance.deleteMany({ userId })
+    // Supprimer l'utilisateur
+    await User.findByIdAndDelete(userId)
+
+    return user
+  }
+
+  /**
    * Supprimer une instance (admin)
    */
   static async deleteInstance(instanceId: string) {

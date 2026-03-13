@@ -127,6 +127,295 @@ interface ActivityItem {
   metadata?: any;
 }
 
+// ─── Admin Users Tab (CRUD) ─────────────────────────────────────────────
+function AdminUsersTab({ users, setUsers, adminToken, onReload }: {
+  users: any[];
+  setUsers: (u: any[]) => void;
+  adminToken: string | null;
+  onReload: () => void;
+}) {
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<"all"|"active"|"inactive"|"basic"|"premium">("all");
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [editUser, setEditUser] = useState<any | null>(null);
+  const [editPlan, setEditPlan] = useState("");
+  const [editMaxInstances, setEditMaxInstances] = useState(1);
+  const [confirmDelete, setConfirmDelete] = useState<any | null>(null);
+  const [detailUser, setDetailUser] = useState<any | null>(null);
+  const [error, setError] = useState("");
+
+  const PLAN_COLORS: Record<string, string> = { basic: "#22c55e", premium: "#3b82f6", free: "#9ca3af" };
+
+  const filtered = users.filter((u) => {
+    const ms = !search || u.name?.toLowerCase().includes(search.toLowerCase()) || u.email?.toLowerCase().includes(search.toLowerCase());
+    const mf = filter === "all" || (filter === "active" && u.isActive) || (filter === "inactive" && !u.isActive) || (filter === "basic" && u.plan === "basic") || (filter === "premium" && u.plan === "premium");
+    return ms && mf;
+  });
+
+  async function handleToggle(userId: string) {
+    if (!adminToken) return;
+    setActionLoading(userId);
+    try {
+      const res = await axios.put(`${API_URL}/api/admin/users/${userId}/toggle`, {}, { headers: { Authorization: `Bearer ${adminToken}` } });
+      if (res.data.success) setUsers(users.map(u => u._id === userId ? { ...u, isActive: res.data.data.isActive } : u));
+    } catch (err: any) { setError(err.response?.data?.error || "Erreur"); }
+    finally { setActionLoading(null); }
+  }
+
+  async function handleUpdatePlan() {
+    if (!editUser || !adminToken) return;
+    setActionLoading(editUser._id);
+    try {
+      const res = await axios.put(`${API_URL}/api/admin/users/${editUser._id}/plan`, { plan: editPlan, maxInstances: editMaxInstances }, { headers: { Authorization: `Bearer ${adminToken}` } });
+      if (res.data.success) { setUsers(users.map(u => u._id === editUser._id ? { ...u, plan: editPlan, maxInstances: editMaxInstances } : u)); setEditUser(null); }
+    } catch (err: any) { setError(err.response?.data?.error || "Erreur"); }
+    finally { setActionLoading(null); }
+  }
+
+  async function handleDelete(userId: string) {
+    if (!adminToken) return;
+    setActionLoading(userId);
+    try {
+      const res = await axios.delete(`${API_URL}/api/admin/users/${userId}`, { headers: { Authorization: `Bearer ${adminToken}` } });
+      if (res.data.success) { setUsers(users.filter(u => u._id !== userId)); setConfirmDelete(null); }
+    } catch (err: any) { setError(err.response?.data?.error || "Erreur"); }
+    finally { setActionLoading(null); }
+  }
+
+  async function handleViewDetails(userId: string) {
+    if (!adminToken) return;
+    setActionLoading(userId + "_d");
+    try {
+      const res = await axios.get(`${API_URL}/api/admin/users/${userId}`, { headers: { Authorization: `Bearer ${adminToken}` } });
+      if (res.data.success) setDetailUser(res.data.data);
+    } catch (err: any) { setError(err.response?.data?.error || "Erreur"); }
+    finally { setActionLoading(null); }
+  }
+
+  function openEdit(user: any) { setEditUser(user); setEditPlan(user.plan || "basic"); setEditMaxInstances(user.maxInstances || 1); }
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+      {error && (
+        <div className="rounded-xl px-4 py-2.5 text-xs text-red-400 flex items-center gap-2" style={{ background: "#1a0505", border: "1px solid #3b1111" }}>
+          <AlertTriangle size={13} />{error}
+          <button onClick={() => setError("")} className="ml-auto text-red-300 hover:text-white"><XCircle size={13} /></button>
+        </div>
+      )}
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {[
+          { label: "Total Utilisateurs", value: users.length, color: "text-white", sub: `${users.length} comptes` },
+          { label: "Utilisateurs Actifs", value: users.filter(u => u.isActive).length, color: "text-green-400", sub: `${((users.filter(u => u.isActive).length / (users.length || 1)) * 100).toFixed(1)}% du total` },
+          { label: "Nouveaux (7j)", value: users.filter(u => { const d = new Date(u.createdAt); const w = new Date(); w.setDate(w.getDate() - 7); return d >= w; }).length, color: "text-blue-400", sub: "Derniers 7 jours" },
+          { label: "Premium", value: users.filter(u => u.plan === "premium").length, color: "text-purple-400", sub: "Plan Premium" },
+        ].map(({ label, value, color, sub }) => (
+          <div key={label} className="p-6 rounded-xl" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
+            <h3 className="text-sm font-semibold text-white mb-2">{label}</h3>
+            <p className={`text-2xl font-bold ${color}`}>{value}</p>
+            <p className="text-xs text-gray-400 mt-1">{sub}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Search + Filters */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-[200px] max-w-xs">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher par nom ou email…" className="w-full pl-9 pr-3 py-2 rounded-lg text-xs text-white bg-[#0a0a0a] border border-[#1e1e1e] focus:border-green-500/40 outline-none" />
+        </div>
+        <div className="flex gap-1.5">
+          {(["all","active","inactive","basic","premium"] as const).map((f) => (
+            <button key={f} onClick={() => setFilter(f)} className="px-2.5 py-1.5 rounded-lg text-[11px] font-medium capitalize transition-all" style={{ background: filter === f ? "#22c55e18" : "transparent", color: filter === f ? "#22c55e" : "#6b7280", border: `1px solid ${filter === f ? "#22c55e30" : "#1e1e1e"}` }}>
+              {f === "all" ? "Tous" : f === "active" ? "Actifs" : f === "inactive" ? "Inactifs" : f}
+            </button>
+          ))}
+        </div>
+        <button onClick={onReload} className="ml-auto px-3 py-1.5 rounded-lg text-[11px] font-medium text-gray-400 hover:text-white border border-[#1e1e1e] hover:border-green-500/30 transition-all flex items-center gap-1.5">
+          <RefreshCw size={12} /> Rafraîchir
+        </button>
+      </div>
+
+      {/* Table */}
+      <div className="rounded-xl overflow-hidden" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b" style={{ borderColor: "var(--card-border)" }}>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-400">Utilisateur</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-400">Plan</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-400">Statut</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-400">Paiement</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-400">Instances</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-400">Inscription</th>
+                <th className="text-right py-3 px-4 text-xs font-medium text-gray-400">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((user) => (
+                <tr key={user._id} className="border-b hover:bg-white/[0.02] transition-colors" style={{ borderColor: "var(--card-border)" }}>
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0" style={{ background: user.isActive ? "#0d2510" : "#1a0505", color: user.isActive ? "#22c55e" : "#ef4444" }}>
+                        {(user.name || "?").charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-white">{user.name}</p>
+                        <p className="text-xs text-gray-400">{user.email}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <span className="px-2 py-1 text-xs font-semibold rounded-full capitalize" style={{ background: `${PLAN_COLORS[user.plan] || "#666"}18`, color: PLAN_COLORS[user.plan] || "#666" }}>{user.plan}</span>
+                  </td>
+                  <td className="py-3 px-4">
+                    <span className={`flex items-center gap-1 text-xs font-medium ${user.isActive ? "text-green-400" : "text-red-400"}`}>
+                      {user.isActive ? <CheckCircle size={11} /> : <XCircle size={11} />}
+                      {user.isActive ? "Actif" : "Inactif"}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4">
+                    <span className="px-2 py-1 text-xs font-medium rounded-full" style={{ background: user.hasPaid ? "#22c55e18" : "#f59e0b18", color: user.hasPaid ? "#22c55e" : "#f59e0b" }}>
+                      {user.hasPaid ? "Payé" : "Non payé"}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-sm text-white">{user.maxInstances || 0}</td>
+                  <td className="py-3 px-4 text-xs text-gray-400">{new Date(user.createdAt).toLocaleDateString("fr-FR")}</td>
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-1 justify-end">
+                      <button onClick={() => handleViewDetails(user._id)} className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all" title="Voir détails">
+                        {actionLoading === user._id + "_d" ? <Activity size={14} className="animate-spin" /> : <Eye size={14} />}
+                      </button>
+                      <button onClick={() => openEdit(user)} className="p-1.5 rounded-lg text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 transition-all" title="Modifier plan">
+                        <Edit size={14} />
+                      </button>
+                      <button onClick={() => handleToggle(user._id)} disabled={actionLoading === user._id} className={`p-1.5 rounded-lg transition-all ${user.isActive ? "text-orange-400 hover:text-orange-300 hover:bg-orange-500/10" : "text-green-400 hover:text-green-300 hover:bg-green-500/10"}`} title={user.isActive ? "Désactiver" : "Activer"}>
+                        {actionLoading === user._id ? <Activity size={14} className="animate-spin" /> : user.isActive ? <Lock size={14} /> : <Unlock size={14} />}
+                      </button>
+                      <button onClick={() => setConfirmDelete(user)} className="p-1.5 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all" title="Supprimer">
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {filtered.length === 0 && <div className="text-center py-12 text-gray-500 text-sm">Aucun utilisateur trouvé.</div>}
+      </div>
+
+      {/* Edit Plan Modal */}
+      {editUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setEditUser(null)}>
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} onClick={(e) => e.stopPropagation()} className="rounded-2xl p-6 w-full max-w-md space-y-5" style={{ background: "#111", border: "1px solid #1e1e1e" }}>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-white">Modifier le plan</h3>
+              <button onClick={() => setEditUser(null)} className="text-gray-400 hover:text-white"><XCircle size={16} /></button>
+            </div>
+            <div><p className="text-sm text-white font-medium">{editUser.name}</p><p className="text-xs text-gray-400">{editUser.email}</p></div>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-gray-400 block mb-1.5">Plan</label>
+                <div className="flex gap-2">
+                  {(["basic","premium"] as const).map((p) => (
+                    <button key={p} onClick={() => { setEditPlan(p); setEditMaxInstances(p === "premium" ? 999 : 1); }} className="flex-1 px-3 py-2.5 rounded-lg text-xs font-semibold capitalize transition-all" style={{ background: editPlan === p ? `${PLAN_COLORS[p]}20` : "#0a0a0a", color: editPlan === p ? PLAN_COLORS[p] : "#6b7280", border: `1px solid ${editPlan === p ? `${PLAN_COLORS[p]}40` : "#1e1e1e"}` }}>
+                      {editPlan === p && <CheckCircle size={11} className="inline mr-1" />}{p}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-gray-400 block mb-1.5">Max Instances</label>
+                <input type="number" min={1} value={editMaxInstances} onChange={(e) => setEditMaxInstances(Math.max(1, parseInt(e.target.value) || 1))} className="w-full px-3 py-2 rounded-lg text-xs text-white bg-[#0a0a0a] border border-[#1e1e1e] focus:border-green-500/40 outline-none" />
+              </div>
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button onClick={() => setEditUser(null)} className="flex-1 px-3 py-2.5 rounded-lg text-xs font-medium text-gray-400 border border-[#1e1e1e] hover:bg-white/5 transition-all">Annuler</button>
+              <button onClick={handleUpdatePlan} disabled={actionLoading === editUser._id} className="flex-1 px-3 py-2.5 rounded-lg text-xs font-semibold text-white bg-green-600 hover:bg-green-500 transition-all disabled:opacity-50">
+                {actionLoading === editUser._id ? <Activity size={13} className="animate-spin inline mr-1" /> : null}Enregistrer
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Delete Confirm Modal */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setConfirmDelete(null)}>
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} onClick={(e) => e.stopPropagation()} className="rounded-2xl p-6 w-full max-w-sm space-y-4" style={{ background: "#111", border: "1px solid #3b1111" }}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center"><AlertTriangle size={20} className="text-red-400" /></div>
+              <div><h3 className="text-sm font-semibold text-white">Supprimer l&apos;utilisateur</h3><p className="text-xs text-gray-400">Cette action est irréversible</p></div>
+            </div>
+            <div className="rounded-lg p-3" style={{ background: "#0a0a0a", border: "1px solid #1e1e1e" }}>
+              <p className="text-sm text-white font-medium">{confirmDelete.name}</p>
+              <p className="text-xs text-gray-400">{confirmDelete.email}</p>
+              <p className="text-xs text-gray-500 mt-1">Plan: {confirmDelete.plan} · Instances: {confirmDelete.maxInstances}</p>
+            </div>
+            <p className="text-xs text-red-400/80">Toutes les instances WhatsApp de cet utilisateur seront également supprimées.</p>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmDelete(null)} className="flex-1 px-3 py-2.5 rounded-lg text-xs font-medium text-gray-400 border border-[#1e1e1e] hover:bg-white/5 transition-all">Annuler</button>
+              <button onClick={() => handleDelete(confirmDelete._id)} disabled={actionLoading === confirmDelete._id} className="flex-1 px-3 py-2.5 rounded-lg text-xs font-semibold text-white bg-red-600 hover:bg-red-500 transition-all disabled:opacity-50">
+                {actionLoading === confirmDelete._id ? <Activity size={13} className="animate-spin inline mr-1" /> : <Trash2 size={13} className="inline mr-1" />}Supprimer
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* User Detail Modal */}
+      {detailUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setDetailUser(null)}>
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} onClick={(e) => e.stopPropagation()} className="rounded-2xl p-6 w-full max-w-lg space-y-4 max-h-[80vh] overflow-y-auto" style={{ background: "#111", border: "1px solid #1e1e1e" }}>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-white">Détails utilisateur</h3>
+              <button onClick={() => setDetailUser(null)} className="text-gray-400 hover:text-white"><XCircle size={16} /></button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: "Nom", value: detailUser.user?.name },
+                { label: "Email", value: detailUser.user?.email },
+                { label: "Plan", value: detailUser.user?.plan },
+                { label: "Max Instances", value: detailUser.user?.maxInstances },
+                { label: "Statut", value: detailUser.user?.isActive ? "Actif" : "Inactif" },
+                { label: "Paiement", value: detailUser.user?.hasPaid ? "Payé" : "Non payé" },
+                { label: "Inscrit le", value: detailUser.user?.createdAt ? new Date(detailUser.user.createdAt).toLocaleDateString("fr-FR") : "-" },
+                { label: "Email vérifié", value: detailUser.user?.emailVerified ? "Oui" : "Non" },
+              ].map(({ label, value }) => (
+                <div key={label} className="rounded-lg p-2.5" style={{ background: "#0a0a0a", border: "1px solid #1e1e1e" }}>
+                  <p className="text-[10px] text-gray-500">{label}</p>
+                  <p className="text-xs text-white font-medium mt-0.5">{String(value ?? "-")}</p>
+                </div>
+              ))}
+            </div>
+            <div className="rounded-xl p-4" style={{ background: "#0a0a0a", border: "1px solid #1e1e1e" }}>
+              <p className="text-xs text-gray-400 mb-3 font-medium">Instances WhatsApp</p>
+              <div className="flex gap-6">
+                <div><p className="text-lg font-bold text-green-400">{detailUser.stats?.totalInstances || 0}</p><p className="text-[10px] text-gray-500">Total</p></div>
+                <div><p className="text-lg font-bold text-blue-400">{detailUser.stats?.activeInstances || 0}</p><p className="text-[10px] text-gray-500">Actives</p></div>
+                <div><p className="text-lg font-bold text-yellow-400">{detailUser.stats?.connectedInstances || 0}</p><p className="text-[10px] text-gray-500">Connectées</p></div>
+              </div>
+            </div>
+            {detailUser.instances?.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs text-gray-400 font-medium">Instances</p>
+                {detailUser.instances.map((inst: any) => (
+                  <div key={inst._id} className="rounded-lg p-3 flex items-center justify-between" style={{ background: "#0a0a0a", border: "1px solid #1e1e1e" }}>
+                    <div><p className="text-xs text-white font-medium">{inst.instanceName}</p><p className="text-[10px] text-gray-500">{inst.createdAt ? new Date(inst.createdAt).toLocaleDateString("fr-FR") : ""}</p></div>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${inst.status === "open" ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}>{inst.status || "unknown"}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
 export default function UltraAdvancedAdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [email, setEmail] = useState("");
@@ -1074,94 +1363,12 @@ export default function UltraAdvancedAdminPage() {
 
         {/* Section Utilisateurs */}
         {activeTab === "users" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
-          >
-            {/* Stats Users */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="p-6 rounded-xl" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
-                <h3 className="text-sm font-semibold text-white mb-2">Total Utilisateurs</h3>
-                <p className="text-2xl font-bold text-white">{users.length}</p>
-                <p className="text-xs text-green-400 mt-1">+12% ce mois</p>
-              </div>
-              <div className="p-6 rounded-xl" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
-                <h3 className="text-sm font-semibold text-white mb-2">Utilisateurs Actifs</h3>
-                <p className="text-2xl font-bold text-green-400">{users.filter(u => u.isActive).length}</p>
-                <p className="text-xs text-gray-400 mt-1">{((users.filter(u => u.isActive).length / (users.length || 1)) * 100).toFixed(1)}% du total</p>
-              </div>
-              <div className="p-6 rounded-xl" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
-                <h3 className="text-sm font-semibold text-white mb-2">Nouveaux (7j)</h3>
-                <p className="text-2xl font-bold text-blue-400">
-                  {users.filter(u => {
-                    const created = new Date(u.createdAt);
-                    const sevenDaysAgo = new Date();
-                    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-                    return created >= sevenDaysAgo;
-                  }).length}
-                </p>
-                <p className="text-xs text-gray-400 mt-1">Derniers 7 jours</p>
-              </div>
-              <div className="p-6 rounded-xl" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
-                <h3 className="text-sm font-semibold text-white mb-2">Premium</h3>
-                <p className="text-2xl font-bold text-purple-400">
-                  {users.filter(u => u.plan === 'premium').length}
-                </p>
-                <p className="text-xs text-gray-400 mt-1">Plan Premium</p>
-              </div>
-            </div>
-
-            {/* Table Users */}
-            <div className="p-6 rounded-xl" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
-              <h3 className="text-sm font-semibold text-white mb-4">Liste des utilisateurs</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b" style={{ borderColor: "var(--card-border)" }}>
-                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-400">Utilisateur</th>
-                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-400">Plan</th>
-                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-400">Statut</th>
-                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-400">Instances</th>
-                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-400">Inscription</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.slice(0, 10).map((user) => (
-                      <tr key={user._id} className="border-b" style={{ borderColor: "var(--card-border)" }}>
-                        <td className="py-3 px-4">
-                          <div>
-                            <p className="text-sm font-medium text-white">{user.name}</p>
-                            <p className="text-xs text-gray-400">{user.email}</p>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            user.plan === 'premium' ? 'bg-blue-500/10 text-blue-400' :
-                            user.plan === 'basic' ? 'bg-green-500/10 text-green-400' :
-                            'bg-gray-500/10 text-gray-400'
-                          }`}>
-                            {user.plan}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className={`text-xs ${user.isActive ? 'text-green-400' : 'text-red-400'}`}>
-                            {user.isActive ? 'Actif' : 'Inactif'}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-sm text-white">
-                          {user.maxInstances || 0}
-                        </td>
-                        <td className="py-3 px-4 text-xs text-gray-400">
-                          {new Date(user.createdAt).toLocaleDateString('fr-FR')}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </motion.div>
+          <AdminUsersTab
+            users={users}
+            setUsers={setUsers}
+            adminToken={adminToken}
+            onReload={() => adminToken && loadAllData(adminToken)}
+          />
         )}
 
         {/* Section Instances */}
