@@ -126,9 +126,9 @@ export class AuthService {
       // Generate email verification token
       const verificationToken = this.generateEmailVerificationToken(userData.email)
 
-      // Calculate trial end date (3 days from now)
+      // Calculate trial end date (7 days from now)
       const trialEndsAt = new Date()
-      trialEndsAt.setDate(trialEndsAt.getDate() + 3)
+      trialEndsAt.setDate(trialEndsAt.getDate() + 7)
 
       // Create new user (active immediately - email verification is optional)
       const user = await UserService.create({

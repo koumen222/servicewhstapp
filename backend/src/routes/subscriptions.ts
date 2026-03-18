@@ -7,8 +7,8 @@ import crypto from 'crypto'
 const router = Router()
 
 export const PLANS: Record<string, { name: string; price: number; maxInstances: number; currency: string }> = {
-  basic: { name: 'Basic', price: 0, maxInstances: 1, currency: 'XAF' },
-  premium: { name: 'Premium', price: 7495, maxInstances: 5, currency: 'XAF' },
+  basic: { name: 'Basic', price: 3000, maxInstances: 1, currency: 'XAF' },
+  premium: { name: 'Premium', price: 10000, maxInstances: 999, currency: 'XAF' },
 }
 
 router.get('/plans', (_req, res) => {
@@ -22,7 +22,7 @@ router.get('/my-subscription', async (req, res) => {
       return res.status(401).json({ error: 'Authentication required' })
     }
 
-    const user = await User.findById(userId).select('plan maxInstances hasPaid isPaidAccount createdAt')
+    const user = await User.findById(userId).select('plan maxInstances hasPaid isPaidAccount createdAt trialEndsAt')
     if (!user) {
       return res.status(404).json({ error: 'User not found' })
     }
@@ -32,11 +32,21 @@ router.get('/my-subscription', async (req, res) => {
     const planKey = (user.plan as string) || 'basic'
     const planDetails = PLANS[planKey] || PLANS.basic
 
+    const now = new Date()
+    const trialEndsAt = user.trialEndsAt ? new Date(user.trialEndsAt) : null
+    const isTrialActive = trialEndsAt ? trialEndsAt.getTime() > now.getTime() : false
+    const trialDaysRemaining = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0
+
     res.json({
       plan: planKey,
       maxInstances: user.maxInstances ?? 1,
       planDetails,
       payments: [],
+      trial: {
+        isActive: isTrialActive && !user.hasPaid,
+        endsAt: user.trialEndsAt || null,
+        daysRemaining: trialDaysRemaining,
+      },
       usage: {
         activeInstances,
         totalMessages: 0,

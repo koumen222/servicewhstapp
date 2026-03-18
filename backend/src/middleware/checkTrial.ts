@@ -25,8 +25,8 @@ export async function checkTrialExpiration(req: Request, res: Response, next: Ne
       })
     }
 
-    // Si l'utilisateur a déjà payé, on le laisse passer
-    if (user.isPaidAccount || user.hasPaid) {
+    // Si l'utilisateur a déjà payé ou est sur le plan premium, on le laisse passer
+    if (user.isPaidAccount || user.hasPaid || user.plan === 'premium') {
       return next()
     }
 

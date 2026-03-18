@@ -8,7 +8,8 @@ export default function PricingPage() {
       id: "basic",
       name: "Basic",
       price: "3 000 XAF",
-      description: "Plan de démarrage pour les petites entreprises.",
+      trialBadge: "Essai gratuit 7 jours",
+      description: "Plan de démarrage pour les petites entreprises. Essai gratuit inclus !",
       features: [
         "1 instance WhatsApp",
         "Envois illimités",
@@ -16,7 +17,7 @@ export default function PricingPage() {
         "Webhooks",
         "Support email",
       ],
-      cta: "Choisir ce plan",
+      cta: "Commencer l'essai gratuit",
       highlighted: true,
       color: "#22c55e",
       icon: Star,
@@ -79,6 +80,12 @@ export default function PricingPage() {
                   </div>
                   <h3 className="text-base font-semibold text-white mb-1">{tier.name}</h3>
                   
+                  {('trialBadge' in tier) && tier.trialBadge && (
+                    <span className="inline-block bg-yellow-500/20 text-yellow-400 text-[10px] font-bold px-2 py-0.5 rounded-full mb-1">
+                      {tier.trialBadge}
+                    </span>
+                  )}
+
                   <div className="flex flex-col gap-0.5">
                     <div className="flex items-baseline gap-1">
                       <span className="text-xl font-bold" style={{ color: tier.highlighted ? '#22c55e' : 'white' }}>

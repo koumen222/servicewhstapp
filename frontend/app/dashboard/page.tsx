@@ -159,7 +159,9 @@ export default function DashboardPage() {
           </div>
           <div>
             <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-              {user?.plan?.toUpperCase() ?? "BASIC"} {t("dash.plan.plan")}
+              {(!user?.hasPaid && !user?.isPaidAccount && user?.trialEndsAt && new Date(user.trialEndsAt) > new Date()) 
+                ? "ESSAI GRATUIT" 
+                : (user?.plan?.toUpperCase() ?? "BASIC")} {t("dash.plan.plan")}
             </p>
             <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
               {user?.maxInstances ?? 1} {(user?.maxInstances ?? 1) !== 1 ? t("dash.plan.instances") : t("dash.plan.instance")} · {t("dash.plan.upgradeMore")}

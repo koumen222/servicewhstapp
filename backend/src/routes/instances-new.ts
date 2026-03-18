@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express'
 import axios from 'axios'
 import { InstanceService } from '../services/instanceService.js'
+import { UserService } from '../services/userService.js'
 import { env } from '../config/env.js'
 
 const router = Router()
@@ -46,12 +47,43 @@ router.post('/', async (req: Request, res: Response) => {
       })
     }
 
+    // Récupérer les données fraîches depuis la DB (le JWT peut être périmé)
+    const dbUser = await UserService.findById(userId)
+    if (!dbUser || !dbUser.isActive) {
+      return res.status(403).json({
+        error: true,
+        code: 'USER_INACTIVE',
+        message: 'Compte utilisateur introuvable ou désactivé'
+      })
+    }
+
+    const isPremium = dbUser.plan === 'premium'
+    const isPaid = dbUser.isPaidAccount || dbUser.hasPaid
+
+    // Vérifier la période d'essai si l'utilisateur n'est pas premium/payé
+    if (!isPremium && !isPaid && dbUser.trialEndsAt) {
+      const now = new Date()
+      const trialEnd = new Date(dbUser.trialEndsAt)
+      if (now > trialEnd) {
+        return res.status(403).json({
+          error: true,
+          code: 'TRIAL_EXPIRED',
+          message: 'Votre période d\'essai gratuit est expirée. Veuillez effectuer un paiement pour continuer.',
+          requiresPayment: true
+        })
+      }
+    }
+
+    // Vérifier la limite d'instances (utiliser les données DB, pas le JWT)
+    const effectiveMaxInstances = dbUser.maxInstances
     const userInstancesCount = await InstanceService.countUserInstances(userId, true)
-    if (userInstancesCount >= req.user!.maxInstances) {
+
+    // Les utilisateurs premium (instances illimitées = 999) passent librement
+    if (!isPremium && userInstancesCount >= effectiveMaxInstances) {
       return res.status(403).json({
         error: true,
         code: 'MAX_INSTANCES_REACHED',
-        message: `Limite atteinte : ${req.user!.maxInstances} instance(s) maximum pour votre plan`
+        message: `Limite atteinte : ${effectiveMaxInstances} instance(s) maximum pour votre plan`
       })
     }
 

@@ -33,6 +33,7 @@ export default function AccountPage() {
   const usage = sub?.usage;
   const maxInst = sub?.maxInstances ?? user?.maxInstances ?? 1;
   const instPct = Math.min(((usage?.activeInstances ?? instances.length) / maxInst) * 100, 100);
+  const isTrialActive = (sub as any)?.trial?.isActive || (!user?.hasPaid && !user?.isPaidAccount && user?.trialEndsAt && new Date(user.trialEndsAt) > new Date());
 
   if (loading) {
     return (
@@ -69,9 +70,12 @@ export default function AccountPage() {
           </div>
           <span
             className="px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize shrink-0"
-            style={{ background: "var(--tag-bg)", color: "var(--tag-text)" }}
+            style={{ 
+              background: isTrialActive ? "rgba(234, 179, 8, 0.15)" : "var(--tag-bg)", 
+              color: isTrialActive ? "#eab308" : "var(--tag-text)" 
+            }}
           >
-            {plan}
+            {isTrialActive ? "Essai gratuit" : plan}
           </span>
         </div>
       </motion.div>

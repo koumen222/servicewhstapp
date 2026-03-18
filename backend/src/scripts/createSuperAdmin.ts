@@ -6,9 +6,9 @@ async function createSuperAdmin() {
     console.log('🔄 Connexion à MongoDB...')
     await connectMongoose()
 
-    const email = 'admin@whatsapp-saas.com'
-    const password = 'Admin@2024!'
-    const name = 'Super Admin'
+    const email = 'koumenprive@gmail.com'
+    const password = 'Koumen@22'
+    const name = 'Koumen Admin'
 
     console.log('👤 Création du compte super admin...')
     const admin = await AdminService.createSuperAdmin(email, password, name)

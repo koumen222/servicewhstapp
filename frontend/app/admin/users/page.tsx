@@ -116,7 +116,7 @@ export default function AdminUsersPage() {
         setUsers((prev) =>
           prev.map((u) =>
             u._id === editingUser._id
-              ? { ...u, plan: editPlan, maxInstances: editMaxInstances }
+              ? { ...u, plan: editPlan, maxInstances: editMaxInstances, hasPaid: true, isPaidAccount: true }
               : u
           )
         );
@@ -309,11 +309,11 @@ export default function AdminUsersPage() {
                       <span
                         className="px-1.5 py-0.5 rounded text-[10px] font-semibold"
                         style={{
-                          background: u.hasPaid ? "#22c55e18" : "#f59e0b18",
-                          color: u.hasPaid ? "#22c55e" : "#f59e0b",
+                          background: (u.hasPaid || u.isPaidAccount || u.plan === 'premium') ? "#22c55e18" : "#f59e0b18",
+                          color: (u.hasPaid || u.isPaidAccount || u.plan === 'premium') ? "#22c55e" : "#f59e0b",
                         }}
                       >
-                        {u.hasPaid ? "Payé" : "Non payé"}
+                        {(u.hasPaid || u.isPaidAccount || u.plan === 'premium') ? "Payé" : "Non payé"}
                       </span>
                     </td>
                     <td className="text-[#5a7a5a] text-[11px]">
@@ -539,7 +539,7 @@ export default function AdminUsersPage() {
                   { label: "Plan", value: detailUser.user.plan },
                   { label: "Max Instances", value: detailUser.user.maxInstances },
                   { label: "Statut", value: detailUser.user.isActive ? "Actif" : "Inactif" },
-                  { label: "Paiement", value: detailUser.user.hasPaid ? "Payé" : "Non payé" },
+                  { label: "Paiement", value: (detailUser.user.hasPaid || detailUser.user.isPaidAccount || detailUser.user.plan === 'premium') ? "Payé" : "Non payé" },
                   { label: "Inscrit le", value: formatDate(detailUser.user.createdAt) },
                   { label: "Mis à jour", value: formatDate(detailUser.user.updatedAt) },
                 ].map(({ label, value }) => (

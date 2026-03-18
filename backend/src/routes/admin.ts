@@ -169,11 +169,22 @@ router.delete('/instances/:instanceId', adminAuthMiddleware, async (req: Request
   }
 })
 
+// POST /api/admin/migrate/premium - Corriger les utilisateurs premium existants
+router.post('/migrate/premium', adminAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const result = await AdminService.migratePremiumUsers()
+    console.log(`✅ Migrated ${result.updated} premium users to hasPaid=true`)
+    return res.json({ success: true, data: result, message: `${result.updated} utilisateur(s) premium mis à jour` })
+  } catch (error: any) {
+    console.error('Admin migrate premium error:', error)
+    return res.status(500).json({ success: false, error: 'Erreur lors de la migration' })
+  }
+})
+
 // GET /api/admin/analytics/growth - Données de croissance
 router.get('/analytics/growth', adminAuthMiddleware, async (req: Request, res: Response) => {
   try {
-    const { period = '30d' } = req.query;
-    
+    const { period = '30d' } = req.query;    
     // Générer des données mockées pour la démonstration
     const days = period === '7d' ? 7 : period === '90d' ? 90 : 30;
     const userGrowth = [];

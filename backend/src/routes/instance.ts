@@ -85,9 +85,25 @@ router.post('/create', async (req, res) => {
       })
     }
 
-    // Vérifier les limites d'instances selon le plan
+    const isPremium = user.plan === 'premium'
+    const isPaid = user.isPaidAccount || user.hasPaid
+
+    // Vérifier la période d'essai si l'utilisateur n'est pas premium/payé
+    if (!isPremium && !isPaid && user.trialEndsAt) {
+      const now = new Date()
+      const trialEnd = new Date(user.trialEndsAt)
+      if (now > trialEnd) {
+        return res.status(403).json({
+          error: 'Votre période d\'essai gratuit est expirée. Veuillez effectuer un paiement pour continuer.',
+          code: 'TRIAL_EXPIRED',
+          requiresPayment: true
+        })
+      }
+    }
+
+    // Vérifier les limites d'instances selon le plan (les premium passent librement)
     const userInstances = await InstanceService.countUserInstances(userId, true)
-    if (userInstances >= user.maxInstances) {
+    if (!isPremium && userInstances >= user.maxInstances) {
       return res.status(400).json({
         error: 'Instance limit reached',
         message: `Your ${user.plan} plan allows maximum ${user.maxInstances} instances`,

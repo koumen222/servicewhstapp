@@ -20,6 +20,7 @@ interface Message {
 }
 
 const FEATURES = [
+  "Essai gratuit de 7 jours (plan Basic)",
   "Jusqu'à 1 instance WhatsApp gratuite",
   "Accès API avec webhooks",
   "Suivi des messages en temps réel",
@@ -237,7 +238,7 @@ export default function RegisterPage() {
             Le plan gratuit inclut
           </p>
           <p className="text-[12px] text-[#5a7a5a]">
-            1 instance · 1 000 messages/mois · Accès complet à l'API
+            Essai gratuit 7 jours · 1 instance · Accès complet à l'API
           </p>
         </div>
       </div>

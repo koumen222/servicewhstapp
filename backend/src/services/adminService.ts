@@ -99,8 +99,15 @@ export class AdminService {
 
   /**
    * Lister tous les utilisateurs avec pagination
+   * Auto-corriger les utilisateurs premium qui n'ont pas hasPaid=true
    */
   static async getAllUsers(page: number = 1, limit: number = 50) {
+    // Corriger silencieusement les utilisateurs premium existants sans hasPaid
+    await User.updateMany(
+      { plan: 'premium', $or: [{ hasPaid: false }, { isPaidAccount: false }] },
+      { hasPaid: true, isPaidAccount: true }
+    )
+
     const skip = (page - 1) * limit
     const [users, total] = await Promise.all([
       User.find()
@@ -175,9 +182,21 @@ export class AdminService {
    * Mettre à jour le plan d'un utilisateur
    */
   static async updateUserPlan(userId: string, plan: string, maxInstances: number) {
+    const updateData: Record<string, any> = {
+      plan,
+      maxInstances,
+      hasPaid: true,
+      isPaidAccount: true,
+    }
+
+    // Si le plan est premium, on efface la date de fin d'essai
+    if (plan === 'premium') {
+      updateData.trialEndsAt = null
+    }
+
     const user = await User.findByIdAndUpdate(
       userId,
-      { plan, maxInstances },
+      updateData,
       { new: true }
     ).select('-password')
 
@@ -218,6 +237,17 @@ export class AdminService {
     await User.findByIdAndDelete(userId)
 
     return user
+  }
+
+  /**
+   * Migrer tous les utilisateurs premium existants vers hasPaid=true
+   */
+  static async migratePremiumUsers() {
+    const result = await User.updateMany(
+      { plan: 'premium', $or: [{ hasPaid: false }, { isPaidAccount: false }] },
+      { hasPaid: true, isPaidAccount: true, trialEndsAt: null }
+    )
+    return { updated: result.modifiedCount }
   }
 
   /**

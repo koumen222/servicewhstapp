@@ -65,7 +65,7 @@ export function TrialBanner() {
                 Période d'essai expirée
               </h3>
               <p className="text-xs text-red-300 mb-3">
-                Votre période d'essai gratuit de 3 jours est terminée. Pour continuer à utiliser le service, 
+                Votre période d'essai gratuit de 7 jours est terminée. Pour continuer à utiliser le service, 
                 veuillez effectuer un paiement.
               </p>
               <div className="flex flex-wrap gap-2">
@@ -92,7 +92,7 @@ export function TrialBanner() {
                 Essai gratuit - {daysRemaining} jour{daysRemaining > 1 ? "s" : ""} restant{daysRemaining > 1 ? "s" : ""}
               </h3>
               <p className="text-xs text-yellow-300 mb-2">
-                Profitez de toutes les fonctionnalités du plan Basic gratuitement pendant {daysRemaining} jour{daysRemaining > 1 ? "s" : ""}. 
+                Profitez de toutes les fonctionnalités du plan Basic (3 000 XAF/mois) gratuitement pendant votre essai de 7 jours. 
                 Après cette période, vous devrez effectuer un paiement pour continuer.
               </p>
               <Link
