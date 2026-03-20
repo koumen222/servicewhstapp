@@ -57,22 +57,7 @@ export function SupportChatbot() {
 
     try {
       const getApiUrl = () => {
-        if (typeof window !== "undefined") {
-          const hostname = window.location.hostname;
-          if (
-            hostname === "zechat.site" ||
-            hostname === "www.zechat.site" ||
-            hostname === "ecomcookpit.site" ||
-            hostname === "www.ecomcookpit.site" ||
-            (!hostname.includes("localhost") && !hostname.includes("127.0.0.1"))
-          ) {
-            return "https://api.ecomcookpit.site";
-          }
-        }
-        if (process.env.NEXT_PUBLIC_API_URL) {
-          return process.env.NEXT_PUBLIC_API_URL;
-        }
-        return "http://localhost:3001";
+        return process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
       };
 
       const apiUrl = getApiUrl();

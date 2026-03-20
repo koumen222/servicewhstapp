@@ -1,34 +1,9 @@
 import axios from "axios";
 
-// Détection automatique de l'URL backend
-const getBaseURL = () => {
-  // 1. Priorité à la variable d'environnement
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
-  }
-  
-  // 2. Détection automatique basée sur l'environnement
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    
-    // En production (domaine personnalisé)
-    if (hostname === 'zechat.site' || hostname === 'www.zechat.site' || hostname === 'ecomcookpit.site' || hostname === 'www.ecomcookpit.site') {
-      return 'https://api.ecomcookpit.site';
-    }
-    
-    // En développement local
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return 'http://localhost:3001';
-    }
-  }
-  
-  // 3. Fallback par défaut
-  return 'http://localhost:3001';
-};
+// URL backend : env variable en priorité, sinon localhost
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-const BASE_URL = getBaseURL();
-
-// Log de l'URL API utilisée pour debug
+console.log(`⚙️ Using API: ${BASE_URL}`);
 console.log(`🚀 API Base URL initialized to: ${BASE_URL}`);
 
 export const api = axios.create({
