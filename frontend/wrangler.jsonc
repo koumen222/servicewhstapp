@@ -34,5 +34,9 @@
 		// Enable image optimization
 		// see https://opennext.js.org/cloudflare/howtos/image
 		"binding": "IMAGES"
+	},
+	"vars": {
+		"NEXT_PUBLIC_API_URL": "https://servicewhstapp-production-2d5f.up.railway.app",
+		"NEXT_PUBLIC_APP_URL": "https://zechat.site"
 	}
 }
