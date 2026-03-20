@@ -12,7 +12,7 @@ export const env = {
   EVOLUTION_API_URL: process.env.EVOLUTION_API_URL || '',
   EVOLUTION_API_KEY: process.env.EVOLUTION_API_KEY || '',
   EVOLUTION_MASTER_API_KEY: process.env.EVOLUTION_MASTER_API_KEY || process.env.EVOLUTION_API_KEY || '',
-  FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
+  FRONTEND_URL: process.env.FRONTEND_URL || 'https://zechat.site,http://localhost:5173,http://localhost:3000',
   MONGODB_URI: process.env.MONGODB_URI || '',
 }
 

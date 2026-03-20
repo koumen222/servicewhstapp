@@ -42,6 +42,45 @@ const app = express()
 app.set('etag', false)
 app.set('trust proxy', 1)
 
+const allowedOrigins = env.FRONTEND_URL.split(',').map(o => o.trim().replace(/\/$/, ''))
+console.log('🔧 CORS allowedOrigins:', allowedOrigins)
+
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    // En développement, autoriser toutes les origines
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`🔍 CORS check (DEV MODE) - Origin: ${origin} - Allowed`)
+      return callback(null, true)
+    }
+
+    // En production, autoriser les origines configurées + requêtes sans origin (Postman, curl, etc.)
+    console.log(`🔍 CORS check (PROD) - Origin: ${origin}`)
+
+    // Autoriser les requêtes sans origin (serveur à serveur, Postman, etc.)
+    if (!origin) {
+      console.log('✅ CORS: No origin header - Allowed')
+      return callback(null, true)
+    }
+
+    // Vérifier si l'origin est dans la liste autorisée
+    if (allowedOrigins.includes(origin)) {
+      console.log(`✅ CORS: Origin ${origin} is in allowed list`)
+      return callback(null, true)
+    }
+
+    console.log(`❌ CORS: Origin ${origin} blocked. Allowed origins:`, allowedOrigins)
+    callback(new Error(`CORS: origin ${origin} not allowed`))
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'X-Requested-With'],
+  exposedHeaders: ['Content-Length', 'X-Request-Id'],
+  maxAge: 86400 // Cache preflight requests for 24 hours
+}
+
+// Handle OPTIONS preflight BEFORE Helmet so CORS headers are always returned
+app.options('*', cors(corsOptions))
+
 // =============== SÉCURITÉ GLOBALE ===============
 app.use(helmet({
   contentSecurityPolicy: {
@@ -53,42 +92,8 @@ app.use(helmet({
   }
 }))
 
-const allowedOrigins = env.FRONTEND_URL.split(',').map(o => o.trim().replace(/\/$/, ''))
-console.log('🔧 CORS allowedOrigins:', allowedOrigins)
-
 // CORS configuration
-app.use(cors({
-  origin: (origin, callback) => {
-    // En développement, autoriser toutes les origines
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`🔍 CORS check (DEV MODE) - Origin: ${origin} - Allowed`)
-      return callback(null, true)
-    }
-    
-    // En production, autoriser les origines configurées + requêtes sans origin (Postman, curl, etc.)
-    console.log(`🔍 CORS check (PROD) - Origin: ${origin}`)
-    
-    // Autoriser les requêtes sans origin (serveur à serveur, Postman, etc.)
-    if (!origin) {
-      console.log('✅ CORS: No origin header - Allowed')
-      return callback(null, true)
-    }
-    
-    // Vérifier si l'origin est dans la liste autorisée
-    if (allowedOrigins.includes(origin)) {
-      console.log(`✅ CORS: Origin ${origin} is in allowed list`)
-      return callback(null, true)
-    }
-    
-    console.log(`❌ CORS: Origin ${origin} blocked. Allowed origins:`, allowedOrigins)
-    callback(new Error(`CORS: origin ${origin} not allowed`))
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'X-Requested-With'],
-  exposedHeaders: ['Content-Length', 'X-Request-Id'],
-  maxAge: 86400 // Cache preflight requests for 24 hours
-}))
+app.use(cors(corsOptions))
 
 app.use(express.json({ 
   limit: '10mb',
