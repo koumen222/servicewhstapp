@@ -8,6 +8,3 @@
 /dashboard/*    /dashboard/:splat    200
 /docs/*         /docs/:splat         200
 /(auth)/*       /(auth)/:splat       200
-
-# SPA fallback - redirect all non-static routes to index.html
-/*    /index.html   200
